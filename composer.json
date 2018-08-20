@@ -1,0 +1,44 @@
+{
+  "name": "10up/assurewp",
+  "license": ["MIT"],
+  "authors": [
+    {
+      "name": "Taylor Lovett",
+      "email": "taylorl@get10up.com"
+    }
+  ],
+  "require": {
+    "symfony/console": "^3.3",
+    "10up/wpsnapshots": "dev-feature/create",
+    "facebook/webdriver": "^1.6",
+    "docker-php/docker-php": "^2.0"
+  },
+  "bin": [
+    "bin/wpsnapshots"
+  ],
+  "autoload": {
+    "files": [
+      "src/utils.php"
+    ],
+    "psr-4": {
+      "AssureWP\\": "./src/classes"
+    }
+  },
+  "repositories": [
+    {
+      "type": "git",
+      "url": "https://github.com/10up/wpsnapshots.git"
+    }
+  ],
+  "scripts": {
+    "lint": [
+      "phpcs ."
+    ],
+    "lint-fix": [
+      "phpcbf ."
+    ]
+  },
+  "require-dev": {
+    "10up/phpcs-composer": "dev-master"
+  }
+}
