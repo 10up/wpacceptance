@@ -131,7 +131,7 @@ class Environment {
 			];
 		}
 
-		$command = '/root/.composer/vendor/bin/wpsnapshots pull ' . $this->snapshot_id . ' --confirm --confirm_config_create --site_mapping="' . addslashes( json_encode( $site_mapping ) ) . '"';
+		$command = '/root/.composer/vendor/bin/wpsnapshots pull ' . $this->snapshot_id . ' --confirm --config_db_name="wordpress" --config_db_user="root" --config_db_password="password" --config_db_host="mysql-' . $this->network_id . '" --confirm_wp_download --confirm_config_create --site_mapping="' . addslashes( json_encode( $site_mapping ) ) . '"';
 
 		Log::instance()->write( 'Running command:', 1 );
 		Log::instance()->write( $command, 1 );
@@ -163,6 +163,7 @@ class Environment {
 	 * Destroy environment
 	 */
 	public function destroy() {
+		return;
 		Log::instance()->write( 'Destroying containers...', 1 );
 
 		$this->stopContainers();
@@ -183,6 +184,10 @@ class Environment {
 			],
 			[
 				'name' => 'wordpress',
+				'tag'  => 'latest',
+			],
+			[
+				'name' => 'nginx',
 				'tag'  => 'latest',
 			],
 			[
@@ -232,7 +237,6 @@ class Environment {
 
 		$this->containers['mysql'] = $this->docker->containerCreate( $container_config, [ 'name' => 'mysql-' . $this->network_id ] );
 
-
 		$this->mysql_stream = $this->docker->containerAttach( 'mysql-' . $this->network_id, [
 			'stream' => true,
 			'stdin'  => true,
@@ -265,24 +269,38 @@ class Environment {
 			]
 		);
 
-		$container_port_map           = new \ArrayObject();
-		$container_port_map['80/tcp'] = new \stdClass();
-
 		$container_config = new ContainersCreatePostBody();
 		$container_config->setImage( 'assurewp-wordpress' );
 		$container_config->setAttachStdin( true );
 		$container_config->setAttachStdout( true );
-		$container_config->setExposedPorts( $container_port_map );
 		$container_config->setAttachStderr( true );
 		$container_config->setTty( true );
-		$container_config->setEnv(
+
+		$container_config->setHostConfig( $host_config );
+
+		$this->containers['wordpress'] = $this->docker->containerCreate( $container_config, [ 'name' => 'wordpress-' . $this->network_id ] );
+
+		/**
+		 * Create nginx container
+		 */
+
+		$host_config = new HostConfig();
+		$host_config->setNetworkMode( $this->network_id );
+		$host_config->setBinds(
 			[
-				'WORDPRESS_DB_HOST=mysql-' . $this->network_id,
-				'WORDPRESS_DB_USER=root',
-				'WORDPRESS_DB_PASSWORD=password',
-				'WORDPRESS_DB_NAME=wordpress',
+				ASSUREWP_DIR . '/docker/nginx/config/default.conf:/etc/nginx/conf.d/default.conf'
 			]
 		);
+
+		$container_port_map           = new \ArrayObject();
+		$container_port_map['80/tcp'] = new \stdClass();
+
+		$container_config = new ContainersCreatePostBody();
+		$container_config->setImage( 'nginx:latest' );
+		$container_config->setAttachStdin( true );
+		$container_config->setAttachStdout( true );
+		$container_config->setAttachStderr( true );
+		$container_config->setExposedPorts( $container_port_map );
 
 		$port_binding = new PortBinding();
 		$port_binding->setHostPort( $this->wordpress_port );
@@ -294,7 +312,14 @@ class Environment {
 
 		$container_config->setHostConfig( $host_config );
 
-		$this->containers['wordpress'] = $this->docker->containerCreate( $container_config, [ 'name' => 'wordpress-' . $this->network_id ] );
+		$this->containers['nginx'] = $this->docker->containerCreate( $container_config, [ 'name' => 'nginx-' . $this->network_id ] );
+
+		$this->nginx_stream = $this->docker->containerAttach( 'nginx-' . $this->network_id, [
+			'stream' => true,
+			'stdin'  => true,
+			'stdout' => true,
+			'stderr' => true,
+		] );
 
 		/**
 		 * Create selenium container
@@ -355,6 +380,16 @@ class Environment {
 
 			sleep( 1 );
 		}
+
+		$this->nginx_stream->onStdout( function( $stdout ) {
+			echo $stdout;
+		} );
+
+		$this->nginx_stream->onStderr( function( $stderr ) {
+			echo $stderr;
+		} );
+
+		$this->nginx_stream->wait();
 	}
 
 	/**

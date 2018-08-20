@@ -60,7 +60,7 @@ class AcceptanceTester {
 			$path = '/' . $path;
 		}
 
-		$page = 'http://wordpress:' . $this->environment->getWordPressPort() . $path;
+		$page = 'http://localhost:' . $this->environment->getWordPressPort() . $path;
 
 		Log::instance()->write( 'Navigating to URL: ' . $page, 1 );
 

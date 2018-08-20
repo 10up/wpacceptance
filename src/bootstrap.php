@@ -11,6 +11,8 @@ use \Symfony\Component\Console\Application;
 
 $app = new Application( 'AssureWP', '0.9' );
 
+define( 'ASSUREWP_DIR', __DIR__ );
+
 /**
  * Attempt to set this as AssureWP can consume a lot of memory.
  */
