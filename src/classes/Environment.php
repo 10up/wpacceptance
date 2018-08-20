@@ -284,23 +284,34 @@ class Environment {
 		 * Create nginx container
 		 */
 
+		$context = new Context( __DIR__ . '/../../docker/nginx');
+		$input_stream = $context->toStream();
+		$build_stream = $this->docker->imageBuild( $input_stream, [ 't' => 'assurewp-nginx' ] );
+
+		$build_stream->onFrame( function( BuildInfo $build_info ) {
+			Log::instance()->write( $build_info->getStream(), 1 );
+		} );
+
+		$build_stream->wait();
+
 		$host_config = new HostConfig();
 		$host_config->setNetworkMode( $this->network_id );
-		$host_config->setBinds(
-			[
-				ASSUREWP_DIR . '/docker/nginx/config/default.conf:/etc/nginx/conf.d/default.conf'
-			]
-		);
 
 		$container_port_map           = new \ArrayObject();
 		$container_port_map['80/tcp'] = new \stdClass();
 
 		$container_config = new ContainersCreatePostBody();
-		$container_config->setImage( 'nginx:latest' );
+		$container_config->setImage( 'assurewp-nginx' );
 		$container_config->setAttachStdin( true );
 		$container_config->setAttachStdout( true );
 		$container_config->setAttachStderr( true );
 		$container_config->setExposedPorts( $container_port_map );
+		$container_config->setTty( true );
+		$container_config->setEnv(
+			[
+				'WP_HOST=' . 'wordpress-' . $this->network_id,
+			]
+		);
 
 		$port_binding = new PortBinding();
 		$port_binding->setHostPort( $this->wordpress_port );
@@ -314,12 +325,8 @@ class Environment {
 
 		$this->containers['nginx'] = $this->docker->containerCreate( $container_config, [ 'name' => 'nginx-' . $this->network_id ] );
 
-		$this->nginx_stream = $this->docker->containerAttach( 'nginx-' . $this->network_id, [
-			'stream' => true,
-			'stdin'  => true,
-			'stdout' => true,
-			'stderr' => true,
-		] );
+		var_dump($this->containers['nginx']);
+
 
 		/**
 		 * Create selenium container
@@ -380,16 +387,6 @@ class Environment {
 
 			sleep( 1 );
 		}
-
-		$this->nginx_stream->onStdout( function( $stdout ) {
-			echo $stdout;
-		} );
-
-		$this->nginx_stream->onStderr( function( $stderr ) {
-			echo $stderr;
-		} );
-
-		$this->nginx_stream->wait();
 	}
 
 	/**
