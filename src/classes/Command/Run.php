@@ -2,10 +2,10 @@
 /**
  * Run test suite command
  *
- * @package assurewp
+ * @package wpassure
  */
 
-namespace AssureWP\Command;
+namespace WPAssure\Command;
 
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -17,10 +17,10 @@ use Symfony\Component\Console\Question\Question;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
 
-use AssureWP\Environment as Environment;
-use AssureWP\Log as Log;
-use AssureWP\AcceptanceTester as AcceptanceTester;
-use AssureWP\Utils as Utils;
+use WPAssure\Environment as Environment;
+use WPAssure\Log as Log;
+use WPAssure\AcceptanceTester as AcceptanceTester;
+use WPAssure\Utils as Utils;
 use WPSnapshots\Connection as Connection;
 use WPSnapshots\Snapshot as Snapshot;
 
@@ -34,7 +34,7 @@ class Run extends Command {
 	 */
 	protected function configure() {
 		$this->setName( 'run' );
-		$this->setDescription( 'Run an AssureWP test suite.' );
+		$this->setDescription( 'Run an WPAssure test suite.' );
 
 		$this->addOption( 'snapshot_id', null, InputOption::VALUE_REQUIRED, 'WP Snapshot ID.' );
 		$this->addOption( 'path', null, InputOption::VALUE_REQUIRED, 'Path to WordPress wp-config.php directory.' );
@@ -91,8 +91,8 @@ class Run extends Command {
 				'db_name'         => $input->getOption( 'db_name' ),
 				'db_user'         => $input->getOption( 'db_user' ),
 				'db_password'     => $input->getOption( 'db_password' ),
-				'project'         => 'AssureWP Snapshot',
-				'description'     => 'AssureWP project',
+				'project'         => 'WPAssure Snapshot',
+				'description'     => 'WPAssure project',
 				'no_scrub'        => false,
 				'exclude_uploads' => true,
 			] );

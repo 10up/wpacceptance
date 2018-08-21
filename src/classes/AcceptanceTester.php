@@ -2,10 +2,10 @@
 /**
  * Acceptance tester class
  *
- * @package  assurewp
+ * @package  wpassure
  */
 
-namespace AssureWP;
+namespace WPAssure;
 
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
@@ -60,7 +60,7 @@ class AcceptanceTester {
 			$path = '/' . $path;
 		}
 
-		$page = 'http://localhost:' . $this->environment->getWordPressPort() . $path;
+		$page = 'http://wpassure.test:' . $this->environment->getWordPressPort() . $path;
 
 		Log::instance()->write( 'Navigating to URL: ' . $page, 1 );
 

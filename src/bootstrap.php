@@ -1,20 +1,20 @@
 <?php
 /**
- * Bootstrap AssureWP
+ * Bootstrap WPAssure
  *
- * @package  assurewp
+ * @package  wpassure
  */
 
-namespace AssureWP;
+namespace WPAssure;
 
 use \Symfony\Component\Console\Application;
 
-$app = new Application( 'AssureWP', '0.9' );
+$app = new Application( 'WPAssure', '0.9' );
 
 define( 'ASSUREWP_DIR', __DIR__ );
 
 /**
- * Attempt to set this as AssureWP can consume a lot of memory.
+ * Attempt to set this as WPAssure can consume a lot of memory.
  */
 ini_set( 'memory_limit', '-1' );
 

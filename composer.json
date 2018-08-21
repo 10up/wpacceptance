@@ -1,5 +1,5 @@
 {
-  "name": "10up/assurewp",
+  "name": "10up/wpassure",
   "license": ["MIT"],
   "authors": [
     {
@@ -21,7 +21,7 @@
       "src/utils.php"
     ],
     "psr-4": {
-      "AssureWP\\": "./src/classes"
+      "WPAssure\\": "./src/classes"
     }
   },
   "repositories": [

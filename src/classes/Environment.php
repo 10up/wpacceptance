@@ -2,10 +2,10 @@
 /**
  * Create an environment
  *
- * @package assurewp
+ * @package wpassure
  */
 
-namespace AssureWP;
+namespace WPAssure;
 
 use Docker\API\Model\NetworkCreate;
 use Docker\API\Model\NetworksCreatePostBody;
@@ -19,7 +19,7 @@ use Docker\API\Model\BuildInfo;
 use Docker\Context\Context;
 use Docker\Docker;
 use GrantLucas\PortFinder;
-use AssureWP\Utils as Utils;
+use WPAssure\Utils as Utils;
 use WPSnapshots\Snapshot;
 
 /**
@@ -75,7 +75,7 @@ class Environment {
 	 * @param  string $snapshot_id WPSnapshot ID to load into environment
 	 */
 	public function __construct( $snapshot_id ) {
-		$this->network_id  = 'assurewp' . time();
+		$this->network_id  = 'wpassure' . time();
 		$this->docker      = Docker::create();
 		$this->snapshot_id = $snapshot_id;
 
@@ -126,8 +126,8 @@ class Environment {
 			$site_host = parse_url( $site['site_url'], PHP_URL_HOST );
 
 			$site_mapping[] = [
-				'home_url' => str_replace( '//' . $home_host, '//localhost:' . $this->wordpress_port, $site['home_url'] ),
-				'site_url' => str_replace( '//' . $site_host, '//localhost:' . $this->wordpress_port, $site['site_url'] ),
+				'home_url' => str_replace( '//' . $home_host, '//wpassure.test:' . $this->wordpress_port, $site['home_url'] ),
+				'site_url' => str_replace( '//' . $site_host, '//wpassure.test:' . $this->wordpress_port, $site['site_url'] ),
 			];
 		}
 
@@ -249,9 +249,10 @@ class Environment {
 		 */
 
 		$context = new Context( __DIR__ . '/../../docker/wordpress');
-		$input_stream = $context->toStream();
-		$build_stream = $this->docker->imageBuild( $input_stream, [ 't' => 'assurewp-wordpress' ] );
 
+		$input_stream = $context->toStream();
+
+		$build_stream = $this->docker->imageBuild( $input_stream, [ 't' => 'wpassure-wordpress' ] );
 		$build_stream->onFrame( function( BuildInfo $build_info ) {
 			Log::instance()->write( $build_info->getStream(), 1 );
 		} );
@@ -261,6 +262,7 @@ class Environment {
 		$this->wordpress_port = Utils\find_open_port( '127.0.0.1', 1000, 9999 );
 
 		$host_config = new HostConfig();
+
 		$host_config->setNetworkMode( $this->network_id );
 		$host_config->setBinds(
 			[
@@ -269,49 +271,17 @@ class Environment {
 			]
 		);
 
-		$container_config = new ContainersCreatePostBody();
-		$container_config->setImage( 'assurewp-wordpress' );
-		$container_config->setAttachStdin( true );
-		$container_config->setAttachStdout( true );
-		$container_config->setAttachStderr( true );
-		$container_config->setTty( true );
-
-		$container_config->setHostConfig( $host_config );
-
-		$this->containers['wordpress'] = $this->docker->containerCreate( $container_config, [ 'name' => 'wordpress-' . $this->network_id ] );
-
-		/**
-		 * Create nginx container
-		 */
-
-		$context = new Context( __DIR__ . '/../../docker/nginx');
-		$input_stream = $context->toStream();
-		$build_stream = $this->docker->imageBuild( $input_stream, [ 't' => 'assurewp-nginx' ] );
-
-		$build_stream->onFrame( function( BuildInfo $build_info ) {
-			Log::instance()->write( $build_info->getStream(), 1 );
-		} );
-
-		$build_stream->wait();
-
-		$host_config = new HostConfig();
-		$host_config->setNetworkMode( $this->network_id );
-
 		$container_port_map           = new \ArrayObject();
 		$container_port_map['80/tcp'] = new \stdClass();
 
 		$container_config = new ContainersCreatePostBody();
-		$container_config->setImage( 'assurewp-nginx' );
+
+		$container_config->setImage( 'wpassure-wordpress' );
 		$container_config->setAttachStdin( true );
 		$container_config->setAttachStdout( true );
-		$container_config->setAttachStderr( true );
 		$container_config->setExposedPorts( $container_port_map );
+		$container_config->setAttachStderr( true );
 		$container_config->setTty( true );
-		$container_config->setEnv(
-			[
-				'WP_HOST=' . 'wordpress-' . $this->network_id,
-			]
-		);
 
 		$port_binding = new PortBinding();
 		$port_binding->setHostPort( $this->wordpress_port );
@@ -319,15 +289,11 @@ class Environment {
 
 		$host_port_map           = new \ArrayObject();
 		$host_port_map['80/tcp'] = [ $port_binding ];
-		$host_config->setPortBindings( $host_port_map );
 
+		$host_config->setPortBindings( $host_port_map );
 		$container_config->setHostConfig( $host_config );
 
-		$this->containers['nginx'] = $this->docker->containerCreate( $container_config, [ 'name' => 'nginx-' . $this->network_id ] );
-
-		var_dump($this->containers['nginx']);
-
-
+		$this->containers['wordpress'] = $this->docker->containerCreate( $container_config, [ 'name' => 'wordpress-' . $this->network_id ] );
 		/**
 		 * Create selenium container
 		 */
@@ -342,7 +308,7 @@ class Environment {
 
 		$host_config = new HostConfig();
 		$host_config->setNetworkMode( $this->network_id );
-		$host_config->setExtraHosts( [ 'wordpress:' . $this->gateway_ip ] );
+		$host_config->setExtraHosts( [ 'wpassure.test:' . $this->gateway_ip ] );
 
 		$container_config = new ContainersCreatePostBody();
 		$container_config->setImage( 'selenium/standalone-chrome:3.4.0' );

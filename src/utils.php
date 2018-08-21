@@ -2,10 +2,10 @@
 /**
  * Utility functions
  *
- * @package  assurewp
+ * @package  wpassure
  */
 
-namespace AssureWP\Utils;
+namespace WPAssure\Utils;
 
 /**
  * Find root of WP install (where wp-config.php resides)

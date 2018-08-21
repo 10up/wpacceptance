@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ec64f270e6f2d88e281835173f001985",
+    "content-hash": "99d3a9d49d56f920dd06fdc694fc5b49",
     "packages": [
         {
             "name": "10up/wpsnapshots",
