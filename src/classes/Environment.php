@@ -99,19 +99,23 @@ class Environment {
 		$exec_config->setAttachStderr( true );
 		$exec_config->setCmd( [ 'composer', 'global', 'update', '10up/wpsnapshots' ] );
 
-		$exec_id = $this->docker->containerExec( 'wordpress-' . $this->network_id, $exec_config )->getId();
+		$exec_id           = $this->docker->containerExec( 'wordpress-' . $this->network_id, $exec_config )->getId();
 		$exec_start_config = new ExecIdStartPostBody();
 		$exec_start_config->setDetach( false );
 
 		$stream = $this->docker->execStart( $exec_id, $exec_start_config );
 
-		$stream->onStdout( function( $stdout ) {
-			Log::instance()->write( $stdout, 1 );
-		} );
+		$stream->onStdout(
+			function( $stdout ) {
+					Log::instance()->write( $stdout, 1 );
+			}
+		);
 
-		$stream->onStderr( function( $stderr ) {
-			Log::instance()->write( $stderr, 1 );
-		} );
+		$stream->onStderr(
+			function( $stderr ) {
+					Log::instance()->write( $stderr, 1 );
+			}
+		);
 
 		$stream->wait();
 
@@ -121,14 +125,21 @@ class Environment {
 
 		$site_mapping = [];
 
+		Log::instance()->write( 'Snapshot site mapping:', 1 );
+
 		foreach ( $snapshot->meta['sites'] as $site ) {
 			$home_host = parse_url( $site['home_url'], PHP_URL_HOST );
 			$site_host = parse_url( $site['site_url'], PHP_URL_HOST );
 
-			$site_mapping[] = [
+			$map = [
 				'home_url' => str_replace( '//' . $home_host, '//wpassure.test:' . $this->wordpress_port, $site['home_url'] ),
 				'site_url' => str_replace( '//' . $site_host, '//wpassure.test:' . $this->wordpress_port, $site['site_url'] ),
 			];
+
+			$site_mapping[] = $map;
+
+			Log::instance()->write( 'Home URL: ' . $map['home_url'], 1 );
+			Log::instance()->write( 'Site URL: ' . $map['site_url'], 1 );
 		}
 
 		$command = '/root/.composer/vendor/bin/wpsnapshots pull ' . $this->snapshot_id . ' --confirm --config_db_name="wordpress" --config_db_user="root" --config_db_password="password" --config_db_host="mysql-' . $this->network_id . '" --confirm_wp_download --confirm_config_create --site_mapping="' . addslashes( json_encode( $site_mapping ) ) . '"';
@@ -140,21 +151,25 @@ class Environment {
 		$exec_config->setTty( true );
 		$exec_config->setAttachStdout( true );
 		$exec_config->setAttachStderr( true );
-		$exec_config->setCmd( [ "/bin/sh", "-c", $command ] );
+		$exec_config->setCmd( [ '/bin/sh', '-c', $command ] );
 
-		$exec_id = $this->docker->containerExec( 'wordpress-' . $this->network_id, $exec_config )->getId();
+		$exec_id           = $this->docker->containerExec( 'wordpress-' . $this->network_id, $exec_config )->getId();
 		$exec_start_config = new ExecIdStartPostBody();
 		$exec_start_config->setDetach( false );
 
 		$stream = $this->docker->execStart( $exec_id, $exec_start_config );
 
-		$stream->onStdout( function( $stdout ) {
-			Log::instance()->write( $stdout, 1 );
-		} );
+		$stream->onStdout(
+			function( $stdout ) {
+					Log::instance()->write( $stdout, 1 );
+			}
+		);
 
-		$stream->onStderr( function( $stderr ) {
-			Log::instance()->write( $stderr, 1 );
-		} );
+		$stream->onStderr(
+			function( $stderr ) {
+					Log::instance()->write( $stderr, 1 );
+			}
+		);
 
 		$stream->wait();
 	}
@@ -163,7 +178,6 @@ class Environment {
 	 * Destroy environment
 	 */
 	public function destroy() {
-		return;
 		Log::instance()->write( 'Destroying containers...', 1 );
 
 		$this->stopContainers();
@@ -237,25 +251,29 @@ class Environment {
 
 		$this->containers['mysql'] = $this->docker->containerCreate( $container_config, [ 'name' => 'mysql-' . $this->network_id ] );
 
-		$this->mysql_stream = $this->docker->containerAttach( 'mysql-' . $this->network_id, [
-			'stream' => true,
-			'stdin'  => true,
-			'stdout' => true,
-			'stderr' => true,
-		] );
+		$this->mysql_stream = $this->docker->containerAttach(
+			'mysql-' . $this->network_id, [
+				'stream' => true,
+				'stdin'  => true,
+				'stdout' => true,
+				'stderr' => true,
+			]
+		);
 
 		/**
 		 * Create WP container
 		 */
 
-		$context = new Context( __DIR__ . '/../../docker/wordpress');
+		$context = new Context( __DIR__ . '/../../docker/wordpress' );
 
 		$input_stream = $context->toStream();
 
 		$build_stream = $this->docker->imageBuild( $input_stream, [ 't' => 'wpassure-wordpress' ] );
-		$build_stream->onFrame( function( BuildInfo $build_info ) {
-			Log::instance()->write( $build_info->getStream(), 1 );
-		} );
+		$build_stream->onFrame(
+			function( BuildInfo $build_info ) {
+					Log::instance()->write( $build_info->getStream(), 1 );
+			}
+		);
 
 		$build_stream->wait();
 
@@ -267,7 +285,7 @@ class Environment {
 		$host_config->setBinds(
 			[
 				\WPSnapshots\Utils\get_snapshot_directory() . $this->snapshot_id . ':/root/.wpsnapshots/' . $this->snapshot_id,
-				$_SERVER['HOME'] . '/.wpsnapshots.json:/root/.wpsnapshots.json'
+				$_SERVER['HOME'] . '/.wpsnapshots.json:/root/.wpsnapshots.json',
 			]
 		);
 
@@ -340,11 +358,13 @@ class Environment {
 
 		$mysql_started = false;
 
-		$this->mysql_stream->onStdout( function( $stdout ) {
-			if ( preg_match( '#MySQL init process done#i', $stdout ) ) {
-				$mysql_started = true;
+		$this->mysql_stream->onStdout(
+			function( $stdout ) {
+				if ( preg_match( '#MySQL init process done#i', $stdout ) ) {
+					  $mysql_started = true;
+				}
 			}
-		} );
+		);
 
 		for ( $i = 0; $i < 15; $i ++ ) {
 			if ( $mysql_started ) {
@@ -392,6 +412,9 @@ class Environment {
 		$ipam_config = $network->getIPAM()->getConfig();
 
 		$this->gateway_ip = $ipam_config[0]['Gateway'];
+
+		Log::instance()->write( 'Network ID: ' . $this->network_id, 1 );
+		Log::instance()->write( 'Gateway IP: ' . $this->gateway_ip, 1 );
 	}
 
 	/**
