@@ -35,8 +35,7 @@ class AcceptanceTester {
 	 * @param Environment $environment Environment object
 	 */
 	public function __construct( Environment $environment ) {
-		$host = 'http://localhost:' . $environment->getSeleniumPort() . '/wd/hub';
-
+		$host = $environment->getSeleniumServerUrl();
 		$capabilities = DesiredCapabilities::chrome();
 
 		$this->driver      = RemoteWebDriver::create( $host, $capabilities, 20000 );
@@ -60,7 +59,7 @@ class AcceptanceTester {
 			$path = '/' . $path;
 		}
 
-		$page = 'http://wpassure.test:' . $this->environment->getWordPressPort() . $path;
+		$page = $this->environment->getWpHomepageUrl() . $path;
 
 		Log::instance()->write( 'Navigating to URL: ' . $page, 1 );
 
@@ -83,4 +82,5 @@ class AcceptanceTester {
 	public function click() {
 
 	}
+
 }

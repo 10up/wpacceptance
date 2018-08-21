@@ -11,7 +11,8 @@
     "symfony/console": "^3.3",
     "10up/wpsnapshots": "dev-feature/create",
     "facebook/webdriver": "^1.6",
-    "docker-php/docker-php": "^2.0"
+    "docker-php/docker-php": "^2.0",
+    "phpunit/phpunit": "^7.3"
   },
   "bin": [
     "bin/wpsnapshots"

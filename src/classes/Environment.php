@@ -427,21 +427,21 @@ class Environment {
 	}
 
 	/**
-	 * Get Selenium port
+	 * Get Selenium server URL
 	 *
-	 * @return int
+	 * @return string
 	 */
-	public function getSeleniumPort() {
-		return $this->selenium_port;
+	public function getSeleniumServerUrl() {
+		return 'http://localhost:' . intval( $this->selenium_port ) . '/wd/hub';
 	}
 
 	/**
-	 * Get WordPress port
+	 * Get WordPress homepage URL
 	 *
-	 * @return int
+	 * @return string
 	 */
-	public function getWordPressPort() {
-		return $this->wordpress_port;
+	public function getWpHomepageUrl() {
+		return 'http://wpassure.test:' . intval( $this->wordpress_port );
 	}
 
 	/**
@@ -452,4 +452,5 @@ class Environment {
 	public function getGatewayIP() {
 		return $this->gateway_ip;
 	}
+
 }
