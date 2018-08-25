@@ -70,14 +70,22 @@ class Environment {
 	protected $selenium_port;
 
 	/**
+	 * Suite config
+	 *
+	 * @var  array
+	 */
+	protected $suite_config;
+
+	/**
 	 * Create environment
 	 *
 	 * @param  string $snapshot_id WPSnapshot ID to load into environment
 	 */
-	public function __construct( $snapshot_id ) {
-		$this->network_id  = 'wpassure' . time();
-		$this->docker      = Docker::create();
-		$this->snapshot_id = $snapshot_id;
+	public function __construct( $snapshot_id, $suite_config ) {
+		$this->network_id   = 'wpassure' . time();
+		$this->docker       = Docker::create();
+		$this->snapshot_id  = $snapshot_id;
+		$this->suite_config = $suite_config;
 
 		$this->createNetwork();
 		$this->downloadImages();
@@ -91,33 +99,42 @@ class Environment {
 	 * Pull WP Snapshot into container
 	 */
 	public function pullSnapshot() {
-		Log::instance()->write( 'Updating WP Snapshots...', 1 );
+		/**
+		 * Optionally update WP Snapshots
+		 */
+		if ( false ) {
+			Log::instance()->write( 'Updating WP Snapshots...', 1 );
 
-		$exec_config = new ContainersIdExecPostBody();
-		$exec_config->setTty( true );
-		$exec_config->setAttachStdout( true );
-		$exec_config->setAttachStderr( true );
-		$exec_config->setCmd( [ 'composer', 'global', 'update', '10up/wpsnapshots' ] );
+			$exec_config = new ContainersIdExecPostBody();
+			$exec_config->setTty( true );
+			$exec_config->setAttachStdout( true );
+			$exec_config->setAttachStderr( true );
+			$exec_config->setCmd( [ 'composer', 'global', 'update', '10up/wpsnapshots' ] );
 
-		$exec_id           = $this->docker->containerExec( 'wordpress-' . $this->network_id, $exec_config )->getId();
-		$exec_start_config = new ExecIdStartPostBody();
-		$exec_start_config->setDetach( false );
+			$exec_id           = $this->docker->containerExec( 'wordpress-' . $this->network_id, $exec_config )->getId();
+			$exec_start_config = new ExecIdStartPostBody();
+			$exec_start_config->setDetach( false );
 
-		$stream = $this->docker->execStart( $exec_id, $exec_start_config );
+			$stream = $this->docker->execStart( $exec_id, $exec_start_config );
 
-		$stream->onStdout(
-			function( $stdout ) {
-					Log::instance()->write( $stdout, 1 );
-			}
-		);
+			$stream->onStdout(
+				function( $stdout ) {
+						Log::instance()->write( $stdout, 1 );
+				}
+			);
 
-		$stream->onStderr(
-			function( $stderr ) {
-					Log::instance()->write( $stderr, 1 );
-			}
-		);
+			$stream->onStderr(
+				function( $stderr ) {
+						Log::instance()->write( $stderr, 1 );
+				}
+			);
 
-		$stream->wait();
+			$stream->wait();
+		}
+
+		/**
+		 * Pulling snapshot
+		 */
 
 		Log::instance()->write( 'Pulling snapshot...', 1 );
 
@@ -172,12 +189,122 @@ class Environment {
 		);
 
 		$stream->wait();
+
+		/**
+		 * Determine where codebase is located in snapshot
+		 */
+
+		Log::instance()->write( 'Finding codebase in snapshot...', 1 );
+
+		$exec_config = new ContainersIdExecPostBody();
+		$exec_config->setTty( true );
+		$exec_config->setAttachStdout( true );
+		$exec_config->setAttachStderr( true );
+		$exec_config->setCmd( [ '/bin/sh', '-c', 'find /var/www/html -name "wpassure.json" -not -path "/var/www/html/wp-includes/*" -not -path "/var/www/html/wp-admin/*"' ] );
+
+		$exec_id           = $this->docker->containerExec( 'wordpress-' . $this->network_id, $exec_config )->getId();
+		$exec_start_config = new ExecIdStartPostBody();
+		$exec_start_config->setDetach( false );
+
+		$stream = $this->docker->execStart( $exec_id, $exec_start_config );
+
+		$suite_config_files = [];
+
+		$stream->onStdout(
+			function( $stdout ) use ( &$suite_config_files ) {
+				$suite_config_files[] = trim( $stdout );
+			}
+		);
+
+		$stream->onStderr(
+			function( $stderr ) {
+				Log::instance()->write( $stderr, 1 );
+			}
+		);
+
+		$stream->wait();
+
+		$snapshot_repo_path = false;
+
+		foreach ( $suite_config_files as $suite_config_file ) {
+			$exec_config = new ContainersIdExecPostBody();
+			$exec_config->setTty( true );
+			$exec_config->setAttachStdout( true );
+			$exec_config->setAttachStderr( true );
+			$exec_config->setCmd( [ '/bin/sh', '-c', 'php -r "\$config = json_decode(file_get_contents(\"' . $suite_config_file . '\"), true); echo \$config[\"name\"];"' ] );
+
+			$exec_id           = $this->docker->containerExec( 'wordpress-' . $this->network_id, $exec_config )->getId();
+			$exec_start_config = new ExecIdStartPostBody();
+			$exec_start_config->setDetach( false );
+
+			$stream = $this->docker->execStart( $exec_id, $exec_start_config );
+
+			$suite_config_files = [];
+			$suite_config_name  = '';
+
+			$stream->onStdout(
+				function( $name ) use ( &$suite_config_name ) {
+					$suite_config_name = $name;
+				}
+			);
+
+			$stream->onStderr(
+				function( $stderr ) {
+					Log::instance()->write( $stderr, 1 );
+				}
+			);
+
+			$stream->wait();
+
+			if ( $suite_config_name === $this->suite_config['name'] ) {
+				$snapshot_repo_path = dirname( $suite_config_file );
+				break;
+			}
+		}
+
+		if ( empty( $snapshot_repo_path ) ) {
+			Log::instance()->write( 'Could not copy codebase files into snapshot. The snapshot must contain a codebase with a wpassure.json file.', 0, 'error' );
+			return;
+		}
+
+		/**
+		 * Copy repo files into container
+		 */
+
+		Log::instance()->write( 'Copying codebase into container.', 1 );
+
+		$exec_config = new ContainersIdExecPostBody();
+		$exec_config->setTty( true );
+		$exec_config->setAttachStdout( true );
+		$exec_config->setAttachStderr( true );
+		$exec_config->setCmd( [ '/bin/sh', '-c', 'cp -rf /root/repo/* ' . $snapshot_repo_path ] );
+
+		$exec_id           = $this->docker->containerExec( 'wordpress-' . $this->network_id, $exec_config )->getId();
+		$exec_start_config = new ExecIdStartPostBody();
+		$exec_start_config->setDetach( false );
+
+		$stream = $this->docker->execStart( $exec_id, $exec_start_config );
+
+		$stream->onStdout(
+			function( $stdout ) {
+				Log::instance()->write( $stdout, 1 );
+			}
+		);
+
+		$stream->onStderr(
+			function( $stderr ) {
+				Log::instance()->write( $stderr, 1 );
+			}
+		);
+
+		$stream->wait();
 	}
 
 	/**
 	 * Destroy environment
 	 */
 	public function destroy() {
+		return;
 		Log::instance()->write( 'Destroying containers...', 1 );
 
 		$this->stopContainers();
@@ -286,6 +413,7 @@ class Environment {
 			[
 				\WPSnapshots\Utils\get_snapshot_directory() . $this->snapshot_id . ':/root/.wpsnapshots/' . $this->snapshot_id,
 				$_SERVER['HOME'] . '/.wpsnapshots.json:/root/.wpsnapshots.json',
+				$this->suite_config['path'] . ':/root/repo',
 			]
 		);
 
@@ -312,6 +440,7 @@ class Environment {
 		$container_config->setHostConfig( $host_config );
 
 		$this->containers['wordpress'] = $this->docker->containerCreate( $container_config, [ 'name' => 'wordpress-' . $this->network_id ] );
+
 		/**
 		 * Create selenium container
 		 */

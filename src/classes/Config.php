@@ -7,6 +7,7 @@ namespace WPAssure;
 
 use WPAssure\Log;
 use \ArrayAccess;
+use WPAssure\Utils;
 
 /**
  * Handle suite config files
@@ -18,14 +19,14 @@ class Config implements ArrayAccess {
 	 *
 	 * @var array
 	 */
-	private $config;
+	protected $config;
 
 	/**
 	 * Initiate class
 	 *
 	 * @param  string $path Path to wpassure.json directory
 	 */
-	private function __construct( array $config ) {
+	protected function __construct( array $config ) {
 		$this->config = $config;
 	}
 
@@ -57,6 +58,8 @@ class Config implements ArrayAccess {
 
 			return false;
 		}
+
+		$config['path'] = $path;
 
 		return new self( $config );
 	}

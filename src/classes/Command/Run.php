@@ -88,7 +88,7 @@ class Run extends Command {
 			$snapshot_id = $input->getOption( 'snapshot_id' );
 
 			if ( empty( $snapshot_id ) ) {
-				$snapshot_id = $test_config['snapshot_id'];
+				$snapshot_id = $suite_config['snapshot_id'];
 			}
 		}
 
@@ -125,7 +125,7 @@ class Run extends Command {
 
 		Log::instance()->write( 'Creating environment...' );
 
-		$environment = new Environment( $snapshot_id );
+		$environment = new Environment( $snapshot_id, $suite_config );
 
 		$I = new AcceptanceTester( $environment );
 		$I->amOnPage( '/' );
