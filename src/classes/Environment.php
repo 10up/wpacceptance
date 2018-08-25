@@ -304,7 +304,6 @@ class Environment {
 	 * Destroy environment
 	 */
 	public function destroy() {
-		return;
 		Log::instance()->write( 'Destroying containers...', 1 );
 
 		$this->stopContainers();
