@@ -59,7 +59,7 @@ class Config implements ArrayAccess {
 			return false;
 		}
 
-		$config['path'] = $path;
+		$config['path'] = Utils\trailingslash( $path );
 
 		return new self( $config );
 	}

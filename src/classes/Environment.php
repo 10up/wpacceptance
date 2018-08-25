@@ -271,7 +271,7 @@ class Environment {
 		 * Copy repo files into container
 		 */
 
-		Log::instance()->write( 'Copying codebase into container.', 1 );
+		Log::instance()->write( 'Copying codebase into container...', 1 );
 
 		$exec_config = new ContainersIdExecPostBody();
 		$exec_config->setTty( true );
@@ -321,6 +321,14 @@ class Environment {
 			[
 				'name' => 'mysql',
 				'tag'  => '5.7',
+			],
+			[
+				'name' => 'wordpress',
+				'tag'  => 'latest',
+			],
+			[
+				'name' => 'nginx',
+				'tag'  => 'latest',
 			],
 			[
 				'name' => 'selenium/standalone-chrome',
