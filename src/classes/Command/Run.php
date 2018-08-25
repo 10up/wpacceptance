@@ -17,12 +17,13 @@ use Symfony\Component\Console\Question\Question;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
 
-use WPAssure\Environment as Environment;
-use WPAssure\Log as Log;
-use WPAssure\AcceptanceTester as AcceptanceTester;
-use WPAssure\Utils as Utils;
-use WPSnapshots\Connection as Connection;
-use WPSnapshots\Snapshot as Snapshot;
+use WPAssure\Environment;
+use WPAssure\Log;
+use WPAssure\AcceptanceTester;
+use WPAssure\Utils;
+use WPAssure\Config;
+use WPSnapshots\Connection;
+use WPSnapshots\Snapshot;
 
 /**
  * Run test suite
@@ -35,6 +36,8 @@ class Run extends Command {
 	protected function configure() {
 		$this->setName( 'run' );
 		$this->setDescription( 'Run an WPAssure test suite.' );
+
+		$this->addOption( 'local', false, InputOption::VALUE_NONE, 'Run tests against local WordPress install.' );
 
 		$this->addOption( 'snapshot_id', null, InputOption::VALUE_REQUIRED, 'WP Snapshot ID.' );
 		$this->addOption( 'path', null, InputOption::VALUE_REQUIRED, 'Path to WordPress wp-config.php directory.' );
@@ -71,7 +74,23 @@ class Run extends Command {
 			return;
 		}
 
-		$snapshot_id = $input->getOption( 'snapshot_id' );
+		$suite_config = Config::create();
+
+		if ( false === $suite_config ) {
+			return;
+		}
+
+		$local = $input->getOption( 'local' );
+
+		$snapshot_id = false;
+
+		if ( empty( $local ) ) {
+			$snapshot_id = $input->getOption( 'snapshot_id' );
+
+			if ( empty( $snapshot_id ) ) {
+				$snapshot_id = $test_config['snapshot_id'];
+			}
+		}
 
 		if ( ! empty( $snapshot_id ) ) {
 			if ( ! \WPSnapshots\Utils\is_snapshot_cached( $snapshot_id ) ) {

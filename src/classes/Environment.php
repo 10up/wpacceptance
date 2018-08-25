@@ -161,13 +161,13 @@ class Environment {
 
 		$stream->onStdout(
 			function( $stdout ) {
-					Log::instance()->write( $stdout, 1 );
+				Log::instance()->write( $stdout, 1 );
 			}
 		);
 
 		$stream->onStderr(
 			function( $stderr ) {
-					Log::instance()->write( $stderr, 1 );
+				Log::instance()->write( $stderr, 1 );
 			}
 		);
 
