@@ -323,14 +323,6 @@ class Environment {
 				'tag'  => '5.7',
 			],
 			[
-				'name' => 'wordpress',
-				'tag'  => 'latest',
-			],
-			[
-				'name' => 'nginx',
-				'tag'  => 'latest',
-			],
-			[
 				'name' => 'selenium/standalone-chrome',
 				'tag'  => '3.4.0',
 			],
