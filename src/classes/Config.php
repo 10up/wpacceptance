@@ -65,6 +65,18 @@ class Config implements ArrayAccess {
 	}
 
 	/**
+	 * Write config to current wpassure.json file
+	 */
+	public function write() {
+		Log::instance()->write( 'Writing config.', 1 );
+
+		$file_config = $this->config;
+		unset( $file_config['path'] );
+
+		file_put_contents( $this->config['path'] . '/wpassure.json', json_encode( $file_config, JSON_PRETTY_PRINT ) );
+	}
+
+	/**
 	 * Set key in class
 	 *
 	 * @param  int|string $offset Array key

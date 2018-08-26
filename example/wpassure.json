@@ -1,0 +1,6 @@
+{
+    "name": "wpassure-example",
+    "tests": [
+        "tests\/*"
+    ]
+}
