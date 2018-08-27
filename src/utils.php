@@ -27,6 +27,16 @@ function get_wordpress_path() {
 }
 
 /**
+ * Add trailing slash to path
+ *
+ * @param  string $path Path
+ * @return string
+ */
+function trailingslash( $path ) {
+	return rtrim( $path, '/' ) . '/';
+}
+
+/**
  * Find an open port given a host
  *
  * @param  string $host  Host URL

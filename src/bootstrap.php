@@ -11,7 +11,7 @@ use \Symfony\Component\Console\Application;
 
 $app = new Application( 'WPAssure', '0.9' );
 
-define( 'ASSUREWP_DIR', __DIR__ );
+define( 'WPASSURE_DIR', dirname( __DIR__ ) );
 
 /**
  * Attempt to set this as WPAssure can consume a lot of memory.

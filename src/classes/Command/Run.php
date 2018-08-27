@@ -16,13 +16,15 @@ use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Question\Question;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
+use PHPUnit\TextUI\Command as PHPUnitCommand;
 
-use WPAssure\Environment as Environment;
-use WPAssure\Log as Log;
-use WPAssure\AcceptanceTester as AcceptanceTester;
-use WPAssure\Utils as Utils;
-use WPSnapshots\Connection as Connection;
-use WPSnapshots\Snapshot as Snapshot;
+use WPAssure\Environment;
+use WPAssure\Log;
+use WPAssure\AcceptanceTester;
+use WPAssure\Utils;
+use WPAssure\Config;
+use WPSnapshots\Connection;
+use WPSnapshots\Snapshot;
 
 /**
  * Run test suite
@@ -35,6 +37,9 @@ class Run extends Command {
 	protected function configure() {
 		$this->setName( 'run' );
 		$this->setDescription( 'Run an WPAssure test suite.' );
+
+		$this->addOption( 'local', false, InputOption::VALUE_NONE, 'Run tests against local WordPress install.' );
+		$this->addOption( 'save', false, InputOption::VALUE_NONE, 'If tests are successful, save snapshot ID to wpassure.json and push it to the remote repository.' );
 
 		$this->addOption( 'snapshot_id', null, InputOption::VALUE_REQUIRED, 'WP Snapshot ID.' );
 		$this->addOption( 'path', null, InputOption::VALUE_REQUIRED, 'Path to WordPress wp-config.php directory.' );
@@ -71,7 +76,23 @@ class Run extends Command {
 			return;
 		}
 
-		$snapshot_id = $input->getOption( 'snapshot_id' );
+		$suite_config = Config::create();
+
+		if ( false === $suite_config ) {
+			return;
+		}
+
+		$local = $input->getOption( 'local' );
+
+		$snapshot_id = false;
+
+		if ( empty( $local ) ) {
+			$snapshot_id = $input->getOption( 'snapshot_id' );
+
+			if ( empty( $snapshot_id ) ) {
+				$snapshot_id = $suite_config['snapshot_id'];
+			}
+		}
 
 		if ( ! empty( $snapshot_id ) ) {
 			if ( ! \WPSnapshots\Utils\is_snapshot_cached( $snapshot_id ) ) {
@@ -106,12 +127,39 @@ class Run extends Command {
 
 		Log::instance()->write( 'Creating environment...' );
 
-		$environment = new Environment( $snapshot_id );
+		$environment = new Environment( $snapshot_id, $suite_config );
 
-		$I = new AcceptanceTester( $environment );
-		$I->amOnPage( '/' );
+		Log::instance()->write( 'Running tests...' );
 
-		$I->takeScreenshot();
+		$test_files = [];
+
+		foreach ( $suite_config['tests'] as $test_path ) {
+			foreach ( glob( $test_path ) as $test_file ) {
+				$test_files[] = $test_file;
+			}
+		}
+
+		$test_files = array_unique( $test_files );
+
+		$error = false;
+
+		foreach ( $test_files as $test_file ) {
+			$command = new PHPUnitCommand();
+			if ( 0 !== $command->run( [ WPASSURE_DIR . '/vendor/bin/phpunit', $test_file ], false ) ) {
+				$error = true;
+			}
+		}
+
+		if ( $error ) {
+			$output->writeln( 'Test(s) have failed.', 0, 'error' );
+		} else {
+			$output->writeln( 'Test(s) passed!', 0, 'success' );
+
+			if ( $input->getOption( 'save' ) ) {
+				$suite_config['snapshot_id'] = $snapshot_id;
+				$suite_config->write();
+			}
+		}
 
 		$environment->destroy();
 
