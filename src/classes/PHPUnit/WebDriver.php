@@ -37,7 +37,7 @@ trait WebDriver {
 
 	/**
 	 * Returns current environment instance.
-	 * 
+	 *
 	 * @access public
 	 * @throws \WPAssure\Exception if environment instance is not set.
 	 * @return \WPAssure\Environment Environment instance.
@@ -52,14 +52,14 @@ trait WebDriver {
 
 	/**
 	 * Returns web driver instance.
-	 * 
+	 *
 	 * @access protected
 	 * @return \Facebook\WebDriver\Remote\RemoteWebDriver Instance of remote web driver.
 	 */
 	protected function _getWebDriver() {
 		if ( is_null( $this->_webDriver ) ) {
 			$environment = $this->getEnvironment();
-			$host = $this->_environment->getSeleniumServerUrl();
+			$host = $environment->getSeleniumServerUrl();
 
 			$capabilities = DesiredCapabilities::chrome();
 			$this->_webDriver = RemoteWebDriver::create( $host, $capabilities, 20000 );
@@ -69,33 +69,18 @@ trait WebDriver {
 	}
 
 	/**
-	 * Returns a new actor that is initialized on a specific page.
-	 * 
+	 * Returns anonymous actor.
+	 *
 	 * @access public
-	 * @param string $url_path The relative path to a landing page.
 	 * @return \WPAssure\PHPUnit\Actor An actor instance.
 	 */
-	public function amOnPage( $url_path ) {
-		$url_parts = parse_url( $url_path );
-
-		$path = $url_parts['path'];
-
-		if ( empty( $path ) ) {
-			$path = '/';
-		} elseif ( '/' !== substr( $path, 0, 1 ) ) {
-			$path = '/' . $path;
-		}
-
-		$environment = $this->getEnvironment();
-		$page = $environment->getWpHomepageUrl() . $path;
-
-		Log::instance()->write( 'Navigating to URL: ' . $page, 1 );
-
+	public function getAnonymousUser() {
 		$webdriver = $this->_getWebDriver();
-		$webdriver->get( $page );
+		$environment = $this->getEnvironment();
 
 		$actor = new Actor();
 		$actor->setWebDriver( $webdriver );
+		$actor->setEnvironment( $environment );
 		$actor->setTest( $this );
 
 		return $actor;
