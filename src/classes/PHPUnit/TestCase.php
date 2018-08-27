@@ -1,9 +1,9 @@
 <?php
 
-namespace WPAssure;
+namespace WPAssure\PHPUnit;
 
 class TestCase extends \PHPUnit\Framework\TestCase {
 
-	use WPAssure\PHPUnit\WebDriver;
+	use WebDriver;
 
 }
