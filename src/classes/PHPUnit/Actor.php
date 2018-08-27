@@ -6,10 +6,6 @@ use WPAssure\Exception;
 
 class Actor {
 
-	use WPAssure\PHPUnit\WebDriver\Popup,
-	    WPAssure\PHPUnit\WebDriver\Navigation,
-	    WPAssure\PHPUnit\WebDriver\Screenshot;
-
 	/**
 	 * Facebook WebDrive instance
 	 *
@@ -20,7 +16,7 @@ class Actor {
 
 	/**
 	 * Test case instance.
-	 * 
+	 *
 	 * @access protected
 	 * @var \PHPUnit\Framework\TestCase
 	 */
@@ -74,6 +70,88 @@ class Actor {
 		}
 
 		return $this->_test;
+	}
+
+	/**
+	 * Accepts the current native popup window created by window.alert, window.confirm,
+	 * window.prompt fucntions.
+	 *
+	 * @access public
+	 */
+	public function acceptPopup() {
+		$this->getWebDriver()->switchTo()->alert()->accept();
+		Log::instance()->write( 'Accepted the current popup.', 1 );
+	}
+
+	/**
+	 * Dismisses the current native popup window created by window.alert, window.confirm,
+	 * window.prompt fucntions.
+	 *
+	 * @access public
+	 */
+	public function cancelPopup() {
+		$this->getWebDriver()->switchTo()->alert()->dismiss();
+		Log::instance()->write( 'Dismissed the current popup.', 1 );
+	}
+
+	/**
+	 * Takes a screenshot of the viewport.
+	 *
+	 * @access public
+	 * @param string $name A filename without extension.
+	 */
+	public function takeScreenshot( $name = null ) {
+		if ( empty( $name ) ) {
+			$name = uniqid( date( 'Y-m-d_H-i-s_' ) );
+		}
+
+		$filename = $name . '.jpg';
+		$this->getWebDriver()->takeScreenshot( $filename );
+		Log::instance()->write( 'Screenshot saved to ' . $filename, 1 );
+	}
+
+	/**
+	 * Moves back to the previous page in the history.
+	 *
+	 * @access public
+	 */
+	public function moveBack() {
+		$webdriver = $this->getWebDriver();
+		$webdriver->navigate()->back();
+		Log::instance()->write( 'Back to ' . $webdriver->getCurrentURL(), 1 );
+	}
+
+	/**
+	 * Moves forward to the next page in the history.
+	 *
+	 * @access public
+	 */
+	public function moveForward() {
+		$webdriver = $this->getWebDriver();
+		$webdriver->navigate()->forward();
+		Log::instance()->write( 'Forward to ' . $webdriver->getCurrentURL(), 1 );
+	}
+
+	/**
+	 * Refreshes the current page.
+	 *
+	 * @access public
+	 */
+	public function refresh() {
+		$this->getWebDriver()->navigate()->refresh();
+		Log::instance()->write( 'Refreshed the current page', 1 );
+	}
+
+	/**
+	 * Navigates to a new URL.
+	 *
+	 * @access public
+	 * @param string $url A new URl.
+	 */
+	public function moveTo( $url ) {
+		$webdriver = $this->getWebDriver();
+		$webdriver->navigate()->to( $url );
+		Log::instance()->write( 'Navigate to ' . $webdriver->getCurrentURL(), 1 );
 	}
 
 }
