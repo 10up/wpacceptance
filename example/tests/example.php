@@ -3,7 +3,9 @@
 class ExampleTest extends \WPAssure\TestCase {
 
 	public function test() {
-		$this->assertTrue( true );
+		$I = $this->getAnonymousUser();
+		$I->amOnPage( '/' );
+		$I->click( '.path .to .an-element' );
 	}
 
 }
