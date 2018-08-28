@@ -20,7 +20,6 @@ use PHPUnit\TextUI\Command as PHPUnitCommand;
 
 use WPAssure\Environment;
 use WPAssure\Log;
-use WPAssure\AcceptanceTester;
 use WPAssure\Utils;
 use WPAssure\Config;
 use WPSnapshots\Connection;
