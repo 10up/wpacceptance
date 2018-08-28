@@ -2,11 +2,14 @@
 
 namespace WPAssure\PHPUnit;
 
+use Facebook\WebDriver\Exception\NoSuchElementException;
+use Facebook\WebDriver\Remote\RemoteWebElement;
 use Facebook\WebDriver\WebDriverBy;
 use Facebook\WebDriver\WebDriverSelect;
-use Facebook\WebDriver\Exception\NoSuchElementException;
+
 use PHPUnit\Framework\ExpectationFailedException;
 use PHPUnit\Framework\TestCase;
+
 use WPAssure\Exception;
 
 class Actor {
@@ -298,9 +301,9 @@ class Actor {
 	 * Return an element based on CSS selector.
 	 *
 	 * @access public
+	 * @throws \PHPUnit\Framework\ExpectationFailedException when the element is not found on the page.
 	 * @param string $element A CSS selector for the element.
 	 * @return \Facebook\WebDriver\Remote\RemoteWebElement An element instance.
-	 * @throws \PHPUnit\Framework\ExpectationFailedException when the element is not found on the page.
 	 */
 	public function getElement( $element ) {
 		try {
@@ -311,6 +314,33 @@ class Actor {
 			return $this->getWebDriver()->findElement( WebDriverBy::cssSelector( $element ) );
 		} catch ( NoSuchElementException $e ) {
 			throw new ExpectationFailedException( "No element found at {$element}" );
+		}
+	}
+
+	/**
+	 * Return elements based on CSS selector.
+	 *
+	 * @access public
+	 * @throws \PHPUnit\Framework\ExpectationFailedException when elements are not found on the page.
+	 * @param string $elements A CSS selector for elements.
+	 * @return array Array of elements.
+	 */
+	public function getElements( $elements ) {
+		try {
+			if ( is_array( $elements ) ) {
+				$items = array();
+				foreach ( $elements as $element ) {
+					if ( $element instanceof RemoteWebElement ) {
+						$items[] = $element;
+					}
+				}
+
+				return $items;
+			}
+
+			return $this->getWebDriver()->findElements( WebDriverBy::cssSelector( $elements ) );
+		} catch ( NoSuchElementException $e ) {
+			throw new ExpectationFailedException( "No elements found at {$elements}" );
 		}
 	}
 
@@ -331,7 +361,7 @@ class Actor {
 	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
 	 * @param string|array $options Single or multiple options to select.
 	 */
-	public function selectOption( $element, $options ) {
+	public function selectOptions( $element, $options ) {
 		$element = $this->getElement( $element );
 		if ( $element->getTagName() === 'select' ) {
 			$select = new WebDriverSelect( $element );
@@ -381,7 +411,7 @@ class Actor {
 	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
 	 * @param string|array $options Single or multiple options to deselect.
 	 */
-	public function deselectOption( $element, $options ) {
+	public function deselectOptions( $element, $options ) {
 		$element = $this->getElement( $element );
 		if ( $element->getTagName() === 'select' ) {
 			$select = new WebDriverSelect( $element );
@@ -425,13 +455,15 @@ class Actor {
 	 * Check a checkbox or radio input.
 	 *
 	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
+	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|array $elements A remote elements or CSS selector.
 	 */
-	public function checkOption( $element ) {
-		$element = $this->getElement( $element );
-		$type = $element->getAttribute( 'type' );
-		if ( in_array( $type, array( 'checkbox', 'radio' ) ) && ! $element->isSelected() ) {
-			$element->click();
+	public function checkOptions( $elements ) {
+		$elements = $this->getElements( $elements );
+		foreach ( $elements as $element ) {
+			$type = $element->getAttribute( 'type' );
+			if ( in_array( $type, array( 'checkbox', 'radio' ) ) && ! $element->isSelected() ) {
+				$element->click();
+			}
 		}
 	}
 
@@ -439,13 +471,15 @@ class Actor {
 	 * Uncheck a checkbox.
 	 *
 	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
+	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|array $element A remote elemente or CSS selector.
 	 */
-	public function uncheckOption( $element ) {
-		$element = $this->getElement( $element );
-		$type = $element->getAttribute( 'type' );
-		if ( $type === 'checkbox' && $element->isSelected() ) {
-			$element->click();
+	public function uncheckOptions( $element ) {
+		$elements = $this->getElements( $elements );
+		foreach ( $elements as $element ) {
+			$type = $element->getAttribute( 'type' );
+			if ( $type === 'checkbox' && $element->isSelected() ) {
+				$element->click();
+			}
 		}
 	}
 
@@ -463,13 +497,16 @@ class Actor {
 	}
 
 	/**
-	 * Clear the value of a textarea or an input field.
+	 * Clear the value of a textarea or an input fields.
 	 *
 	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
+	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|array $elements A remote elements or CSS selector.
 	 */
-	public function clearField( $element ) {
-		$this->getElement( $element )->clear();
+	public function clearFields( $elements ) {
+		$elements = $this->getElements( $elements );
+		foreach ( $elements as $element ) {
+			$element->clear();
+		}
 	}
 
 	/**
