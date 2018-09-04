@@ -25,6 +25,7 @@ use WPAssure\Utils;
 use WPAssure\Config;
 use WPSnapshots\Connection;
 use WPSnapshots\Snapshot;
+use WPSnapshots\Log as WPSnapshotsLog;
 
 /**
  * Run test suite
@@ -57,6 +58,7 @@ class Run extends Command {
 	 */
 	protected function execute( InputInterface $input, OutputInterface $output ) {
 		Log::instance()->setOutput( $output );
+		WPSnapshotsLog::instance()->setOutput( $output );
 
 		$connection = Connection::instance()->connect();
 
