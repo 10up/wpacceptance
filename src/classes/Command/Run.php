@@ -105,7 +105,7 @@ class Run extends Command {
 					return;
 				}
 			}
-		} else {
+		} elseif ( empty( $local ) ) {
 			Log::instance()->write( 'Creating snapshot...' );
 
 			$snapshot = Snapshot::create(
