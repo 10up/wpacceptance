@@ -40,6 +40,8 @@ class Run extends Command {
 		$this->addOption( 'local', false, InputOption::VALUE_NONE, 'Run tests against local WordPress install.' );
 		$this->addOption( 'save', false, InputOption::VALUE_NONE, 'If tests are successful, save snapshot ID to wpassure.json and push it to the remote repository.' );
 
+		$this->addOption( 'config', false, InputOption::VALUE_REQUIRED, 'Path to a directory that contains wpassure.json file or a direct path to the config file.' );
+
 		$this->addOption( 'snapshot_id', null, InputOption::VALUE_REQUIRED, 'WP Snapshot ID.' );
 		$this->addOption( 'path', null, InputOption::VALUE_REQUIRED, 'Path to WordPress wp-config.php directory.' );
 		$this->addOption( 'db_host', null, InputOption::VALUE_REQUIRED, 'Database host.' );
@@ -75,7 +77,8 @@ class Run extends Command {
 			return;
 		}
 
-		$suite_config = Config::create();
+		$config_path = $input->getOption( 'config' );
+		$suite_config = Config::create( $config_path );
 
 		if ( false === $suite_config ) {
 			return;

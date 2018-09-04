@@ -33,7 +33,7 @@ class Config implements ArrayAccess {
 	/**
 	 * Config factory method
 	 *
-	 * @param  string $path Path to wpassure.json directory
+	 * @param  string $path Path to a directory with wpassure.json file or config file itself.
 	 * @return Config|bool
 	 */
 	public static function create( $path = '' ) {
@@ -43,9 +43,13 @@ class Config implements ArrayAccess {
 			$path = getcwd();
 		}
 
-		if ( file_exists( $path . '/wpassure.json' ) ) {
-			$raw_file = file_get_contents( $path . '/wpassure.json' );
+		$filepath = $path;
+		if ( is_dir( $path ) ) {
+			$filepath = $path . DIRECTORY_SEPARATOR . 'wpassure.json';
+		}
 
+		if ( file_exists( $filepath ) ) {
+			$raw_file = file_get_contents( $filepath );
 			$config = json_decode( $raw_file, true );
 		} else {
 			Log::instance()->write( 'wpassure.json not found.', 0, 'error' );
@@ -59,7 +63,7 @@ class Config implements ArrayAccess {
 			return false;
 		}
 
-		$config['path'] = Utils\trailingslash( $path );
+		$config['path'] = Utils\trailingslash( dirname( $filepath ) );
 
 		return new self( $config );
 	}
