@@ -134,17 +134,18 @@ class Run extends Command {
 		Log::instance()->write( 'Running tests...' );
 
 		$test_files = [];
+		$test_dirs = ! empty( $suite_config['tests'] ) && is_array( $suite_config['tests'] )
+			? $suite_config['tests']
+			: array( 'tests' . DIRECTORY_SEPARATOR . '*.php' );
 
-		foreach ( $suite_config['tests'] as $test_path ) {
+		foreach ( $test_dirs as $test_path ) {
 			foreach ( glob( $test_path ) as $test_file ) {
 				$test_files[] = $test_file;
 			}
 		}
 
-		$test_files = array_unique( $test_files );
-
 		$error = false;
-
+		$test_files = array_unique( $test_files );
 		foreach ( $test_files as $test_file ) {
 			$command = new PHPUnitCommand();
 			if ( 0 !== $command->run( [ WPASSURE_DIR . '/vendor/bin/phpunit', $test_file ], false ) ) {
