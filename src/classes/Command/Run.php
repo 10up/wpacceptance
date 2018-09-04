@@ -129,7 +129,11 @@ class Run extends Command {
 
 		Log::instance()->write( 'Creating environment...' );
 
-		$environment = new Environment( $snapshot_id, $suite_config );
+		$environment = Environment::create( $snapshot_id, $suite_config );
+
+		if ( ! $environment ) {
+			exit;
+		}
 
 		Log::instance()->write( 'Running tests...' );
 
