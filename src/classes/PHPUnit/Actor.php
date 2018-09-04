@@ -11,11 +11,21 @@ use PHPUnit\Framework\ExpectationFailedException;
 use PHPUnit\Framework\TestCase;
 
 use WPAssure\Exception;
+use WPAssure\PHPUnit\Constraint;
+use WPAssure\PHPUnit\Constraints\Cookie as CookieConstrain;
 
 class Actor {
 
 	/**
-	 * Facebook WebDrive instance
+	 * Actor's name.
+	 *
+	 * @access private
+	 * @var string
+	 */
+	private $_name;
+
+	/**
+	 * Facebook WebDrive instance.
 	 *
 	 * @access private
 	 * @var \Facebook\WebDriver\Remote\RemoteWebDriver
@@ -23,7 +33,7 @@ class Actor {
 	private $_webdriver = null;
 
 	/**
-	 * Environment instance
+	 * Environment instance.
 	 *
 	 * @access private
 	 * @var \WPAssure\Environment
@@ -37,6 +47,36 @@ class Actor {
 	 * @var \PHPUnit\Framework\TestCase
 	 */
 	private $_test = null;
+
+	/**
+	 * Constructor.
+	 *
+	 * @access public
+	 * @param string $name Actor name.
+	 */
+	public function __construct( $name = 'user' ) {
+		$this->_name = $name;
+	}
+
+	/**
+	 * Set actor name.
+	 *
+	 * @access public
+	 * @param string $name Actor name.
+	 */
+	public function setActorName( $name ) {
+		$this->_name = $name;
+	}
+
+	/**
+	 * Return actor name.
+	 *
+	 * @access public
+	 * @return string Actor name.
+	 */
+	public function getActorName() {
+		return $this->_name;
+	}
 
 	/**
 	 * Set a new instance of a web driver.
@@ -245,6 +285,32 @@ class Actor {
 		$webdriver = $this->getWebDriver();
         $webdriver->manage()->window()->setSize( $dimension );
     }
+
+	/**
+	 * Assert that the actor sees a cookie.
+	 *
+	 * @access public
+	 * @param string $name The cookie name.
+	 * @param mixed $value Optional. The cookie value. If it's empty, value check will be ignored.
+	 * @param string $message Optional. The message to use on a failure.
+	 */
+	public function seeCookie( $name, $value = null, $message = '' ) {
+		$constraint = new CookieConstrain( $name, $value, Constraint::ACTION_SEE );
+		TestCase::assertThat( $this, $constraint, $message );
+	}
+
+	/**
+	 * Assert that the actor can't see a cookie.
+	 *
+	 * @access public
+	 * @param string $name The cookie name.
+	 * @param mixed $value Optional. The cookie value. If it's empty, value check will be ignored.
+	 * @param string $message Optional. The message to use on a failure.
+	 */
+	public function dontSeeCookie( $name, $value = null, $message = '' ) {
+		$constraint = new CookieConstrain( $name, $value, Constraint::ACTION_DONTSEE );
+		TestCase::assertThat( $this, $constraint, $message );
+	}
 
     /**
      * Set a specific cookie.

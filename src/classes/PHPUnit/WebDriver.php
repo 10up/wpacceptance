@@ -72,13 +72,14 @@ trait WebDriver {
 	 * Returns anonymous actor.
 	 *
 	 * @access public
+	 * @param string $name An actor name.
 	 * @return \WPAssure\PHPUnit\Actor An actor instance.
 	 */
-	public function getAnonymousUser() {
+	public function getAnonymousUser( $name = 'anonymous user' ) {
 		$webdriver = $this->_getWebDriver();
 		$environment = $this->getEnvironment();
 
-		$actor = new Actor();
+		$actor = new Actor( $name );
 		$actor->setWebDriver( $webdriver );
 		$actor->setEnvironment( $environment );
 		$actor->setTest( $this );
