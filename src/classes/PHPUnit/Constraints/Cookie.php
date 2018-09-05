@@ -21,29 +21,22 @@ class Cookie extends \WPAssure\PHPUnit\Constraint {
 	private $_value = null;
 
 	/**
-	 * The evaluation action.
-	 *
-	 * @access private
-	 * @var string
-	 */
-	private $_action = 'see';
-
-	/**
 	 * Constructor.
 	 *
 	 * @access public
+	 * @param string $action The evaluation action. Valid options are "see" or "dontSee".
 	 * @param string $name A cookie name.
 	 * @param mixed $value Optional. Cookie vale.
-	 * @param string $action The evaluation action. Valid options are "see" or "dontSee".
 	 */
-	public function __construct( $name, $value, $action ) {
-		parent::__construct();
+	public function __construct( $action, $name, $value ) {
+		$current_action = $action === self::ACTION_SEE || $action === self::ACTION_DONTSEE
+			? $action
+			: self::ACTION_SEE;
+
+		parent::__construct( $current_action );
 
 		$this->_name = $name;
 		$this->_value = $value;
-		$this->_action = $action === self::ACTION_SEE || $action === self::ACTION_DONTSEE
-			? $action
-			: self::ACTION_SEE;
 	}
 
 	/**

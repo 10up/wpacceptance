@@ -8,6 +8,25 @@ abstract class Constraint extends \PHPUnit\Framework\Constraint\Constraint {
 	const ACTION_DONTSEE = 'dontSee';
 
 	/**
+	 * The evaluation action.
+	 *
+	 * @access protected
+	 * @var string
+	 */
+	protected $_action = '';
+
+	/**
+	 * Constructor.
+	 *
+	 * @access public
+	 * @param string $action The evaluation action.
+	 */
+	public function __construct( $action ) {
+		parent::__construct();
+		$this->_action = $action;
+	}
+
+	/**
 	 * Return an instance of the actor class.
 	 *
 	 * @access protected
@@ -23,6 +42,23 @@ abstract class Constraint extends \PHPUnit\Framework\Constraint\Constraint {
 		return $other;
 	}
 
+	/**
+	 * Return the description of the current evaluation action.
+	 *
+	 * @access protected
+	 * @return string A description of the current action.
+	 */
+	protected function _getActionDescription() {
+		switch ( $this->_action ) {
+			case self::ACTION_SEE:
+				return ' sees';
+			case self::ACTION_DONTSEE:
+				return " doesn't see";
+		}
+
+		return '';
+	}
+
     /**
      * Return the description of the failure.
      *
@@ -32,12 +68,7 @@ abstract class Constraint extends \PHPUnit\Framework\Constraint\Constraint {
 	 */
 	protected function failureDescription( $other ) {
 		$actor = $this->_getActor( $other );
-
-		$message = $actor->getActorName();
-		$message .= $this->_action === self::ACTION_SEE ? ' sees ' : " doesn't see";
-		$message .= $this->toString();
-
-		return $message;
+		return $actor->getActorName() . $this->_getActionDescription() . $this->toString();
 	}
 
 }

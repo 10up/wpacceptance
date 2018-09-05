@@ -295,7 +295,7 @@ class Actor {
 	 * @param string $message Optional. The message to use on a failure.
 	 */
 	public function seeCookie( $name, $value = null, $message = '' ) {
-		$constraint = new CookieConstrain( $name, $value, Constraint::ACTION_SEE );
+		$constraint = new CookieConstrain( Constraint::ACTION_SEE, $name, $value );
 		TestCase::assertThat( $this, $constraint, $message );
 	}
 
@@ -308,7 +308,7 @@ class Actor {
 	 * @param string $message Optional. The message to use on a failure.
 	 */
 	public function dontSeeCookie( $name, $value = null, $message = '' ) {
-		$constraint = new CookieConstrain( $name, $value, Constraint::ACTION_DONTSEE );
+		$constraint = new CookieConstrain( Constraint::ACTION_DONTSEE, $name, $value );
 		TestCase::assertThat( $this, $constraint, $message );
 	}
 
