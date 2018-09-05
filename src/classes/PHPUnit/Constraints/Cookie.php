@@ -29,18 +29,14 @@ class Cookie extends \WPAssure\PHPUnit\Constraint {
 	 * @param mixed $value Optional. Cookie vale.
 	 */
 	public function __construct( $action, $name, $value ) {
-		$current_action = $action === self::ACTION_SEE || $action === self::ACTION_DONTSEE
-			? $action
-			: self::ACTION_SEE;
-
-		parent::__construct( $current_action );
+		parent::__construct( self::_verifySeeableAction( $action ) );
 
 		$this->_name = $name;
 		$this->_value = $value;
 	}
 
 	/**
-	 * Evaluate if actor can or can't see a cookie.
+	 * Evaluate if the actor can or can't see a cookie.
 	 *
 	 * @access protected
 	 * @param \WPAssure\PHPUnit\Actor $other The actor instance.
@@ -76,7 +72,7 @@ class Cookie extends \WPAssure\PHPUnit\Constraint {
 	 * @return string The description text.
 	 */
 	public function toString() {
-		$message .= sprintf( ' "%s" cookie', $this->_name );
+		$message = sprintf( ' "%s" cookie', $this->_name );
 		if ( ! empty( $this->_value ) ) {
 			$message .= sprintf( ' with "%s" value', $this->_value );
 		}
