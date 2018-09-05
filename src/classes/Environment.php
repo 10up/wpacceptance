@@ -77,32 +77,65 @@ class Environment {
 	protected $suite_config;
 
 	/**
-	 * Create environment
+	 * Environment constructor
 	 *
 	 * @param  string $snapshot_id WPSnapshot ID to load into environment
+	 * @param  array  $suite_config Config array
 	 */
-	public function __construct( $snapshot_id, $suite_config ) {
+	protected function __construct( $snapshot_id, $suite_config ) {
 		$this->network_id   = 'wpassure' . time();
 		$this->docker       = Docker::create();
 		$this->snapshot_id  = $snapshot_id;
 		$this->suite_config = $suite_config;
+	}
 
-		$this->createNetwork();
-		$this->downloadImages();
-		$this->createContainers();
-		$this->startContainers();
+	/**
+	 * Create environment
+	 *
+	 * @param  string $snapshot_id WPSnapshot ID to load into environment
+	 * @param  array  $suite_config Config array
+	 * @return  self|bool
+	 */
+	public static function create( $snapshot_id, $suite_config ) {
+		$enviromment = new self( $snapshot_id, $suite_config );
 
-		$this->pullSnapshot();
+		if ( ! $enviromment->createNetwork() ) {
+			return false;
+		}
+
+		if ( ! $enviromment->downloadImages() ) {
+			return false;
+		}
+
+		if ( ! $enviromment->createContainers() ) {
+			return false;
+		}
+
+		if ( ! $enviromment->startContainers() ) {
+			$enviromment->destroy();
+
+			return false;
+		}
+
+		if ( ! $enviromment->pullSnapshot() ) {
+			$enviromment->destroy();
+
+			return false;
+		}
+
+		return $enviromment;
 	}
 
 	/**
 	 * Pull WP Snapshot into container
+	 *
+	 * @return  bool
 	 */
 	public function pullSnapshot() {
 		/**
 		 * Optionally update WP Snapshots
 		 */
-		if ( false ) {
+		if ( true ) {
 			Log::instance()->write( 'Updating WP Snapshots...', 1 );
 
 			$exec_config = new ContainersIdExecPostBody();
@@ -264,7 +297,7 @@ class Environment {
 
 		if ( empty( $snapshot_repo_path ) ) {
 			Log::instance()->write( 'Could not copy codebase files into snapshot. The snapshot must contain a codebase with a wpassure.json file.', 0, 'error' );
-			return;
+			return false;
 		}
 
 		/**
@@ -298,10 +331,14 @@ class Environment {
 		);
 
 		$stream->wait();
+
+		return true;
 	}
 
 	/**
 	 * Destroy environment
+	 *
+	 * @return  bool
 	 */
 	public function destroy() {
 		Log::instance()->write( 'Destroying containers...', 1 );
@@ -309,10 +346,14 @@ class Environment {
 		$this->stopContainers();
 		$this->deleteContainers();
 		$this->deleteNetwork();
+
+		return true;
 	}
 
 	/**
 	 * Download Docker images
+	 *
+	 * @return  bool
 	 */
 	public function downloadImages() {
 		Log::instance()->write( 'Downloading Docker images...', 1 );
@@ -347,10 +388,14 @@ class Environment {
 
 			$create_image->wait();
 		}
+
+		return true;
 	}
 
 	/**
 	 * Create Docker containers
+	 *
+	 * @return  bool
 	 */
 	public function createContainers() {
 		Log::instance()->write( 'Creating containers...' );
@@ -411,7 +456,7 @@ class Environment {
 		$host_config->setBinds(
 			[
 				\WPSnapshots\Utils\get_snapshot_directory() . $this->snapshot_id . ':/root/.wpsnapshots/' . $this->snapshot_id,
-				$_SERVER['HOME'] . '/.wpsnapshots.json:/root/.wpsnapshots.json',
+				\WPSnapshots\Utils\get_snapshot_directory() . 'config.json:/root/.wpsnapshots/config.json',
 				$this->suite_config['path'] . ':/root/repo',
 			]
 		);
@@ -470,10 +515,14 @@ class Environment {
 		$container_config->setHostConfig( $host_config );
 
 		$this->containers['selenium'] = $this->docker->containerCreate( $container_config, [ 'name' => 'selenium-' . $this->network_id ] );
+
+		return true;
 	}
 
 	/**
 	 * Start containers
+	 *
+	 * @return  bool
 	 */
 	public function startContainers() {
 		Log::instance()->write( 'Starting containers...', 1 );
@@ -501,10 +550,14 @@ class Environment {
 
 			sleep( 1 );
 		}
+
+		return true;
 	}
 
 	/**
 	 * Stop Docker containers
+	 *
+	 * @return  bool
 	 */
 	public function stopContainers() {
 		Log::instance()->write( 'Stopping containers...', 1 );
@@ -512,10 +565,14 @@ class Environment {
 		foreach ( $this->containers as $container ) {
 			$this->docker->containerStop( $container->getId() );
 		}
+
+		return true;
 	}
 
 	/**
 	 * Delete Docker containers
+	 *
+	 * @return  bool
 	 */
 	public function deleteContainers() {
 		Log::instance()->write( 'Deleting containers...', 1 );
@@ -523,10 +580,14 @@ class Environment {
 		foreach ( $this->containers as $container ) {
 			$this->docker->containerDelete( $container->getId() );
 		}
+
+		return true;
 	}
 
 	/**
 	 * Create Docker network
+	 *
+	 * @return  bool
 	 */
 	public function createNetwork() {
 		Log::instance()->write( 'Creating network...', 1 );
@@ -543,15 +604,21 @@ class Environment {
 
 		Log::instance()->write( 'Network ID: ' . $this->network_id, 1 );
 		Log::instance()->write( 'Gateway IP: ' . $this->gateway_ip, 1 );
+
+		return true;
 	}
 
 	/**
 	 * Delete Docker network
+	 *
+	 * @return  bool
 	 */
 	public function deleteNetwork() {
 		Log::instance()->write( 'Deleting network...', 1 );
 
-		return $this->docker->networkDelete( $this->network_id );
+		$this->docker->networkDelete( $this->network_id );
+
+		return true;
 	}
 
 	/**

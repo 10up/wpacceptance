@@ -1,6 +1,8 @@
 <?php
 /**
  * Handle suite config file wpassure.json
+ *
+ * @package  wpsnapshots
  */
 
 namespace WPAssure;
@@ -24,7 +26,7 @@ class Config implements ArrayAccess {
 	/**
 	 * Initiate class
 	 *
-	 * @param  string $path Path to wpassure.json directory
+	 * @param  array $config Configuration array
 	 */
 	protected function __construct( array $config ) {
 		$this->config = $config;
@@ -84,7 +86,7 @@ class Config implements ArrayAccess {
 	 * Set key in class
 	 *
 	 * @param  int|string $offset Array key
-	 * @param  mixed $value  Array value
+	 * @param  mixed      $value  Array value
 	 */
 	public function offsetSet( $offset, $value ) {
 		if ( is_null( $offset ) ) {
@@ -120,6 +122,6 @@ class Config implements ArrayAccess {
 	 * @return mixed
 	 */
 	public function offsetGet( $offset ) {
-		return isset( $this->config[ $offset] ) ? $this->config[ $offset ] : null;
+		return isset( $this->config[ $offset ] ) ? $this->config[ $offset ] : null;
 	}
 }

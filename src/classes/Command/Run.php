@@ -24,6 +24,7 @@ use WPAssure\Utils;
 use WPAssure\Config;
 use WPSnapshots\Connection;
 use WPSnapshots\Snapshot;
+use WPSnapshots\Log as WPSnapshotsLog;
 
 /**
  * Run test suite
@@ -58,6 +59,8 @@ class Run extends Command {
 	 */
 	protected function execute( InputInterface $input, OutputInterface $output ) {
 		Log::instance()->setOutput( $output );
+		WPSnapshotsLog::instance()->setOutput( $output );
+		WPSnapshotsLog::instance()->setVerbosityOffset( 1 );
 
 		$connection = Connection::instance()->connect();
 
@@ -129,7 +132,11 @@ class Run extends Command {
 
 		Log::instance()->write( 'Creating environment...' );
 
-		$environment = new Environment( $snapshot_id, $suite_config );
+		$environment = Environment::create( $snapshot_id, $suite_config );
+
+		if ( ! $environment ) {
+			exit;
+		}
 
 		Log::instance()->write( 'Running tests...' );
 
