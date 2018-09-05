@@ -16,6 +16,21 @@ abstract class Constraint extends \PHPUnit\Framework\Constraint\Constraint {
 	protected $_action = '';
 
 	/**
+	 * Verify and return evaluation action that can be either "see" or "dontSee" only.
+	 * If the action is not valid, return "see" action as default.
+	 *
+	 * @static
+	 * @access public
+	 * @param string $action The original evaluation action.
+	 * @return string Verified evaluation action or "see" action if it is invalid.
+	 */
+	protected static function _verifySeeableAction( $action ) {
+		return $action === self::ACTION_SEE || $action === self::ACTION_DONTSEE
+			? $action
+			: self::ACTION_SEE;
+	}
+
+	/**
 	 * Constructor.
 	 *
 	 * @access public

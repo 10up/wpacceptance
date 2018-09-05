@@ -29,11 +29,7 @@ class Cookie extends \WPAssure\PHPUnit\Constraint {
 	 * @param mixed $value Optional. Cookie vale.
 	 */
 	public function __construct( $action, $name, $value ) {
-		$current_action = $action === self::ACTION_SEE || $action === self::ACTION_DONTSEE
-			? $action
-			: self::ACTION_SEE;
-
-		parent::__construct( $current_action );
+		parent::__construct( self::_verifySeeableAction( $action ) );
 
 		$this->_name = $name;
 		$this->_value = $value;

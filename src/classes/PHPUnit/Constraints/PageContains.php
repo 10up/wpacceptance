@@ -6,6 +6,8 @@ use Facebook\WebDriver\Remote\RemoteWebElement;
 
 class PageContains extends \WPAssure\PHPUnit\Constraint {
 
+	use WPAssure\PHPUnit\Constraints\Traits\StringOrPattern;
+
 	/**
 	 * The text to look for.
 	 *
@@ -31,11 +33,7 @@ class PageContains extends \WPAssure\PHPUnit\Constraint {
 	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element Optional. An element to look for a text inside.
 	 */
 	public function __construct( $action, $text, $element ) {
-		$current_action = $action === self::ACTION_SEE || $action === self::ACTION_DONTSEE
-			? $action
-			: self::ACTION_SEE;
-
-		parent::__construct( $current_action );
+		parent::__construct( self::_verifySeeableAction( $action ) );
 
 		$this->_text = $text;
 		$this->_element = $element;
@@ -52,16 +50,14 @@ class PageContains extends \WPAssure\PHPUnit\Constraint {
 		$actor = $this->_getActor( $other );
 		$element = $actor->getElement( ! empty( $this->_element ) ? $this->_element : 'body' );
 		if ( $element ) {
-			$text = trim( $element->getText() );
-			if ( empty( $text ) ) {
+			$content = trim( $element->getText() );
+			if ( empty( $content ) ) {
 				// if current action is "dontSee" then return "true" what means the constrain is met,
 				// otherwise it means that action is "see" and the constrain isn't met, thus return "false"
 				return $this->_action === self::ACTION_DONTSEE;
 			}
 
-			$found = preg_match( '#^/[^/]+/(\w?)$#', $this->_text )
-				? preg_match( $this->_text, $text ) > 0
-				: mb_stripos( $text, $this->_text ) !== false;
+			$found = $this->_findMatch( $content, $this->_text );
 
 			return ( $found && $this->_action === self::ACTION_SEE ) || ( ! $found && $this->_action === self::ACTION_DONTSEE );
 		}

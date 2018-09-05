@@ -15,6 +15,7 @@ use WPAssure\PHPUnit\Constraint;
 use WPAssure\PHPUnit\Constraints\Cookie as CookieConstrain;
 use WPAssure\PHPUnit\Constraints\PageContains as PageContainsConstrain;
 use WPAssure\PHPUnit\Constraints\PageSourceContains as PageSourceContainsConstrain;
+use WPAssure\PHPUnit\Constraints\LinkOnPage as LinkOnPageConstrain;
 
 class Actor {
 
@@ -385,18 +386,22 @@ class Actor {
 	 *
 	 * @access public
 	 * @throws \PHPUnit\Framework\ExpectationFailedException when the element is not found on the page.
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A CSS selector for the element.
+	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|\Facebook\WebDriver\WebDriverBy|string $element A CSS selector for the element.
 	 * @return \Facebook\WebDriver\Remote\RemoteWebElement An element instance.
 	 */
 	public function getElement( $element ) {
-		try {
-			if ( $element instanceof \Facebook\WebDriver\Remote\RemoteWebElement ) {
-				return $element;
-			}
+		if ( $element instanceof RemoteWebElement ) {
+			return $element;
+		}
 
-			return $this->getWebDriver()->findElement( WebDriverBy::cssSelector( $element ) );
+		$webdriver = $this->getWebDriver();
+		$by = $element instanceof WebDriverBy ? $element : WebDriverBy::cssSelector( $element );
+
+		try {
+			return $webdriver->findElement( $by );
 		} catch ( NoSuchElementException $e ) {
-			throw new ExpectationFailedException( "No element found at {$element}" );
+			$message = sprintf( 'No element found using %s "%s"', $by->getMechanism(), $by->getValue() );
+			throw new ExpectationFailedException( $message );
 		}
 	}
 
@@ -405,25 +410,29 @@ class Actor {
 	 *
 	 * @access public
 	 * @throws \PHPUnit\Framework\ExpectationFailedException when elements are not found on the page.
-	 * @param array|string $elements A CSS selector for elements.
+	 * @param \Facebook\WebDriver\WebDriverBy|array|string $elements A CSS selector for elements.
 	 * @return array Array of elements.
 	 */
 	public function getElements( $elements ) {
-		try {
-			if ( is_array( $elements ) ) {
-				$items = array();
-				foreach ( $elements as $element ) {
-					if ( $element instanceof RemoteWebElement ) {
-						$items[] = $element;
-					}
+		if ( is_array( $elements ) ) {
+			$items = array();
+			foreach ( $elements as $element ) {
+				if ( $element instanceof RemoteWebElement ) {
+					$items[] = $element;
 				}
-
-				return $items;
 			}
 
-			return $this->getWebDriver()->findElements( WebDriverBy::cssSelector( $elements ) );
+			return $items;
+		}
+
+		$webdriver = $this->getWebDriver();
+		$by = $element instanceof WebDriverBy ? $element : WebDriverBy::cssSelector( $element );
+
+		try {
+			return $webdriver->findElements( $by );
 		} catch ( NoSuchElementException $e ) {
-			throw new ExpectationFailedException( "No elements found at {$elements}" );
+			$message = sprintf( 'No elements found using %s "%s"', $by->getMechanism(), $by->getValue() );
+			throw new ExpectationFailedException( $message );
 		}
 	}
 
@@ -640,7 +649,7 @@ class Actor {
 
 	/**
 	 * Check if the actor sees a text in the page source. You can use a regular expression to check a text.
-	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: "/test/i".
+	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: <b>"/test/i"</b>.
 	 *
 	 * @access public
 	 * @param string $text A text to look for or a regular expression.
@@ -655,7 +664,7 @@ class Actor {
 
 	/**
 	 * Check if the actor can't see a text in the page source. You can use a regular expression to check a text.
-	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: "/test/i".
+	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: <b>"/test/i"</b>.
 	 *
 	 * @access public
 	 * @param string $text A text to look for or a regular expression.
@@ -664,6 +673,40 @@ class Actor {
 	public function dontSeeTextInSource( $text, $message = '' ) {
 		$this->_assertThat(
 			new PageSourceContainsConstrain( Constraint::ACTION_DONTSEE, $text ),
+			$message
+		);
+	}
+
+	/**
+	 * Check if the actor sees a link on the current page with specific text and url. You can use
+	 * a regular expression to check URL in the href attribute. Please, use forward slashes to define your
+	 * regular expression if you want to use it. For instance: <b>"/test/i"</b>.
+	 *
+	 * @access public
+	 * @param string $text A text to find a link.
+	 * @param string $url Optional. The url of the link.
+	 * @param string $message Optional. The message to use on a failure.
+	 */
+	public function seeLink( $text, $url = '', $message = '' ) {
+		$this->_assertThat(
+			new LinkOnPageConstrain( Constraint::ACTION_SEE, $text, $url ),
+			$message
+		);
+	}
+
+	/**
+	 * Check if the actor doesn't see a link on the current page with specific text and url. You can use
+	 * a regular expression to check URL in the href attribute. Please, use forward slashes to define your
+	 * regular expression if you want to use it. For instance: <b>"/test/i"</b>.
+	 *
+	 * @access public
+	 * @param string $text A text to find a link.
+	 * @param string $url Optional. The url of the link.
+	 * @param string $message Optional. The message to use on a failure.
+	 */
+	public function dontSeeLink( $text, $url = '', $message = '' ) {
+		$this->_assertThat(
+			new LinkOnPageConstrain( Constraint::ACTION_DONTSEE, $text, $url ),
 			$message
 		);
 	}
