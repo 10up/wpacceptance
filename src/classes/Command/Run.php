@@ -20,7 +20,6 @@ use PHPUnit\TextUI\Command as PHPUnitCommand;
 
 use WPAssure\Environment;
 use WPAssure\Log;
-use WPAssure\AcceptanceTester;
 use WPAssure\Utils;
 use WPAssure\Config;
 use WPSnapshots\Connection;
@@ -41,6 +40,8 @@ class Run extends Command {
 
 		$this->addOption( 'local', false, InputOption::VALUE_NONE, 'Run tests against local WordPress install.' );
 		$this->addOption( 'save', false, InputOption::VALUE_NONE, 'If tests are successful, save snapshot ID to wpassure.json and push it to the remote repository.' );
+
+		$this->addOption( 'config', false, InputOption::VALUE_REQUIRED, 'Path to a directory that contains wpassure.json file or a direct path to the config file.' );
 
 		$this->addOption( 'snapshot_id', null, InputOption::VALUE_REQUIRED, 'WP Snapshot ID.' );
 		$this->addOption( 'path', null, InputOption::VALUE_REQUIRED, 'Path to WordPress wp-config.php directory.' );
@@ -79,7 +80,8 @@ class Run extends Command {
 			return;
 		}
 
-		$suite_config = Config::create();
+		$config_path = $input->getOption( 'config' );
+		$suite_config = Config::create( $config_path );
 
 		if ( false === $suite_config ) {
 			return;
@@ -106,7 +108,7 @@ class Run extends Command {
 					return;
 				}
 			}
-		} else {
+		} elseif ( empty( $local ) ) {
 			Log::instance()->write( 'Creating snapshot...' );
 
 			$snapshot = Snapshot::create(
@@ -139,17 +141,18 @@ class Run extends Command {
 		Log::instance()->write( 'Running tests...' );
 
 		$test_files = [];
+		$test_dirs = ! empty( $suite_config['tests'] ) && is_array( $suite_config['tests'] )
+			? $suite_config['tests']
+			: array( 'tests' . DIRECTORY_SEPARATOR . '*.php' );
 
-		foreach ( $suite_config['tests'] as $test_path ) {
+		foreach ( $test_dirs as $test_path ) {
 			foreach ( glob( $test_path ) as $test_file ) {
 				$test_files[] = $test_file;
 			}
 		}
 
-		$test_files = array_unique( $test_files );
-
 		$error = false;
-
+		$test_files = array_unique( $test_files );
 		foreach ( $test_files as $test_file ) {
 			$command = new PHPUnitCommand();
 			if ( 0 !== $command->run( [ WPASSURE_DIR . '/vendor/bin/phpunit', $test_file ], false ) ) {
