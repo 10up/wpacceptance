@@ -40,7 +40,7 @@ class Cookie extends \WPAssure\PHPUnit\Constraint {
 	}
 
 	/**
-	 * Evaluate if actor can or can't see a cookie.
+	 * Evaluate if the actor can or can't see a cookie.
 	 *
 	 * @access protected
 	 * @param \WPAssure\PHPUnit\Actor $other The actor instance.
@@ -76,7 +76,7 @@ class Cookie extends \WPAssure\PHPUnit\Constraint {
 	 * @return string The description text.
 	 */
 	public function toString() {
-		$message .= sprintf( ' "%s" cookie', $this->_name );
+		$message = sprintf( ' "%s" cookie', $this->_name );
 		if ( ! empty( $this->_value ) ) {
 			$message .= sprintf( ' with "%s" value', $this->_value );
 		}

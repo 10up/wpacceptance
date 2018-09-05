@@ -13,6 +13,7 @@ use PHPUnit\Framework\TestCase;
 use WPAssure\Exception;
 use WPAssure\PHPUnit\Constraint;
 use WPAssure\PHPUnit\Constraints\Cookie as CookieConstrain;
+use WPAssure\PHPUnit\Constraints\PageContains as PageContainsConstrain;
 
 class Actor {
 
@@ -151,6 +152,17 @@ class Actor {
 		}
 
 		return $this->_test;
+	}
+
+	/**
+	 * Perform assertion for a specific constraint.
+	 *
+	 * @access protected
+	 * @param \WPAssure\PHPUnit\Constraint $constraint An instance of constraint class.
+	 * @param string $message Optional. A message for a failure.
+	 */
+	protected function _assertThat( $constraint, $message = '' ) {
+		TestCase::assertThat( $this, $constraint, $message );
 	}
 
 	/**
@@ -295,8 +307,10 @@ class Actor {
 	 * @param string $message Optional. The message to use on a failure.
 	 */
 	public function seeCookie( $name, $value = null, $message = '' ) {
-		$constraint = new CookieConstrain( Constraint::ACTION_SEE, $name, $value );
-		TestCase::assertThat( $this, $constraint, $message );
+		$this->_assertThat(
+			new CookieConstrain( Constraint::ACTION_SEE, $name, $value ),
+			$message
+		);
 	}
 
 	/**
@@ -308,8 +322,10 @@ class Actor {
 	 * @param string $message Optional. The message to use on a failure.
 	 */
 	public function dontSeeCookie( $name, $value = null, $message = '' ) {
-		$constraint = new CookieConstrain( Constraint::ACTION_DONTSEE, $name, $value );
-		TestCase::assertThat( $this, $constraint, $message );
+		$this->_assertThat(
+			new CookieConstrain( Constraint::ACTION_DONTSEE, $name, $value ),
+			$message
+		);
 	}
 
     /**
@@ -368,7 +384,7 @@ class Actor {
 	 *
 	 * @access public
 	 * @throws \PHPUnit\Framework\ExpectationFailedException when the element is not found on the page.
-	 * @param string $element A CSS selector for the element.
+	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A CSS selector for the element.
 	 * @return \Facebook\WebDriver\Remote\RemoteWebElement An element instance.
 	 */
 	public function getElement( $element ) {
@@ -388,7 +404,7 @@ class Actor {
 	 *
 	 * @access public
 	 * @throws \PHPUnit\Framework\ExpectationFailedException when elements are not found on the page.
-	 * @param string $elements A CSS selector for elements.
+	 * @param array|string $elements A CSS selector for elements.
 	 * @return array Array of elements.
 	 */
 	public function getElements( $elements ) {
@@ -587,6 +603,38 @@ class Actor {
 		$element = $this->getElement( $element );
 		$element->setFileDetector( $detector );
 		$element->sendKeys( $file );
+	}
+
+	/**
+	 * Check if the actor sees a text on the current page. You can use a regular expression to check a text.
+	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: "/test/i".
+	 *
+	 * @access public
+	 * @param string $text A text to look for or a regular expression.
+	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A CSS selector for the element.
+	 * @param string $message Optional. The message to use on a failure.
+	 */
+	public function seeText( $text, $element = null, $message = '' ) {
+		$this->_assertThat(
+			new PageContainsConstrain( Constraint::ACTION_SEE, $text, $element ),
+			$message
+		);
+	}
+
+	/**
+	 * Check if the actor can't see a text on the current page. You can use a regular expression to check a text.
+	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: "/test/i".
+	 *
+	 * @access public
+	 * @param string $text A text to look for or a regular expression.
+	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A CSS selector for the element.
+	 * @param string $message Optional. The message to use on a failure.
+	 */
+	public function dontSeeText( $text, $element = null, $message = '' ) {
+		$this->_assertThat(
+			new PageContainsConstrain( Constraint::ACTION_DONTSEE, $text, $element ),
+			$message
+		);
 	}
 
 }
