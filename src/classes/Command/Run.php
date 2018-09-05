@@ -163,6 +163,8 @@ class Run extends Command {
 			$output->writeln( 'Test(s) passed!', 0, 'success' );
 
 			if ( $input->getOption( 'save' ) ) {
+				$output->writeln( 'Snapshot ID saved to wpassure.json', 0, 'success' );
+
 				$suite_config['snapshot_id'] = $snapshot_id;
 				$suite_config->write();
 			}
