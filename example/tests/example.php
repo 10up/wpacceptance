@@ -1,9 +1,13 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
+class ExampleTest extends \WPAssure\PHPUnit\TestCase {
 
-class ExampleTest extends TestCase {
 	public function test() {
+		$I = $this->getAnonymousUser();
+		$I->amOnPage( '/' );
+		$I->click( '.path .to .an-element' );
+
 		$this->assertTrue( true );
 	}
+
 }
