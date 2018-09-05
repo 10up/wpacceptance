@@ -14,6 +14,7 @@ use WPAssure\Exception;
 use WPAssure\PHPUnit\Constraint;
 use WPAssure\PHPUnit\Constraints\Cookie as CookieConstrain;
 use WPAssure\PHPUnit\Constraints\PageContains as PageContainsConstrain;
+use WPAssure\PHPUnit\Constraints\PageSourceContains as PageSourceContainsConstrain;
 
 class Actor {
 
@@ -633,6 +634,36 @@ class Actor {
 	public function dontSeeText( $text, $element = null, $message = '' ) {
 		$this->_assertThat(
 			new PageContainsConstrain( Constraint::ACTION_DONTSEE, $text, $element ),
+			$message
+		);
+	}
+
+	/**
+	 * Check if the actor sees a text in the page source. You can use a regular expression to check a text.
+	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: "/test/i".
+	 *
+	 * @access public
+	 * @param string $text A text to look for or a regular expression.
+	 * @param string $message Optional. The message to use on a failure.
+	 */
+	public function seeTextInSource( $text, $message = '' ) {
+		$this->_assertThat(
+			new PageSourceContainsConstrain( Constraint::ACTION_SEE, $text ),
+			$message
+		);
+	}
+
+	/**
+	 * Check if the actor can't see a text in the page source. You can use a regular expression to check a text.
+	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: "/test/i".
+	 *
+	 * @access public
+	 * @param string $text A text to look for or a regular expression.
+	 * @param string $message Optional. The message to use on a failure.
+	 */
+	public function dontSeeTextInSource( $text, $message = '' ) {
+		$this->_assertThat(
+			new PageSourceContainsConstrain( Constraint::ACTION_DONTSEE, $text ),
 			$message
 		);
 	}
