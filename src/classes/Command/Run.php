@@ -59,6 +59,7 @@ class Run extends Command {
 	protected function execute( InputInterface $input, OutputInterface $output ) {
 		Log::instance()->setOutput( $output );
 		WPSnapshotsLog::instance()->setOutput( $output );
+		WPSnapshotsLog::instance()->setVerbosityOffset( 1 );
 
 		$connection = Connection::instance()->connect();
 

@@ -116,6 +116,6 @@ class Config implements ArrayAccess {
 	 * @return mixed
 	 */
 	public function offsetGet( $offset ) {
-		return isset( $this->config[ $offset] ) ? $this->config[ $offset ] : null;
+		return isset( $this->config[ $offset ] ) ? $this->config[ $offset ] : null;
 	}
 }

@@ -112,13 +112,13 @@ class Environment {
 		}
 
 		if ( ! $enviromment->startContainers() ) {
-			$this->destroy();
+			$enviromment->destroy();
 
 			return false;
 		}
 
 		if ( ! $enviromment->pullSnapshot() ) {
-			$this->destroy();
+			$enviromment->destroy();
 
 			return false;
 		}
@@ -135,7 +135,7 @@ class Environment {
 		/**
 		 * Optionally update WP Snapshots
 		 */
-		if ( false ) {
+		if ( true ) {
 			Log::instance()->write( 'Updating WP Snapshots...', 1 );
 
 			$exec_config = new ContainersIdExecPostBody();
@@ -456,7 +456,7 @@ class Environment {
 		$host_config->setBinds(
 			[
 				\WPSnapshots\Utils\get_snapshot_directory() . $this->snapshot_id . ':/root/.wpsnapshots/' . $this->snapshot_id,
-				$_SERVER['HOME'] . '/.wpsnapshots.json:/root/.wpsnapshots.json',
+				\WPSnapshots\Utils\get_snapshot_directory() . 'config.json:/root/.wpsnapshots/config.json',
 				$this->suite_config['path'] . ':/root/repo',
 			]
 		);
