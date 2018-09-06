@@ -11,6 +11,8 @@ use PHPUnit\Framework\ExpectationFailedException;
 use PHPUnit\Framework\TestCase;
 
 use WPAssure\Exception;
+use WPAssure\EnvironmentFactory;
+use WPAssure\Log;
 use WPAssure\PHPUnit\Constraint;
 use WPAssure\PHPUnit\Constraints\Cookie as CookieConstrain;
 use WPAssure\PHPUnit\Constraints\PageContains as PageContainsConstrain;
@@ -34,14 +36,6 @@ class Actor {
 	 * @var \Facebook\WebDriver\Remote\RemoteWebDriver
 	 */
 	private $_webdriver = null;
-
-	/**
-	 * Environment instance.
-	 *
-	 * @access private
-	 * @var \WPAssure\Environment
-	 */
-	private $_environment = null;
 
 	/**
 	 * Test case instance.
@@ -107,31 +101,6 @@ class Actor {
 	}
 
 	/**
-	 * Set environment instance.
-	 *
-	 * @access public
-	 * @param \WPAssure\Environment $environment Environment instance.
-	 */
-	public function setEnvironment( \WPAssure\Environment $environment ) {
-		$this->_environment = $environment;
-	}
-
-	/**
-	 * Return current environment instance.
-	 *
-	 * @access public
-	 * @throws \WPAssure\Exception if environment instance is not set.
-	 * @return \WPAssure\Environment Environment instance.
-	 */
-	public function getEnvironment() {
-		if ( ! $this->_environment ) {
-			throw new \WPAssure\Exception( 'Environment is not set.' );
-		}
-
-		return $this->_environment;
-	}
-
-	/**
 	 * Set a new instance of PHPUnit test case.
 	 *
 	 * @access public
@@ -185,8 +154,7 @@ class Actor {
 			$path = '/' . $path;
 		}
 
-		$environment = $this->getEnvironment();
-		$page = $environment->getWpHomepageUrl() . $path;
+		$page = EnvironmentFactory::get()->getWpHomepageUrl() . $path;
 
 		$webdriver = $this->getWebDriver();
 		$webdriver->get( $page );

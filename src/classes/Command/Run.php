@@ -18,7 +18,7 @@ use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
 use PHPUnit\TextUI\Command as PHPUnitCommand;
 
-use WPAssure\Environment;
+use WPAssure\EnvironmentFactory;
 use WPAssure\Log;
 use WPAssure\Utils;
 use WPAssure\Config;
@@ -80,7 +80,7 @@ class Run extends Command {
 			return;
 		}
 
-		$config_path = $input->getOption( 'config' );
+		$config_path  = $input->getOption( 'config' );
 		$suite_config = Config::create( $config_path );
 
 		if ( false === $suite_config ) {
@@ -132,7 +132,7 @@ class Run extends Command {
 
 		Log::instance()->write( 'Creating environment...' );
 
-		$environment = Environment::create( $snapshot_id, $suite_config );
+		$environment = EnvironmentFactory::create( $snapshot_id, $suite_config );
 
 		if ( ! $environment ) {
 			exit;
@@ -141,7 +141,7 @@ class Run extends Command {
 		Log::instance()->write( 'Running tests...' );
 
 		$test_files = [];
-		$test_dirs = ! empty( $suite_config['tests'] ) && is_array( $suite_config['tests'] )
+		$test_dirs  = ! empty( $suite_config['tests'] ) && is_array( $suite_config['tests'] )
 			? $suite_config['tests']
 			: array( 'tests' . DIRECTORY_SEPARATOR . '*.php' );
 
@@ -151,7 +151,7 @@ class Run extends Command {
 			}
 		}
 
-		$error = false;
+		$error      = false;
 		$test_files = array_unique( $test_files );
 		foreach ( $test_files as $test_file ) {
 			$command = new PHPUnitCommand();

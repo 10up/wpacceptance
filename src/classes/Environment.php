@@ -82,48 +82,11 @@ class Environment {
 	 * @param  string $snapshot_id WPSnapshot ID to load into environment
 	 * @param  array  $suite_config Config array
 	 */
-	protected function __construct( $snapshot_id, $suite_config ) {
+	public function __construct( $snapshot_id, $suite_config ) {
 		$this->network_id   = 'wpassure' . time();
 		$this->docker       = Docker::create();
 		$this->snapshot_id  = $snapshot_id;
 		$this->suite_config = $suite_config;
-	}
-
-	/**
-	 * Create environment
-	 *
-	 * @param  string $snapshot_id WPSnapshot ID to load into environment
-	 * @param  array  $suite_config Config array
-	 * @return  self|bool
-	 */
-	public static function create( $snapshot_id, $suite_config ) {
-		$enviromment = new self( $snapshot_id, $suite_config );
-
-		if ( ! $enviromment->createNetwork() ) {
-			return false;
-		}
-
-		if ( ! $enviromment->downloadImages() ) {
-			return false;
-		}
-
-		if ( ! $enviromment->createContainers() ) {
-			return false;
-		}
-
-		if ( ! $enviromment->startContainers() ) {
-			$enviromment->destroy();
-
-			return false;
-		}
-
-		if ( ! $enviromment->pullSnapshot() ) {
-			$enviromment->destroy();
-
-			return false;
-		}
-
-		return $enviromment;
 	}
 
 	/**
@@ -390,6 +353,15 @@ class Environment {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Get network ID
+	 *
+	 * @return string
+	 */
+	public function getNetworkId() {
+		return $this->network_id;
 	}
 
 	/**
