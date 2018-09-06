@@ -74,9 +74,9 @@ abstract class Constraint extends \PHPUnit\Framework\Constraint\Constraint {
 		return '';
 	}
 
-    /**
-     * Return the description of the failure.
-     *
+	/**
+	 * Return the description of the failure.
+	 *
 	 * @access protected
 	 * @param mixed $other An instance of an actor.
 	 * @return string A description of the failure.

@@ -52,7 +52,7 @@ class Config implements ArrayAccess {
 
 		if ( file_exists( $filepath ) ) {
 			$raw_file = file_get_contents( $filepath );
-			$config = json_decode( $raw_file, true );
+			$config   = json_decode( $raw_file, true );
 		} else {
 			Log::instance()->write( 'wpassure.json not found.', 0, 'error' );
 

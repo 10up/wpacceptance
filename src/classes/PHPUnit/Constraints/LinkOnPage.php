@@ -37,7 +37,7 @@ class LinkOnPage extends \WPAssure\PHPUnit\Constraint {
 		parent::__construct( self::_verifySeeableAction( $action ) );
 
 		$this->_text = $text;
-		$this->_url = $url;
+		$this->_url  = $url;
 	}
 
 	/**
@@ -49,7 +49,7 @@ class LinkOnPage extends \WPAssure\PHPUnit\Constraint {
 	 */
 	protected function matches( $other ) {
 		$actor = $this->_getActor( $other );
-		$by = WebDriverBy::partialLinkText( $this->_text );
+		$by    = WebDriverBy::partialLinkText( $this->_text );
 
 		try {
 			$elements = $actor->getElements( $by );

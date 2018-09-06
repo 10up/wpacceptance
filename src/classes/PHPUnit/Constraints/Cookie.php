@@ -26,12 +26,12 @@ class Cookie extends \WPAssure\PHPUnit\Constraint {
 	 * @access public
 	 * @param string $action The evaluation action. Valid options are "see" or "dontSee".
 	 * @param string $name A cookie name.
-	 * @param mixed $value Optional. Cookie vale.
+	 * @param mixed  $value Optional. Cookie vale.
 	 */
 	public function __construct( $action, $name, $value ) {
 		parent::__construct( self::_verifySeeableAction( $action ) );
 
-		$this->_name = $name;
+		$this->_name  = $name;
 		$this->_value = $value;
 	}
 
@@ -43,7 +43,7 @@ class Cookie extends \WPAssure\PHPUnit\Constraint {
 	 * @return boolean TRUE if the constrain is met, otherwise FALSE.
 	 */
 	protected function matches( $other ) {
-		$actor = $this->_getActor( $other );
+		$actor     = $this->_getActor( $other );
 		$webdriver = $actor->getWebDriver();
 
 		$cookies = $webdriver->manage()->getCookies();

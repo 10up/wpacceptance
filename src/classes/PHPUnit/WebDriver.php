@@ -27,11 +27,29 @@ trait WebDriver {
 	protected function _getWebDriver() {
 		if ( is_null( $this->_webDriver ) ) {
 
-			$capabilities = DesiredCapabilities::chrome();
-			$this->_webDriver = RemoteWebDriver::create( EnvironmentFactory::get()->getSeleniumServerUrl(), $capabilities, 20000 );
+			$capabilities     = DesiredCapabilities::chrome();
+			$this->_webDriver = RemoteWebDriver::create( $this->getSeleniumServerUrl(), $capabilities, 20000 );
 		}
 
 		return $this->_webDriver;
+	}
+
+	/**
+	 * Get WordPress URL
+	 *
+	 * @return string
+	 */
+	public function getWordPressUrl() {
+		return EnvironmentFactory::get()->getWpHomepageUrl();
+	}
+
+	/**
+	 * Get Selenium host URL
+	 *
+	 * @return string
+	 */
+	public function getSeleniumServerUrl() {
+		return EnvironmentFactory::get()->getSeleniumServerUrl();
 	}
 
 	/**
