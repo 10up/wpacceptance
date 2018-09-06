@@ -1,0 +1,6 @@
+{
+    "name": "twentyseventeen-example",
+    "tests": [
+        "tests\/*"
+    ]
+}

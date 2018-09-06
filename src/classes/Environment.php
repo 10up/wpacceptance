@@ -16,6 +16,7 @@ use Docker\API\Model\ExecIdStartPostBody;
 use Docker\API\Model\HostConfig;
 use Docker\API\Model\PortBinding;
 use Docker\API\Model\BuildInfo;
+use Docker\API\Endpoint\ContainerCreate;
 use Docker\Context\Context;
 use Docker\Docker;
 use GrantLucas\PortFinder;
@@ -372,6 +373,9 @@ class Environment {
 	public function createContainers() {
 		Log::instance()->write( 'Creating containers...' );
 
+		$streamFactory = \Http\Discovery\StreamFactoryDiscovery::find();
+		$serializer = new \Symfony\Component\Serializer\Serializer(\Docker\API\Normalizer\NormalizerFactory::create(), [ new \Symfony\Component\Serializer\Encoder\JsonEncoder( new \Symfony\Component\Serializer\Encoder\JsonEncode(), new \Symfony\Component\Serializer\Encoder\JsonDecode() ) ] );
+
 		/**
 		 * Create MySQL
 		 */
@@ -391,6 +395,13 @@ class Environment {
 			]
 		);
 		$container_config->setHostConfig( $host_config );
+
+		$container_create = new ContainerCreate( $container_config );
+
+		$container_body = $container_create->getBody( $serializer, $streamFactory );
+
+		Log::instance()->write( 'Container Request Body (MySQL):', 2 );
+		Log::instance()->write( $container_body[1], 2 );
 
 		$this->containers['mysql'] = $this->docker->containerCreate( $container_config, [ 'name' => 'mysql-' . $this->network_id ] );
 
@@ -455,6 +466,13 @@ class Environment {
 		$host_config->setPortBindings( $host_port_map );
 		$container_config->setHostConfig( $host_config );
 
+		$container_create = new ContainerCreate( $container_config );
+
+		$container_body = $container_create->getBody( $serializer, $streamFactory );
+
+		Log::instance()->write( 'Container Request Body (WordPress):', 2 );
+		Log::instance()->write( $container_body[1], 2 );
+
 		$this->containers['wordpress'] = $this->docker->containerCreate( $container_config, [ 'name' => 'wordpress-' . $this->network_id ] );
 
 		/**
@@ -486,6 +504,13 @@ class Environment {
 
 		$container_config->setHostConfig( $host_config );
 
+		$container_create = new ContainerCreate( $container_config );
+
+		$container_body = $container_create->getBody( $serializer, $streamFactory );
+
+		Log::instance()->write( 'Container Request Body (Selenium):', 2 );
+		Log::instance()->write( $container_body[1], 2 );
+
 		$this->containers['selenium'] = $this->docker->containerCreate( $container_config, [ 'name' => 'selenium-' . $this->network_id ] );
 
 		return true;
@@ -510,7 +535,7 @@ class Environment {
 		$this->mysql_stream->onStdout(
 			function( $stdout ) {
 				if ( preg_match( '#MySQL init process done#i', $stdout ) ) {
-					  $mysql_started = true;
+					$mysql_started = true;
 				}
 			}
 		);
