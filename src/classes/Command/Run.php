@@ -94,7 +94,7 @@ class Run extends Command {
 		if ( empty( $local ) ) {
 			$snapshot_id = $input->getOption( 'snapshot_id' );
 
-			if ( empty( $snapshot_id ) ) {
+			if ( empty( $snapshot_id ) && ! empty( $suite_config['snapshot_id'] ) ) {
 				$snapshot_id = $suite_config['snapshot_id'];
 			}
 		}
@@ -108,7 +108,12 @@ class Run extends Command {
 					return;
 				}
 			}
-		} elseif ( empty( $local ) ) {
+		} else {
+			if ( empty( $local ) ) {
+				Log::instance()->write( 'You must either provide --snapshot_id, have a snapshot ID in wpassure.json, or provide the --local parameter.', 0, 'error' );
+				return;
+			}
+
 			Log::instance()->write( 'Creating snapshot...' );
 
 			$snapshot = Snapshot::create(
