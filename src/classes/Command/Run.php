@@ -61,6 +61,11 @@ class Run extends Command {
 		WPSnapshotsLog::instance()->setOutput( $output );
 		WPSnapshotsLog::instance()->setVerbosityOffset( 1 );
 
+		if ( ! function_exists( 'mysqli_init' ) ) {
+			Log::instance()->write( 'WPAssure requires the mysqli PHP extension is installed.', 0, 'error' );
+			return;
+		}
+
 		$connection = Connection::instance()->connect();
 
 		if ( \WPSnapshots\Utils\is_error( $connection ) ) {
