@@ -42,16 +42,15 @@ class Config implements ArrayAccess {
 		Log::instance()->write( 'Parsing suite config.', 1 );
 
 		if ( empty( $path ) ) {
-			$path = getcwd();
+			$path = Utils\trailingslash( getcwd() );
+		} else {
+			$path = Utils\normalize_path( $path );
 		}
 
-		$filepath = $path;
-		if ( is_dir( $path ) ) {
-			$filepath = $path . DIRECTORY_SEPARATOR . 'wpassure.json';
-		}
+		$file_path = $path . 'wpassure.json';
 
-		if ( file_exists( $filepath ) ) {
-			$raw_file = file_get_contents( $filepath );
+		if ( file_exists( $file_path ) ) {
+			$raw_file = file_get_contents( $file_path );
 			$config   = json_decode( $raw_file, true );
 		} else {
 			Log::instance()->write( 'wpassure.json not found.', 0, 'error' );
@@ -65,7 +64,7 @@ class Config implements ArrayAccess {
 			return false;
 		}
 
-		$config['path'] = Utils\trailingslash( dirname( $filepath ) );
+		$config['path'] = Utils\trailingslash( dirname( $file_path ) );
 
 		return new self( $config );
 	}

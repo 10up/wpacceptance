@@ -27,6 +27,54 @@ function get_wordpress_path() {
 }
 
 /**
+ * Normalizes paths. Note that we DO always add a trailing slash here
+ *
+ * /
+ * ./
+ * ~/
+ * ./test/
+ * ~/test
+ * test
+ *
+ * @param  string $path Path to normalize
+ * @return string
+ */
+function normalize_path( $path ) {
+	$path = trim( $path );
+
+	if ( '/' === $path ) {
+		return $path;
+	}
+
+	/**
+	 * Prepend ./ to non absolute paths
+	 */
+	if ( preg_match( '#[^\./\\\~]#i', substr( $path, 0, 1 ) ) ) {
+		$path = './' . $path;
+	}
+
+	/**
+	 * Make non-absolute path absolute
+	 */
+	if ( './' === substr( $path, 0, 2 ) ) {
+		$path = rtrim( getcwd(), '/' ) . '/' . substr( $path, 2 );
+	}
+
+	/**
+	 * Replace ~ with home directory
+	 */
+	if ( '~' === substr( $path, 0, 1 ) ) {
+		$path = ltrim( $path, '~' );
+
+		$home = rtrim( $_SERVER['HOME'], '/' );
+
+		$path = $home . $path;
+	}
+
+	return trailingslash( $path );
+}
+
+/**
  * Add trailing slash to path
  *
  * @param  string $path Path

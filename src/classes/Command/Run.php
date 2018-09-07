@@ -41,10 +41,9 @@ class Run extends Command {
 		$this->addOption( 'local', false, InputOption::VALUE_NONE, 'Run tests against local WordPress install.' );
 		$this->addOption( 'save', false, InputOption::VALUE_NONE, 'If tests are successful, save snapshot ID to wpassure.json and push it to the remote repository.' );
 
-		$this->addOption( 'config', false, InputOption::VALUE_REQUIRED, 'Path to a directory that contains wpassure.json file or a direct path to the config file.' );
-
+		$this->addOption( 'suite_config_directory', false, InputOption::VALUE_REQUIRED, 'Path to a directory that contains wpassure.json.' );
 		$this->addOption( 'snapshot_id', null, InputOption::VALUE_REQUIRED, 'WP Snapshot ID.' );
-		$this->addOption( 'path', null, InputOption::VALUE_REQUIRED, 'Path to WordPress wp-config.php directory.' );
+		$this->addOption( 'wp_directory', null, InputOption::VALUE_REQUIRED, 'Path to WordPress wp-config.php directory.' );
 		$this->addOption( 'db_host', null, InputOption::VALUE_REQUIRED, 'Database host.' );
 		$this->addOption( 'db_name', null, InputOption::VALUE_REQUIRED, 'Database name.' );
 		$this->addOption( 'db_user', null, InputOption::VALUE_REQUIRED, 'Database user.' );
@@ -69,19 +68,20 @@ class Run extends Command {
 			return;
 		}
 
-		$path = $input->getOption( 'path' );
+		$wp_directory = $input->getOption( 'wp_directory' );
 
-		if ( ! $path ) {
-			$path = Utils\get_wordpress_path();
+		if ( ! $wp_directory ) {
+			$wp_directory = Utils\get_wordpress_path();
 		}
 
-		if ( empty( $path ) ) {
+		if ( empty( $wp_directory ) ) {
 			Log::instance()->write( 'This does not seem to be a WordPress installation. No wp-config.php found in directory tree.', 0, 'error' );
 			return;
 		}
 
-		$config_path  = $input->getOption( 'config' );
-		$suite_config = Config::create( $config_path );
+		$suite_config_directory = $input->getOption( 'suite_config_directory' );
+
+		$suite_config = Config::create( $suite_config_directory );
 
 		if ( false === $suite_config ) {
 			return;
@@ -113,7 +113,7 @@ class Run extends Command {
 
 			$snapshot = Snapshot::create(
 				[
-					'path'            => $path,
+					'path'            => $wp_directory,
 					'db_host'         => $input->getOption( 'db_host' ),
 					'db_name'         => $input->getOption( 'db_name' ),
 					'db_user'         => $input->getOption( 'db_user' ),
@@ -146,13 +146,20 @@ class Run extends Command {
 			: array( 'tests' . DIRECTORY_SEPARATOR . '*.php' );
 
 		foreach ( $test_dirs as $test_path ) {
-			foreach ( glob( $test_path ) as $test_file ) {
+			$test_path = trim( $test_path );
+
+			if ( 0 === strpos( $test_path, './' ) ) {
+				$test_path = substr( $test_path, 2 );
+			}
+
+			foreach ( glob( $suite_config['path'] . $test_path ) as $test_file ) {
 				$test_files[] = $test_file;
 			}
 		}
 
 		$error      = false;
 		$test_files = array_unique( $test_files );
+
 		foreach ( $test_files as $test_file ) {
 			$command = new PHPUnitCommand();
 			if ( 0 !== $command->run( [ WPASSURE_DIR . '/vendor/bin/phpunit', $test_file ], false ) ) {

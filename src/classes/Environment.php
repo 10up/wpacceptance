@@ -374,7 +374,7 @@ class Environment {
 		Log::instance()->write( 'Creating containers...' );
 
 		$streamFactory = \Http\Discovery\StreamFactoryDiscovery::find();
-		$serializer = new \Symfony\Component\Serializer\Serializer(\Docker\API\Normalizer\NormalizerFactory::create(), [ new \Symfony\Component\Serializer\Encoder\JsonEncoder( new \Symfony\Component\Serializer\Encoder\JsonEncode(), new \Symfony\Component\Serializer\Encoder\JsonDecode() ) ] );
+		$serializer    = new \Symfony\Component\Serializer\Serializer( \Docker\API\Normalizer\NormalizerFactory::create(), [ new \Symfony\Component\Serializer\Encoder\JsonEncoder( new \Symfony\Component\Serializer\Encoder\JsonEncode(), new \Symfony\Component\Serializer\Encoder\JsonDecode() ) ] );
 
 		/**
 		 * Create MySQL
