@@ -4,7 +4,7 @@
   "authors": [
     {
       "name": "Taylor Lovett",
-      "email": "taylorl@get10up.com"
+      "email": "taylor.lovett@10up.com"
     }
   ],
   "require": {
@@ -12,7 +12,8 @@
     "10up/wpsnapshots": "dev-feature/create",
     "facebook/webdriver": "^1.6",
     "docker-php/docker-php": "^2.0",
-    "phpunit/phpunit": "^7.3"
+    "phpunit/phpunit": "^7.3",
+    "php": ">=5.6"
   },
   "bin": [
     "bin/wpassure"
