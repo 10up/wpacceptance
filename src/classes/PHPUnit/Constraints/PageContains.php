@@ -6,7 +6,8 @@ use Facebook\WebDriver\Remote\RemoteWebElement;
 
 class PageContains extends \WPAssure\PHPUnit\Constraint {
 
-	use WPAssure\PHPUnit\Constraints\Traits\StringOrPattern;
+	use WPAssure\PHPUnit\Constraints\Traits\StringOrPattern,
+	    WPAssure\PHPUnit\Constraints\Traits\SeeableAction;
 
 	/**
 	 * The text to look for.
@@ -33,7 +34,7 @@ class PageContains extends \WPAssure\PHPUnit\Constraint {
 	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element Optional. An element to look for a text inside.
 	 */
 	public function __construct( $action, $text, $element ) {
-		parent::__construct( self::_verifySeeableAction( $action ) );
+		parent::__construct( $this->_verifyAction( $action ) );
 
 		$this->_text    = $text;
 		$this->_element = $element;

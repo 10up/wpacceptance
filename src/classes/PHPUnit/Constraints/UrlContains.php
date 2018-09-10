@@ -2,10 +2,10 @@
 
 namespace WPAssure\PHPUnit\Constraints;
 
-class PageSourceContains extends \WPAssure\PHPUnit\Constraint {
+class UrlContains extends \WPAssure\PHPUnit\Constraint {
 
-	use WPAssure\PHPUnit\Constraints\Traits\StringOrPattern,
-	    WPAssure\PHPUnit\Constraints\Traits\SeeableAction;
+	use WPAssure\PHPUnit\Constraints\Traits\SeeableAction,
+	    WPAssure\PHPUnit\Constraints\Traits\StringOrPattern;
 
 	/**
 	 * The text to look for.
@@ -24,11 +24,12 @@ class PageSourceContains extends \WPAssure\PHPUnit\Constraint {
 	 */
 	public function __construct( $action, $text ) {
 		parent::__construct( $this->_verifyAction( $action ) );
+
 		$this->_text = $text;
 	}
 
 	/**
-	 * Evaluate if the actor can or can't see a text in the page source.
+	 * Evaluate if the actor can or can't see a text in the current URL.
 	 *
 	 * @access protected
 	 * @param \WPAssure\PHPUnit\Actor $other The actor instance.
@@ -36,15 +37,10 @@ class PageSourceContains extends \WPAssure\PHPUnit\Constraint {
 	 */
 	protected function matches( $other ) {
 		$actor = $this->_getActor( $other );
+		$webdriver = $actor->getWebDriver();
 
-		$content = trim( $actor->getPageSource() );
-		if ( empty( $content ) ) {
-			// if current action is "dontSee" then return "true" what means the constrain is met,
-			// otherwise it means that action is "see" and the constrain isn't met, thus return "false"
-			return $this->_action === self::ACTION_DONTSEE;
-		}
-
-		$found = $this->_findMatch( $content, $this->_text );
+		$url = trim( $webdriver->getCurrentURL() );
+		$found = $this->_findMatch( $url, $this->_text );
 
 		return ( $found && $this->_action === self::ACTION_SEE ) || ( ! $found && $this->_action === self::ACTION_DONTSEE );
 	}
@@ -56,7 +52,7 @@ class PageSourceContains extends \WPAssure\PHPUnit\Constraint {
 	 * @return string The description text.
 	 */
 	public function toString() {
-		return sprintf( ' "%s" text in the page source', $this->_text );
+		return sprintf( ' "%s" text in the current URL', $this->_text );
 	}
 
 }

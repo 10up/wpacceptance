@@ -7,7 +7,8 @@ use Facebook\WebDriver\WebDriverBy;
 
 class LinkOnPage extends \WPAssure\PHPUnit\Constraint {
 
-	use WPAssure\PHPUnit\Constraints\Traits\StringOrPattern;
+	use WPAssure\PHPUnit\Constraints\Traits\StringOrPattern,
+		WPAssure\PHPUnit\Constraints\Traits\SeeableAction;
 
 	/**
 	 * A text of a link to look for.
@@ -34,7 +35,7 @@ class LinkOnPage extends \WPAssure\PHPUnit\Constraint {
 	 * @param string $url A url of a link to look for.
 	 */
 	public function __construct( $action, $text, $url ) {
-		parent::__construct( self::_verifySeeableAction( $action ) );
+		parent::__construct( $this->_verifyAction( $action ) );
 
 		$this->_text = $text;
 		$this->_url  = $url;
@@ -79,7 +80,7 @@ class LinkOnPage extends \WPAssure\PHPUnit\Constraint {
 	 * @return string The description text.
 	 */
 	public function toString() {
-		$message = sprintf( ' a link with "%s" text' );
+		$message = sprintf( ' a link with "%s" text', $this->_text );
 		if ( ! empty( $this->_url ) ) {
 			$message .= sprintf( ' that contains "%s" url in the href attribute', $this->_url );
 		}

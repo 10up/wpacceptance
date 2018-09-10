@@ -18,6 +18,7 @@ use WPAssure\PHPUnit\Constraints\Cookie as CookieConstrain;
 use WPAssure\PHPUnit\Constraints\PageContains as PageContainsConstrain;
 use WPAssure\PHPUnit\Constraints\PageSourceContains as PageSourceContainsConstrain;
 use WPAssure\PHPUnit\Constraints\LinkOnPage as LinkOnPageConstrain;
+use WPAssure\PHPUnit\Constraints\UrlContains as UrlContainsConstrain;
 
 class Actor {
 
@@ -675,6 +676,36 @@ class Actor {
 	public function dontSeeLink( $text, $url = '', $message = '' ) {
 		$this->_assertThat(
 			new LinkOnPageConstrain( Constraint::ACTION_DONTSEE, $text, $url ),
+			$message
+		);
+	}
+
+	/**
+	 * Check if the actor can see a text in the current URL. You can use a regular expression to check the current URL.
+	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: <b>"/test/i"</b>.
+	 *
+	 * @access public
+	 * @param string $text A text to look for in the current URL.
+	 * @param string $message Optional. The message to use on a failure.
+	 */
+	public function seeTextInUrl( $text, $message = '' ) {
+		$this->_assertThat(
+			new UrlContainsConstrain( Constraint::ACTION_SEE, $text ),
+			$message
+		);
+	}
+
+	/**
+	 * Check if the actor cann't see a text in the current URL. You can use a regular expression to check the current URL.
+	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: <b>"/test/i"</b>.
+	 *
+	 * @access public
+	 * @param string $text A text to look for in the current URL.
+	 * @param string $message Optional. The message to use on a failure.
+	 */
+	public function dontSeeTextInUrl( $text, $message = '' ) {
+		$this->_assertThat(
+			new UrlContainsConstrain( Constraint::ACTION_DONTSEE, $text ),
 			$message
 		);
 	}
