@@ -183,10 +183,18 @@ class Run extends Command {
 			$output->writeln( 'Test(s) passed!', 0, 'success' );
 
 			if ( $input->getOption( 'save' ) ) {
-				$output->writeln( 'Snapshot ID saved to wpassure.json', 0, 'success' );
+				$output->writeln( 'Pushing snapshot to repository...' );
 
-				$suite_config['snapshot_id'] = $snapshot_id;
-				$suite_config->write();
+				if ( $snapshot->push() ) {
+					$output->writeln( 'Snapshot ID saved to wpassure.json', 0, 'success' );
+
+					$suite_config['snapshot_id'] = $snapshot_id;
+					$suite_config->write();
+				} else {
+					$output->writeln( 'Could not push snapshot to repository.', 0, 'error' );
+					$environment->destroy();
+					return;
+				}
 			}
 		}
 

@@ -2,5 +2,6 @@
     "name": "twentyseventeen-example",
     "tests": [
         "tests\/*"
-    ]
+    ],
+    "snapshot_id": "6841ec4e5f1ddde417ffa1ac05acac87"
 }
