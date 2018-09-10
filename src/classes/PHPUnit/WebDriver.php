@@ -3,6 +3,7 @@
 namespace WPAssure\PHPUnit;
 
 use WPAssure\Log;
+use WPAssure\EnvironmentFactory;
 use WPAssure\PHPUnit\Actor;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
@@ -18,39 +19,6 @@ trait WebDriver {
 	private $_webDriver = null;
 
 	/**
-	 * Environment instance
-	 *
-	 * @access private
-	 * @var \WPAssure\Environment
-	 */
-	private $_environment = null;
-
-	/**
-	 * Sets environment instance.
-	 *
-	 * @access public
-	 * @param \WPAssure\Environment $environment Environment instance.
-	 */
-	public function setEnvironment( \WPAssure\Environment $environment ) {
-		$this->_environment = $environment;
-	}
-
-	/**
-	 * Returns current environment instance.
-	 *
-	 * @access public
-	 * @throws \WPAssure\Exception if environment instance is not set.
-	 * @return \WPAssure\Environment Environment instance.
-	 */
-	public function getEnvironment() {
-		if ( ! $this->_environment ) {
-			throw new \WPAssure\Exception( 'Environment is not set.' );
-		}
-
-		return $this->_environment;
-	}
-
-	/**
 	 * Returns web driver instance.
 	 *
 	 * @access protected
@@ -58,14 +26,30 @@ trait WebDriver {
 	 */
 	protected function _getWebDriver() {
 		if ( is_null( $this->_webDriver ) ) {
-			$environment = $this->getEnvironment();
-			$host = $environment->getSeleniumServerUrl();
 
-			$capabilities = DesiredCapabilities::chrome();
-			$this->_webDriver = RemoteWebDriver::create( $host, $capabilities, 20000 );
+			$capabilities     = DesiredCapabilities::chrome();
+			$this->_webDriver = RemoteWebDriver::create( $this->getSeleniumServerUrl(), $capabilities, 20000 );
 		}
 
 		return $this->_webDriver;
+	}
+
+	/**
+	 * Get WordPress URL
+	 *
+	 * @return string
+	 */
+	public function getWordPressUrl() {
+		return EnvironmentFactory::get()->getWpHomepageUrl();
+	}
+
+	/**
+	 * Get Selenium host URL
+	 *
+	 * @return string
+	 */
+	public function getSeleniumServerUrl() {
+		return EnvironmentFactory::get()->getSeleniumServerUrl();
 	}
 
 	/**
@@ -77,11 +61,9 @@ trait WebDriver {
 	 */
 	public function getAnonymousUser( $name = 'anonymous user' ) {
 		$webdriver = $this->_getWebDriver();
-		$environment = $this->getEnvironment();
 
 		$actor = new Actor( $name );
 		$actor->setWebDriver( $webdriver );
-		$actor->setEnvironment( $environment );
 		$actor->setTest( $this );
 
 		return $actor;

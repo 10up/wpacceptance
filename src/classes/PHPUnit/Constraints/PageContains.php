@@ -28,14 +28,14 @@ class PageContains extends \WPAssure\PHPUnit\Constraint {
 	 * Constructor.
 	 *
 	 * @access public
-	 * @param string $action The evaluation action. Valid options are "see" or "dontSee".
-	 * @param string $text A text to look for.
+	 * @param string                                             $action The evaluation action. Valid options are "see" or "dontSee".
+	 * @param string                                             $text A text to look for.
 	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element Optional. An element to look for a text inside.
 	 */
 	public function __construct( $action, $text, $element ) {
 		parent::__construct( self::_verifySeeableAction( $action ) );
 
-		$this->_text = $text;
+		$this->_text    = $text;
 		$this->_element = $element;
 	}
 
@@ -47,7 +47,7 @@ class PageContains extends \WPAssure\PHPUnit\Constraint {
 	 * @return boolean TRUE if the constrain is met, otherwise FALSE.
 	 */
 	protected function matches( $other ) {
-		$actor = $this->_getActor( $other );
+		$actor   = $this->_getActor( $other );
 		$element = $actor->getElement( ! empty( $this->_element ) ? $this->_element : 'body' );
 		if ( $element ) {
 			$content = trim( $element->getText() );

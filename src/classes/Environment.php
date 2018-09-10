@@ -16,6 +16,7 @@ use Docker\API\Model\ExecIdStartPostBody;
 use Docker\API\Model\HostConfig;
 use Docker\API\Model\PortBinding;
 use Docker\API\Model\BuildInfo;
+use Docker\API\Endpoint\ContainerCreate;
 use Docker\Context\Context;
 use Docker\Docker;
 use GrantLucas\PortFinder;
@@ -82,48 +83,11 @@ class Environment {
 	 * @param  string $snapshot_id WPSnapshot ID to load into environment
 	 * @param  array  $suite_config Config array
 	 */
-	protected function __construct( $snapshot_id, $suite_config ) {
+	public function __construct( $snapshot_id, $suite_config ) {
 		$this->network_id   = 'wpassure' . time();
 		$this->docker       = Docker::create();
 		$this->snapshot_id  = $snapshot_id;
 		$this->suite_config = $suite_config;
-	}
-
-	/**
-	 * Create environment
-	 *
-	 * @param  string $snapshot_id WPSnapshot ID to load into environment
-	 * @param  array  $suite_config Config array
-	 * @return  self|bool
-	 */
-	public static function create( $snapshot_id, $suite_config ) {
-		$enviromment = new self( $snapshot_id, $suite_config );
-
-		if ( ! $enviromment->createNetwork() ) {
-			return false;
-		}
-
-		if ( ! $enviromment->downloadImages() ) {
-			return false;
-		}
-
-		if ( ! $enviromment->createContainers() ) {
-			return false;
-		}
-
-		if ( ! $enviromment->startContainers() ) {
-			$enviromment->destroy();
-
-			return false;
-		}
-
-		if ( ! $enviromment->pullSnapshot() ) {
-			$enviromment->destroy();
-
-			return false;
-		}
-
-		return $enviromment;
 	}
 
 	/**
@@ -393,12 +357,24 @@ class Environment {
 	}
 
 	/**
+	 * Get network ID
+	 *
+	 * @return string
+	 */
+	public function getNetworkId() {
+		return $this->network_id;
+	}
+
+	/**
 	 * Create Docker containers
 	 *
 	 * @return  bool
 	 */
 	public function createContainers() {
 		Log::instance()->write( 'Creating containers...' );
+
+		$streamFactory = \Http\Discovery\StreamFactoryDiscovery::find();
+		$serializer    = new \Symfony\Component\Serializer\Serializer( \Docker\API\Normalizer\NormalizerFactory::create(), [ new \Symfony\Component\Serializer\Encoder\JsonEncoder( new \Symfony\Component\Serializer\Encoder\JsonEncode(), new \Symfony\Component\Serializer\Encoder\JsonDecode() ) ] );
 
 		/**
 		 * Create MySQL
@@ -419,6 +395,13 @@ class Environment {
 			]
 		);
 		$container_config->setHostConfig( $host_config );
+
+		$container_create = new ContainerCreate( $container_config );
+
+		$container_body = $container_create->getBody( $serializer, $streamFactory );
+
+		Log::instance()->write( 'Container Request Body (MySQL):', 2 );
+		Log::instance()->write( $container_body[1], 2 );
 
 		$this->containers['mysql'] = $this->docker->containerCreate( $container_config, [ 'name' => 'mysql-' . $this->network_id ] );
 
@@ -483,6 +466,13 @@ class Environment {
 		$host_config->setPortBindings( $host_port_map );
 		$container_config->setHostConfig( $host_config );
 
+		$container_create = new ContainerCreate( $container_config );
+
+		$container_body = $container_create->getBody( $serializer, $streamFactory );
+
+		Log::instance()->write( 'Container Request Body (WordPress):', 2 );
+		Log::instance()->write( $container_body[1], 2 );
+
 		$this->containers['wordpress'] = $this->docker->containerCreate( $container_config, [ 'name' => 'wordpress-' . $this->network_id ] );
 
 		/**
@@ -514,6 +504,13 @@ class Environment {
 
 		$container_config->setHostConfig( $host_config );
 
+		$container_create = new ContainerCreate( $container_config );
+
+		$container_body = $container_create->getBody( $serializer, $streamFactory );
+
+		Log::instance()->write( 'Container Request Body (Selenium):', 2 );
+		Log::instance()->write( $container_body[1], 2 );
+
 		$this->containers['selenium'] = $this->docker->containerCreate( $container_config, [ 'name' => 'selenium-' . $this->network_id ] );
 
 		return true;
@@ -538,7 +535,7 @@ class Environment {
 		$this->mysql_stream->onStdout(
 			function( $stdout ) {
 				if ( preg_match( '#MySQL init process done#i', $stdout ) ) {
-					  $mysql_started = true;
+					$mysql_started = true;
 				}
 			}
 		);

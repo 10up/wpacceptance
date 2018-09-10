@@ -11,6 +11,8 @@ use PHPUnit\Framework\ExpectationFailedException;
 use PHPUnit\Framework\TestCase;
 
 use WPAssure\Exception;
+use WPAssure\EnvironmentFactory;
+use WPAssure\Log;
 use WPAssure\PHPUnit\Constraint;
 use WPAssure\PHPUnit\Constraints\Cookie as CookieConstrain;
 use WPAssure\PHPUnit\Constraints\PageContains as PageContainsConstrain;
@@ -34,14 +36,6 @@ class Actor {
 	 * @var \Facebook\WebDriver\Remote\RemoteWebDriver
 	 */
 	private $_webdriver = null;
-
-	/**
-	 * Environment instance.
-	 *
-	 * @access private
-	 * @var \WPAssure\Environment
-	 */
-	private $_environment = null;
 
 	/**
 	 * Test case instance.
@@ -107,31 +101,6 @@ class Actor {
 	}
 
 	/**
-	 * Set environment instance.
-	 *
-	 * @access public
-	 * @param \WPAssure\Environment $environment Environment instance.
-	 */
-	public function setEnvironment( \WPAssure\Environment $environment ) {
-		$this->_environment = $environment;
-	}
-
-	/**
-	 * Return current environment instance.
-	 *
-	 * @access public
-	 * @throws \WPAssure\Exception if environment instance is not set.
-	 * @return \WPAssure\Environment Environment instance.
-	 */
-	public function getEnvironment() {
-		if ( ! $this->_environment ) {
-			throw new \WPAssure\Exception( 'Environment is not set.' );
-		}
-
-		return $this->_environment;
-	}
-
-	/**
 	 * Set a new instance of PHPUnit test case.
 	 *
 	 * @access public
@@ -161,7 +130,7 @@ class Actor {
 	 *
 	 * @access protected
 	 * @param \WPAssure\PHPUnit\Constraint $constraint An instance of constraint class.
-	 * @param string $message Optional. A message for a failure.
+	 * @param string                       $message Optional. A message for a failure.
 	 */
 	protected function _assertThat( $constraint, $message = '' ) {
 		TestCase::assertThat( $this, $constraint, $message );
@@ -185,8 +154,7 @@ class Actor {
 			$path = '/' . $path;
 		}
 
-		$environment = $this->getEnvironment();
-		$page = $environment->getWpHomepageUrl() . $path;
+		$page = $this->_test->getWordPressUrl() . $path;
 
 		$webdriver = $this->getWebDriver();
 		$webdriver->get( $page );
@@ -293,19 +261,19 @@ class Actor {
 	 * @param int $width A new width.
 	 * @param int $height A new height.
 	 */
-    public function resizeWindow( $width, $height ) {
+	public function resizeWindow( $width, $height ) {
 		$dimension = new \Facebook\WebDriver\WebDriverDimension( $width, $height );
 
 		$webdriver = $this->getWebDriver();
-        $webdriver->manage()->window()->setSize( $dimension );
-    }
+		$webdriver->manage()->window()->setSize( $dimension );
+	}
 
 	/**
 	 * Assert that the actor sees a cookie.
 	 *
 	 * @access public
 	 * @param string $name The cookie name.
-	 * @param mixed $value Optional. The cookie value. If it's empty, value check will be ignored.
+	 * @param mixed  $value Optional. The cookie value. If it's empty, value check will be ignored.
 	 * @param string $message Optional. The message to use on a failure.
 	 */
 	public function seeCookie( $name, $value = null, $message = '' ) {
@@ -320,7 +288,7 @@ class Actor {
 	 *
 	 * @access public
 	 * @param string $name The cookie name.
-	 * @param mixed $value Optional. The cookie value. If it's empty, value check will be ignored.
+	 * @param mixed  $value Optional. The cookie value. If it's empty, value check will be ignored.
 	 * @param string $message Optional. The message to use on a failure.
 	 */
 	public function dontSeeCookie( $name, $value = null, $message = '' ) {
@@ -330,26 +298,26 @@ class Actor {
 		);
 	}
 
-    /**
-     * Set a specific cookie.
-     *
-     * @access public
+	/**
+	 * Set a specific cookie.
+	 *
+	 * @access public
 	 * @param string $name A name of a cookie.
 	 * @param string $value Value for a cookie.
-	 * @param array $params Additional parameters for a cookie.
+	 * @param array  $params Additional parameters for a cookie.
 	 */
-    public function setCookie( $name, $value, array $params = array() ) {
+	public function setCookie( $name, $value, array $params = array() ) {
 		$webdriver = $this->getWebDriver();
 
-		$params['name'] = $name;
-        $params['value'] = $value;
+		$params['name']  = $name;
+		$params['value'] = $value;
 
-        if ( ! isset( $params['domain'] ) ) {
-            $params['domain'] = parse_url( $webdriver->getCurrentURL(), PHP_URL_HOST );
-        }
+		if ( ! isset( $params['domain'] ) ) {
+			$params['domain'] = parse_url( $webdriver->getCurrentURL(), PHP_URL_HOST );
+		}
 
-        $webdriver->manage()->addCookie( $params );
-    }
+		$webdriver->manage()->addCookie( $params );
+	}
 
 	/**
 	 * Return value of a cookie.
@@ -358,28 +326,28 @@ class Actor {
 	 * @param string $name A cookie name.
 	 * @return mixed A cookie value.
 	 */
-    public function getCookie( $name ) {
+	public function getCookie( $name ) {
 		$webdriver = $this->getWebDriver();
-		$cookies = $webdriver->manage()->getCookies();
+		$cookies   = $webdriver->manage()->getCookies();
 		foreach ( $cookies as $cookie ) {
 			if ( $cookie['name'] === $name ) {
 				return $cookie['value'];
 			}
 		}
 
-        return null;
-    }
+		return null;
+	}
 
-    /**
-     * Delete a cookie with the give name.
-     *
+	/**
+	 * Delete a cookie with the give name.
+	 *
 	 * @access public
-     * @param string $name A cookie name to reset.
-     */
-    public function resetCookie( $name ) {
+	 * @param string $name A cookie name to reset.
+	 */
+	public function resetCookie( $name ) {
 		$webdriver = $this->getWebDriver();
-        $webdriver->manage()->deleteCookieNamed( $name );
-    }
+		$webdriver->manage()->deleteCookieNamed( $name );
+	}
 
 	/**
 	 * Return an element based on CSS selector.
@@ -395,7 +363,7 @@ class Actor {
 		}
 
 		$webdriver = $this->getWebDriver();
-		$by = $element instanceof WebDriverBy ? $element : WebDriverBy::cssSelector( $element );
+		$by        = $element instanceof WebDriverBy ? $element : WebDriverBy::cssSelector( $element );
 
 		try {
 			return $webdriver->findElement( $by );
@@ -426,7 +394,7 @@ class Actor {
 		}
 
 		$webdriver = $this->getWebDriver();
-		$by = $element instanceof WebDriverBy ? $element : WebDriverBy::cssSelector( $element );
+		$by        = $element instanceof WebDriverBy ? $element : WebDriverBy::cssSelector( $element );
 
 		try {
 			return $webdriver->findElements( $by );
@@ -451,7 +419,7 @@ class Actor {
 	 *
 	 * @access public
 	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
-	 * @param string|array $options Single or multiple options to select.
+	 * @param string|array                                       $options Single or multiple options to select.
 	 */
 	public function selectOptions( $element, $options ) {
 		$element = $this->getElement( $element );
@@ -470,7 +438,7 @@ class Actor {
 				try {
 					$select->selectByValue( $option );
 					continue;
-				} catch( NoSuchElementException $e ) {
+				} catch ( NoSuchElementException $e ) {
 				}
 
 				// try to select an option by visible text
@@ -501,7 +469,7 @@ class Actor {
 	 *
 	 * @access public
 	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
-	 * @param string|array $options Single or multiple options to deselect.
+	 * @param string|array                                       $options Single or multiple options to deselect.
 	 */
 	public function deselectOptions( $element, $options ) {
 		$element = $this->getElement( $element );
@@ -517,7 +485,7 @@ class Actor {
 				try {
 					$select->deselectByValue( $option );
 					continue;
-				} catch( NoSuchElementException $e ) {
+				} catch ( NoSuchElementException $e ) {
 				}
 
 				// try to deselect an option by visible text
@@ -580,7 +548,7 @@ class Actor {
 	 *
 	 * @access public
 	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
-	 * @param string $value A new value.
+	 * @param string                                             $value A new value.
 	 */
 	public function fillField( $element, $value ) {
 		$element = $this->getElement( $element );
@@ -606,11 +574,11 @@ class Actor {
 	 *
 	 * @access public
 	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
-	 * @param string $file A path to a file.
+	 * @param string                                             $file A path to a file.
 	 */
 	public function attachFile( $element, $file ) {
 		$detector = new \Facebook\WebDriver\Remote\LocalFileDetector();
-		$element = $this->getElement( $element );
+		$element  = $this->getElement( $element );
 		$element->setFileDetector( $detector );
 		$element->sendKeys( $file );
 	}
@@ -620,9 +588,9 @@ class Actor {
 	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: "/test/i".
 	 *
 	 * @access public
-	 * @param string $text A text to look for or a regular expression.
+	 * @param string                                             $text A text to look for or a regular expression.
 	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A CSS selector for the element.
-	 * @param string $message Optional. The message to use on a failure.
+	 * @param string                                             $message Optional. The message to use on a failure.
 	 */
 	public function seeText( $text, $element = null, $message = '' ) {
 		$this->_assertThat(
@@ -636,9 +604,9 @@ class Actor {
 	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: "/test/i".
 	 *
 	 * @access public
-	 * @param string $text A text to look for or a regular expression.
+	 * @param string                                             $text A text to look for or a regular expression.
 	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A CSS selector for the element.
-	 * @param string $message Optional. The message to use on a failure.
+	 * @param string                                             $message Optional. The message to use on a failure.
 	 */
 	public function dontSeeText( $text, $element = null, $message = '' ) {
 		$this->_assertThat(
