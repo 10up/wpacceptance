@@ -74,15 +74,19 @@ class Run extends Command {
 			return;
 		}
 
-		$wp_directory = $input->getOption( 'wp_directory' );
+		$local = $input->getOption( 'local' );
 
-		if ( ! $wp_directory ) {
-			$wp_directory = Utils\get_wordpress_path();
-		}
+		if ( ! empty( $local ) ) {
+			$wp_directory = $input->getOption( 'wp_directory' );
 
-		if ( empty( $wp_directory ) ) {
-			Log::instance()->write( 'This does not seem to be a WordPress installation. No wp-config.php found in directory tree.', 0, 'error' );
-			return;
+			if ( ! $wp_directory ) {
+				$wp_directory = Utils\get_wordpress_path();
+			}
+
+			if ( empty( $wp_directory ) ) {
+				Log::instance()->write( 'This does not seem to be a WordPress installation. No wp-config.php found in directory tree.', 0, 'error' );
+				return;
+			}
 		}
 
 		$suite_config_directory = $input->getArgument( 'suite_config_directory' );
@@ -92,8 +96,6 @@ class Run extends Command {
 		if ( false === $suite_config ) {
 			return;
 		}
-
-		$local = $input->getOption( 'local' );
 
 		$snapshot_id = false;
 
