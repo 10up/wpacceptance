@@ -128,8 +128,8 @@ class Run extends Command {
 					'db_name'         => $input->getOption( 'db_name' ),
 					'db_user'         => $input->getOption( 'db_user' ),
 					'db_password'     => $input->getOption( 'db_password' ),
-					'project'         => 'WPAssure Snapshot',
-					'description'     => 'WPAssure project',
+					'project'         => $suite_config['name'] . ' - WP Assure',
+					'description'     => 'WP Assure snapshot',
 					'no_scrub'        => false,
 					'exclude_uploads' => true,
 				]
@@ -172,6 +172,7 @@ class Run extends Command {
 
 		foreach ( $test_files as $test_file ) {
 			$command = new PHPUnitCommand();
+
 			if ( 0 !== $command->run( [ WPASSURE_DIR . '/vendor/bin/phpunit', $test_file ], false ) ) {
 				$error = true;
 			}

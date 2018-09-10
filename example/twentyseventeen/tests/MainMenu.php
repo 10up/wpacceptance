@@ -13,8 +13,14 @@ class MainMenuTest extends \WPAssure\PHPUnit\TestCase {
 	/**
 	 * On small screen, menu is hidden initially and opens on click
 	 */
+	public function testSmallScreenOpen() {
+		// @todo: Complete
+	}
 
 	/**
 	 * On large screen, menu items are visible
 	 */
+	public function testLargeScreenVisible() {
+		// @todo: Complete
+	}
 }

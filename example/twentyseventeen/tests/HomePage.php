@@ -51,4 +51,7 @@ class HomePageTest extends \WPAssure\PHPUnit\TestCase {
 	/**
 	 * Fill out search form, press enter, search page shows with results
 	 */
+	public function testSearchForm() {
+		// @todo: Complete
+	}
 }
