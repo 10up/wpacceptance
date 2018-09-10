@@ -2,6 +2,8 @@
 
 namespace WPAssure\PHPUnit\Constraints;
 
+use Facebook\WebDriver\WebDriverSelect;
+
 class FieldValueContains extends \WPAssure\PHPUnit\Constraint {
 
 	use WPAssure\PHPUnit\Constraints\Traits\SeeableAction,
@@ -59,9 +61,20 @@ class FieldValueContains extends \WPAssure\PHPUnit\Constraint {
 			case 'textarea':
 				$content = $element->getText();
 				break;
+			case 'select':
+				$select = new WebDriverSelect( $element );
+				$content = $select->getAllSelectedOptions();
+				break;
 		}
 
-		$found = $this->_findMatch( $content, $this->_value );
+		$found = false;
+		if ( is_array( $content ) ) {
+			foreach ( $content as $option ) {
+				$found |= $this->_findMatch( $option, $this->_value );
+			}
+		} else {
+			$found = $this->_findMatch( $content, $this->_value );
+		}
 
 		return ( $found && $this->_action === self::ACTION_SEE ) || ( ! $found && $this->_action === self::ACTION_DONTSEE );
 	}
