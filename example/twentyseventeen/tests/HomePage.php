@@ -8,7 +8,7 @@
 /**
  * PHPUnit test class
  */
-class HomePageShowingTest extends \WPAssure\PHPUnit\TestCase {
+class HomePageTest extends \WPAssure\PHPUnit\TestCase {
 
 	/**
 	 * Test that title is showing
@@ -47,4 +47,8 @@ class HomePageShowingTest extends \WPAssure\PHPUnit\TestCase {
 
 		$this->assertNotEquals( $element, false );
 	}
+
+	/**
+	 * Fill out search form, press enter, search page shows with results
+	 */
 }
