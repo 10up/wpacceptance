@@ -19,6 +19,8 @@ use WPAssure\PHPUnit\Constraints\PageContains as PageContainsConstrain;
 use WPAssure\PHPUnit\Constraints\PageSourceContains as PageSourceContainsConstrain;
 use WPAssure\PHPUnit\Constraints\LinkOnPage as LinkOnPageConstrain;
 use WPAssure\PHPUnit\Constraints\UrlContains as UrlContainsConstrain;
+use WPAssure\PHPUnit\Constraints\CheckboxChecked as CheckboxCheckedConstrain;
+use WPAssure\PHPUnit\Constraints\FieldValueContains as FieldValueContainsConstrain;
 
 class Actor {
 
@@ -706,6 +708,76 @@ class Actor {
 	public function dontSeeTextInUrl( $text, $message = '' ) {
 		$this->_assertThat(
 			new UrlContainsConstrain( Constraint::ACTION_DONTSEE, $text ),
+			$message
+		);
+	}
+
+	/**
+	 * Return current URL.
+	 *
+	 * @access public
+	 * @return string The current URL.
+	 */
+	public function getCurrentUrl() {
+		return $this->getWebDriver()->getCurrentURL();
+	}
+
+	/**
+	 * Check if the current user can see a checkbox is checked.
+	 *
+	 * @access public
+	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A CSS selector for the element.
+	 * @param string $message Optional. The message to use on a failure.
+	 */
+	public function seeCheckboxIsChecked( $element, $message = '' ) {
+		$this->_assertThat(
+			new CheckboxCheckedConstrain( Constraint::ACTION_SEE, $element ),
+			$message
+		);
+	}
+
+	/**
+	 * Check if the current user cann't see a checkbox is checked.
+	 *
+	 * @access public
+	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A CSS selector for the element.
+	 * @param string $message Optional. The message to use on a failure.
+	 */
+	public function dontSeeCheckboxIsChecked( $element, $message = '' ) {
+		$this->_assertThat(
+			new CheckboxCheckedConstrain( Constraint::ACTION_DONTSEE, $element ),
+			$message
+		);
+	}
+
+	/**
+	 * Check if the current user can see a value in a field. You can use a regular expression to check the value.
+	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: <b>"/test/i"</b>.
+	 *
+	 * @access public
+	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A CSS selector for the element.
+	 * @param string $value A value to check.
+	 * @param string $message Optional. The message to use on a failure.
+	 */
+	public function seeFieldValue( $element, $value, $message = '' ) {
+		$this->_assertThat(
+			new FieldValueContainsConstrain( Constraint::ACTION_SEE, $element, $value ),
+			$message
+		);
+	}
+
+	/**
+	 * Check if the current user can see a value in a field. You can use a regular expression to check the value.
+	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: <b>"/test/i"</b>.
+	 *
+	 * @access public
+	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A CSS selector for the element.
+	 * @param string $value A value to check.
+	 * @param string $message Optional. The message to use on a failure.
+	 */
+	public function dontSeeFieldValue( $element, $value, $message = '' ) {
+		$this->_assertThat(
+			new FieldValueContainsConstrain( Constraint::ACTION_DONTSEE, $element, $value ),
 			$message
 		);
 	}
