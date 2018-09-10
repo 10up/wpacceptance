@@ -38,10 +38,11 @@ class Run extends Command {
 		$this->setName( 'run' );
 		$this->setDescription( 'Run an WPAssure test suite.' );
 
+		$this->addArgument( 'suite_config_directory', InputArgument::OPTIONAL, 'Path to a directory that contains wpassure.json.' );
+
 		$this->addOption( 'local', false, InputOption::VALUE_NONE, 'Run tests against local WordPress install.' );
 		$this->addOption( 'save', false, InputOption::VALUE_NONE, 'If tests are successful, save snapshot ID to wpassure.json and push it to the remote repository.' );
 
-		$this->addOption( 'suite_config_directory', false, InputOption::VALUE_REQUIRED, 'Path to a directory that contains wpassure.json.' );
 		$this->addOption( 'snapshot_id', null, InputOption::VALUE_REQUIRED, 'WP Snapshot ID.' );
 		$this->addOption( 'wp_directory', null, InputOption::VALUE_REQUIRED, 'Path to WordPress wp-config.php directory.' );
 		$this->addOption( 'db_host', null, InputOption::VALUE_REQUIRED, 'Database host.' );
@@ -84,7 +85,7 @@ class Run extends Command {
 			return;
 		}
 
-		$suite_config_directory = $input->getOption( 'suite_config_directory' );
+		$suite_config_directory = $input->getArgument( 'suite_config_directory' );
 
 		$suite_config = Config::create( $suite_config_directory );
 

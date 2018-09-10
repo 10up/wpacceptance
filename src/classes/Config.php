@@ -53,7 +53,7 @@ class Config implements ArrayAccess {
 			$raw_file = file_get_contents( $file_path );
 			$config   = json_decode( $raw_file, true );
 		} else {
-			Log::instance()->write( 'wpassure.json not found.', 0, 'error' );
+			Log::instance()->write( 'wpassure.json not found in ' . dirname( $file_path ), 0, 'error' );
 
 			return false;
 		}
