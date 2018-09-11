@@ -291,20 +291,13 @@ class Actor {
 	/**
 	 * Wait for condition
 	 *
-	 * @param  string       $condition  Condition matches to WebDriverExpectedCondition function name: titleIs, titleContaints, etc.
-	 * @param  string|array $mixed_args [description]
-	 * @param  integer      $max_wait   Max wait time in seconds
+	 * @param  string  $condition  Condition matches to WebDriverExpectedCondition function name: titleIs, titleContaints, etc.
+	 * @param  string  $mixed_args [description]
+	 * @param  integer $max_wait   Max wait time in seconds
 	 */
 	public function waitUntil( $condition, $mixed_args, $max_wait = 10 ) {
 		$webdriver = $this->getWebDriver();
-
-		$mixed_args = (array) $mixed_args;
-
-		$webdriver->wait( $max_wait )->until(
-			WebDriverExpectedCondition::$condition(
-				WebDriverBy::className( ...$mixed_args )
-			)
-		);
+		$webdriver->wait( $max_wait )->until( WebDriverExpectedCondition::$condition( $mixed_args ) );
 	}
 
 	/**
