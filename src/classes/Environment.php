@@ -526,6 +526,7 @@ class Environment {
 		$host_config = new HostConfig();
 		$host_config->setNetworkMode( $this->network_id );
 		$host_config->setExtraHosts( [ 'wpassure.test:' . $this->gateway_ip ] );
+		$host_config->setShmSize( ( 1000 * 1000 * 1000 ) ); // 1GB in bytes
 
 		$container_config = new ContainersCreatePostBody();
 		$container_config->setImage( 'selenium/standalone-chrome:3.4.0' );

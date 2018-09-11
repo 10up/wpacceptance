@@ -142,32 +142,6 @@ class Actor {
 	}
 
 	/**
-	 * Return a new actor that is initialized on a specific page.
-	 *
-	 * @access public
-	 * @param string $url_path The relative path to a landing page.
-	 * @return \WPAssure\PHPUnit\Actor An actor instance.
-	 */
-	public function amOnPage( $url_path ) {
-		$url_parts = parse_url( $url_path );
-
-		$path = $url_parts['path'];
-
-		if ( empty( $path ) ) {
-			$path = '/';
-		} elseif ( '/' !== substr( $path, 0, 1 ) ) {
-			$path = '/' . $path;
-		}
-
-		$page = $this->_test->getWordPressUrl() . $path;
-
-		$webdriver = $this->getWebDriver();
-		$webdriver->get( $page );
-
-		Log::instance()->write( 'Navigating to URL: ' . $page, 1 );
-	}
-
-	/**
 	 * Return a page source.
 	 *
 	 * @access public
@@ -186,6 +160,16 @@ class Actor {
 	public function acceptPopup() {
 		$this->getWebDriver()->switchTo()->alert()->accept();
 		Log::instance()->write( 'Accepted the current popup.', 1 );
+	}
+
+	/**
+	 * Get current page title
+	 *
+	 * @access public
+	 * @return  string
+	 */
+	public function getPageTitle() {
+		return $this->getWebDriver()->getTitle();
 	}
 
 	/**
@@ -251,12 +235,33 @@ class Actor {
 	 * Navigate to a new URL.
 	 *
 	 * @access public
-	 * @param string $url A new URl.
+	 * @param string $url_path URL path
 	 */
-	public function moveTo( $url ) {
+	public function moveTo( $url_path ) {
+
+		$url_parts = parse_url( $url_path );
+
+		$path = $url_parts['path'];
+
+		if ( empty( $path ) ) {
+			$path = '/';
+		} elseif ( '/' !== substr( $path, 0, 1 ) ) {
+			$path = '/' . $path;
+		}
+
+		$page = $this->_test->getWordPressUrl() . $path;
+
 		$webdriver = $this->getWebDriver();
-		$webdriver->navigate()->to( $url );
-		Log::instance()->write( 'Navigate to ' . $webdriver->getCurrentURL(), 1 );
+		$webdriver->get( $page );
+
+		Log::instance()->write( 'Navigating to URL: ' . $page, 1 );
+	}
+
+	/**
+	 * End browser session
+	 */
+	public function close() {
+		$this->getWebDriver()->quit();
 	}
 
 	/**

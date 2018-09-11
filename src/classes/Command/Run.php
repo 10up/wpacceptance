@@ -185,6 +185,7 @@ class Run extends Command {
 		}
 
 		$suite = new PHPUnitTestSuite();
+
 		foreach ( $test_files as $test_file ) {
 			if ( empty( $filter_test_files ) || in_array( basename( $test_file ), $filter_test_files, true ) ) {
 				$suite->addTestFile( $test_file );
@@ -194,6 +195,7 @@ class Run extends Command {
 		$suite_args = array();
 
 		$colors = $input->getOption( 'colors' );
+
 		$suite_args['colors'] = $colors ?: PHPUnitResultPrinter::COLOR_AUTO;
 
 		if ( ! empty( $filter_tests ) ) {
