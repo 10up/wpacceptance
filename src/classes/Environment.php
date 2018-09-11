@@ -176,7 +176,8 @@ class Environment {
 		$exec_config->setAttachStderr( true );
 		$exec_config->setCmd( [ '/bin/sh', '-c', $command ] );
 
-		$exec_id           = $this->docker->containerExec( 'wordpress-' . $this->network_id, $exec_config )->getId();
+		$exec_command      = $this->docker->containerExec( 'wordpress-' . $this->network_id, $exec_config );
+		$exec_id           = $exec_command->getId();
 		$exec_start_config = new ExecIdStartPostBody();
 		$exec_start_config->setDetach( false );
 
@@ -195,6 +196,13 @@ class Environment {
 		);
 
 		$stream->wait();
+
+		$exit_code = $this->docker->execInspect( $exec_id )->getExitCode();
+
+		if ( 0 !== $exit_code ) {
+			Log::instance()->write( 'Failed to pull snapshot into WordPress container.', 0, 'error' );
+			return false;
+		}
 
 		/**
 		 * Determine where codebase is located in snapshot
@@ -229,6 +237,13 @@ class Environment {
 		);
 
 		$stream->wait();
+
+		$exit_code = $this->docker->execInspect( $exec_id )->getExitCode();
+
+		if ( 0 !== $exit_code ) {
+			Log::instance()->write( 'Failed to find codebase in snapshot.', 0, 'error' );
+			return false;
+		}
 
 		$snapshot_repo_path = false;
 
@@ -305,6 +320,13 @@ class Environment {
 
 		$stream->wait();
 
+		$exit_code = $this->docker->execInspect( $exec_id )->getExitCode();
+
+		if ( 0 !== $exit_code ) {
+			Log::instance()->write( 'Failed to copy codebase into WordPress container.', 0, 'error' );
+			return false;
+		}
+
 		return true;
 	}
 
@@ -316,7 +338,7 @@ class Environment {
 	public function destroy() {
 		if ( $this->preserve_containers ) {
 			Log::instance()->write( 'Keeping containers alive...', 1 );
-			return;
+			return false;
 		}
 
 		Log::instance()->write( 'Destroying containers...', 1 );
