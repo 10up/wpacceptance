@@ -6,6 +6,8 @@ use Facebook\WebDriver\Exception\NoSuchElementException;
 use Facebook\WebDriver\Remote\RemoteWebElement;
 use Facebook\WebDriver\WebDriverBy;
 use Facebook\WebDriver\WebDriverSelect;
+use Facebook\WebDriver\WebDriverKeys;
+use Facebook\WebDriver\WebDriverExpectedCondition;
 
 use PHPUnit\Framework\ExpectationFailedException;
 use PHPUnit\Framework\TestCase;
@@ -287,6 +289,25 @@ class Actor {
 	}
 
 	/**
+	 * Wait for condition
+	 *
+	 * @param  string       $condition  Condition matches to WebDriverExpectedCondition function name: titleIs, titleContaints, etc.
+	 * @param  string|array $mixed_args [description]
+	 * @param  integer      $max_wait   Max wait time in seconds
+	 */
+	public function waitUntil( $condition, $mixed_args, $max_wait = 10 ) {
+		$webdriver = $this->getWebDriver();
+
+		$mixed_args = (array) $mixed_args;
+
+		$webdriver->wait( $max_wait )->until(
+			WebDriverExpectedCondition::$condition(
+				WebDriverBy::className( ...$mixed_args )
+			)
+		);
+	}
+
+	/**
 	 * Assert that the actor can't see a cookie.
 	 *
 	 * @access public
@@ -557,6 +578,8 @@ class Actor {
 		$element = $this->getElement( $element );
 		$element->clear();
 		$element->sendKeys( (string) $value );
+
+		return $element;
 	}
 
 	/**
@@ -646,6 +669,14 @@ class Actor {
 			new PageSourceContainsConstrain( Constraint::ACTION_DONTSEE, $text ),
 			$message
 		);
+	}
+
+	public function pressEnter( $element ) {
+		$element->sendKeys( WebDriverKeys::ENTER );
+	}
+
+	public function getActiveElement() {
+		return $this->getWebDriver()->switchTo()->activeElement();
 	}
 
 	/**

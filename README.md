@@ -60,7 +60,7 @@ You can only run WP Assure against snapshots that contain some version of the co
 
 ## Commands
 
-__wpassure run__ [--local] [--snapshot_id=<WPSNAPSHOT ID>] [--db_host=<DATABASE HOST>] [--verbose] [--wp_directory=<PATH TO WP DIRECTORY>] [--suite_config_directory=<PATH TO wpassure.json DIRECTORY>] [--save]
+__wpassure run__ [<PATH TO wpassure.json DIRECTORY>] [--local] [--snapshot_id=<WPSNAPSHOT ID>] [--db_host=<DATABASE HOST>] [--verbose] [--wp_directory=<PATH TO WP DIRECTORY>] [--save]
 
 Run a WPAssure test suite. If you want to run on an existing WordPress installation, leave out `--snapshot_id`.
 
