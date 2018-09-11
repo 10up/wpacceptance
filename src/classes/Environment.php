@@ -78,16 +78,25 @@ class Environment {
 	protected $suite_config;
 
 	/**
+	 * Preserve containers or not
+	 *
+	 * @var boolean
+	 */
+	protected $preserve_containers = false;
+
+	/**
 	 * Environment constructor
 	 *
-	 * @param  string $snapshot_id WPSnapshot ID to load into environment
-	 * @param  array  $suite_config Config array
+	 * @param  string  $snapshot_id WPSnapshot ID to load into environment
+	 * @param  array   $suite_config Config array
+	 * @param  boolean $preserve_containers Keep containers alive or not
 	 */
-	public function __construct( $snapshot_id, $suite_config ) {
-		$this->network_id   = 'wpassure' . time();
-		$this->docker       = Docker::create();
-		$this->snapshot_id  = $snapshot_id;
-		$this->suite_config = $suite_config;
+	public function __construct( $snapshot_id, $suite_config, $preserve_containers = false ) {
+		$this->network_id          = 'wpassure' . time();
+		$this->docker              = Docker::create();
+		$this->snapshot_id         = $snapshot_id;
+		$this->suite_config        = $suite_config;
+		$this->preserve_containers = $preserve_containers;
 	}
 
 	/**
@@ -305,6 +314,11 @@ class Environment {
 	 * @return  bool
 	 */
 	public function destroy() {
+		if ( $this->preserve_containers ) {
+			Log::instance()->write( 'Keeping containers alive...', 1 );
+			return;
+		}
+
 		Log::instance()->write( 'Destroying containers...', 1 );
 
 		$this->stopContainers();
@@ -525,7 +539,7 @@ class Environment {
 		Log::instance()->write( 'Starting containers...', 1 );
 
 		foreach ( $this->containers as $container ) {
-			$this->docker->containerStart( $container->getId() );
+			$response = $this->docker->containerStart( $container->getId() );
 		}
 
 		Log::instance()->write( 'Waiting for MySQL to start...', 1 );

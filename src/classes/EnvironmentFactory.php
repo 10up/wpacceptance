@@ -31,12 +31,13 @@ class EnvironmentFactory {
 	/**
 	 * Create environment
 	 *
-	 * @param  string $snapshot_id WPSnapshot ID to load into environment
-	 * @param  array  $suite_config Config array
+	 * @param  string  $snapshot_id WPSnapshot ID to load into environment
+	 * @param  array   $suite_config Config array
+	 * @param  boolean $preserve_containers Keep containers alive or not
 	 * @return  Environment|bool
 	 */
-	public static function create( $snapshot_id, $suite_config ) {
-		$environment = new Environment( $snapshot_id, $suite_config );
+	public static function create( $snapshot_id, $suite_config, $preserve_containers = false ) {
+		$environment = new Environment( $snapshot_id, $suite_config, $preserve_containers );
 
 		self::$environments[] = $environment;
 

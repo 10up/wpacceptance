@@ -38,6 +38,8 @@ class Run extends Command {
 
 		$this->addArgument( 'suite_config_directory', InputArgument::OPTIONAL, 'Path to a directory that contains wpassure.json.' );
 
+		$this->addOption( 'preserve_containers', false, InputOption::VALUE_NONE, "Don't destroy containers after completion." );
+
 		$this->addOption( 'local', false, InputOption::VALUE_NONE, 'Run tests against local WordPress install.' );
 		$this->addOption( 'save', false, InputOption::VALUE_NONE, 'If tests are successful, save snapshot ID to wpassure.json and push it to the remote repository.' );
 
@@ -147,7 +149,7 @@ class Run extends Command {
 
 		Log::instance()->write( 'Creating environment...' );
 
-		$environment = EnvironmentFactory::create( $snapshot_id, $suite_config );
+		$environment = EnvironmentFactory::create( $snapshot_id, $suite_config, $input->getOption( 'preserve_containers' ) );
 
 		if ( ! $environment ) {
 			exit;
