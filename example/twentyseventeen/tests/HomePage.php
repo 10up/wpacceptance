@@ -11,6 +11,23 @@
 class HomePageTest extends \WPAssure\PHPUnit\TestCase {
 
 	/**
+	 * Fill out search form, press enter, search page shows with results
+	 */
+	public function testSearchForm() {
+		$I = $this->getAnonymousUser();
+
+		$I->amOnPage( '/' );
+
+		$element = $I->fillField( '.search-form input[type=search]', 'test search' );
+
+		$I->pressEnter( $element );
+
+		$I->waitUntil( 'titleContains', 'Search Results' );
+
+		$this->assertTrue( true );
+	}
+
+	/**
 	 * Test that title is showing
 	 */
 	public function testTitleShowing() {
@@ -46,12 +63,5 @@ class HomePageTest extends \WPAssure\PHPUnit\TestCase {
 		}
 
 		$this->assertNotEquals( $element, false );
-	}
-
-	/**
-	 * Fill out search form, press enter, search page shows with results
-	 */
-	public function testSearchForm() {
-		// @todo: Complete
 	}
 }

@@ -49,6 +49,9 @@ class Run extends Command {
 		$this->addOption( 'db_name', null, InputOption::VALUE_REQUIRED, 'Database name.' );
 		$this->addOption( 'db_user', null, InputOption::VALUE_REQUIRED, 'Database user.' );
 		$this->addOption( 'db_password', null, InputOption::VALUE_REQUIRED, 'Database password.' );
+
+		$this->addOption( 'filter_test_files', null, InputOption::VALUE_REQUIRED, 'Comma separate test files to execute. If used all other test files will be ignored.' );
+		$this->addOption( 'filter_tests', null, InputOption::VALUE_REQUIRED, 'Filter tests to run. Is analagous to PHPUnit --filter.' );
 	}
 
 	/**
@@ -173,10 +176,27 @@ class Run extends Command {
 		$error      = false;
 		$test_files = array_unique( $test_files );
 
+		$filter_test_files = $input->getOption( 'filter_test_files' );
+		$filter_tests      = $input->getOption( 'filter_tests' );
+
+		if ( ! empty( $filter_test_files ) ) {
+			$filter_test_files = explode( ',', trim( $filter_test_files ) );
+		}
+
 		foreach ( $test_files as $test_file ) {
+			if ( ! empty( $filter_test_files ) && ! in_array( basename( $test_file ), $filter_test_files, true ) ) {
+				continue;
+			}
+
 			$command = new PHPUnitCommand();
 
-			if ( 0 !== $command->run( [ WPASSURE_DIR . '/vendor/bin/phpunit', $test_file ], false ) ) {
+			$test_args = [ WPASSURE_DIR . '/vendor/bin/phpunit', $test_file ];
+
+			if ( ! empty( $filter_tests ) ) {
+				$test_args[] = '--filter=' . $filter_tests;
+			}
+
+			if ( 0 !== $command->run( $test_args, false ) ) {
 				$error = true;
 			}
 		}
