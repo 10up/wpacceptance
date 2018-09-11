@@ -2,11 +2,11 @@
 
 namespace WPAssure\PHPUnit\Constraints;
 
-use Facebook\WebDriver\Remote\RemoteWebElement;
-
 class PageContains extends \WPAssure\PHPUnit\Constraint {
 
-	use WPAssure\PHPUnit\Constraints\Traits\StringOrPattern;
+	use WPAssure\PHPUnit\Constraints\Traits\StringOrPattern,
+	    WPAssure\PHPUnit\Constraints\Traits\SeeableAction,
+	    WPAssure\PHPUnit\Constraints\Traits\ElementToMessage;
 
 	/**
 	 * The text to look for.
@@ -33,7 +33,7 @@ class PageContains extends \WPAssure\PHPUnit\Constraint {
 	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element Optional. An element to look for a text inside.
 	 */
 	public function __construct( $action, $text, $element ) {
-		parent::__construct( self::_verifySeeableAction( $action ) );
+		parent::__construct( $this->_verifyAction( $action ) );
 
 		$this->_text    = $text;
 		$this->_element = $element;
@@ -73,28 +73,8 @@ class PageContains extends \WPAssure\PHPUnit\Constraint {
 	 */
 	public function toString() {
 		$message = sprintf( ' "%s" text', $this->_text );
-
 		if ( ! empty( $this->_element ) ) {
-			if ( is_string( $this->_element ) ) {
-				$message .= sprintf( ' in the scope of "%s" selector', $this->_element );
-			} elseif ( $this->_element instanceof RemoteWebElement ) {
-				$message .= ' in the scope of ' . $this->_element->getTagName();
-
-				$id = trim( $this->_element->getID() );
-				if ( ! empty( $id ) ) {
-					$message .= '#' . $id;
-				}
-
-				$class = trim( $this->_element->getAttribute( 'class' ) );
-				if ( ! empty( $class ) ) {
-					$classes = array_filter( array_map( 'trim', split( ' ', $class ) ) );
-					if ( ! empty( $classes ) ) {
-						$message .= '.' . implode( '.', $classes );
-					}
-				}
-
-				$message .= ' tag';
-			}
+			$message .= ' in the scope of ' . $this->_elementToMessage( $this->_element );
 		}
 
 		return $message;

@@ -14,20 +14,21 @@ class GalleryTest extends \WPAssure\PHPUnit\TestCase {
 	 * Click next arrow, slide changes
 	 */
 	public function testNextArrow() {
-		// @todo: Complete
+		$this->markTestIncomplete( 'This test has not been implemented yet.' );
 	}
 
 	/**
 	 * Click previous arrow, slide changes
 	 */
 	public function testPreviousArrow() {
-		// @todo: Complete
+		$this->markTestIncomplete( 'This test has not been implemented yet.' );
 	}
 
 	/**
 	 * Slide changes on small screen
 	 */
 	public function testSmallScreenNext() {
-		// @todo: Complete
+		$this->markTestIncomplete( 'This test has not been implemented yet.' );
 	}
+
 }

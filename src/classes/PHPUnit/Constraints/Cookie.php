@@ -4,6 +4,8 @@ namespace WPAssure\PHPUnit\Constraints;
 
 class Cookie extends \WPAssure\PHPUnit\Constraint {
 
+	use WPAssure\PHPUnit\Constraints\Traits\SeeableAction;
+
 	/**
 	 * The cookie name.
 	 *
@@ -29,7 +31,7 @@ class Cookie extends \WPAssure\PHPUnit\Constraint {
 	 * @param mixed  $value Optional. Cookie vale.
 	 */
 	public function __construct( $action, $name, $value ) {
-		parent::__construct( self::_verifySeeableAction( $action ) );
+		parent::__construct( $this->_verifyAction( $action ) );
 
 		$this->_name  = $name;
 		$this->_value = $value;

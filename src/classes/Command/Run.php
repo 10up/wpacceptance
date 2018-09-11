@@ -12,11 +12,9 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Formatter\OutputFormatterStyle;
-use Symfony\Component\Console\Question\Question;
-use Facebook\WebDriver\Remote\DesiredCapabilities;
-use Facebook\WebDriver\Remote\RemoteWebDriver;
-use PHPUnit\TextUI\Command as PHPUnitCommand;
+
+use PHPUnit\Framework\TestSuite as PHPUnitTestSuite;
+use PHPUnit\TextUI\ResultPrinter as PHPUnitResultPrinter;
 
 use WPAssure\EnvironmentFactory;
 use WPAssure\Log;
@@ -52,6 +50,7 @@ class Run extends Command {
 
 		$this->addOption( 'filter_test_files', null, InputOption::VALUE_REQUIRED, 'Comma separate test files to execute. If used all other test files will be ignored.' );
 		$this->addOption( 'filter_tests', null, InputOption::VALUE_REQUIRED, 'Filter tests to run. Is analagous to PHPUnit --filter.' );
+		$this->addOption( 'colors', null, InputOption::VALUE_REQUIRED, 'Use colors in output ("never", "auto" or "always")' );
 	}
 
 	/**
@@ -183,22 +182,25 @@ class Run extends Command {
 			$filter_test_files = explode( ',', trim( $filter_test_files ) );
 		}
 
+		$suite = new PHPUnitTestSuite();
 		foreach ( $test_files as $test_file ) {
-			if ( ! empty( $filter_test_files ) && ! in_array( basename( $test_file ), $filter_test_files, true ) ) {
-				continue;
+			if ( empty( $filter_test_files ) || in_array( basename( $test_file ), $filter_test_files, true ) ) {
+				$suite->addTestFile( $test_file );
 			}
+		}
 
-			$command = new PHPUnitCommand();
+		$suite_args = array();
 
-			$test_args = [ WPASSURE_DIR . '/vendor/bin/phpunit', $test_file ];
+		$colors = $input->getOption( 'colors' );
+		$suite_args['colors'] = $colors ?: PHPUnitResultPrinter::COLOR_AUTO;
 
-			if ( ! empty( $filter_tests ) ) {
-				$test_args[] = '--filter=' . $filter_tests;
-			}
+		if ( ! empty( $filter_tests ) ) {
+			$suite_args['filter'] = $filter_tests;
+		}
 
-			if ( 0 !== $command->run( $test_args, false ) ) {
-				$error = true;
-			}
+		$runner = new \PHPUnit\TextUI\TestRunner();
+		if ( 0 !== $runner->doRun( $suite, $suite_args, false ) ) {
+			$error = true;
 		}
 
 		if ( $error ) {
