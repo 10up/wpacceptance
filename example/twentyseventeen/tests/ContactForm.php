@@ -15,13 +15,14 @@ class ContactFormTest extends \WPAssure\PHPUnit\TestCase {
 	 * When I don't fill out required fields, contact form wont submit
 	 */
 	public function testRequiredFields() {
-		// @todo: Complete
+		$this->markTestIncomplete( 'This test has not been implemented yet.' );
 	}
 
 	/**
 	 * When I fill out the form and submit, a new entry appears in the database
 	 */
 	public function testSubmit() {
-		// @todo: Complete
+		$this->markTestIncomplete( 'This test has not been implemented yet.' );
 	}
+
 }
