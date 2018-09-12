@@ -24,6 +24,8 @@ class HomePageTest extends \WPAssure\PHPUnit\TestCase {
 
 		$I->waitUntil( 'titleContains', 'Search Results' );
 
+		$I->seePost();
+
 		$this->assertTrue( true );
 	}
 

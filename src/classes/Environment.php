@@ -71,6 +71,13 @@ class Environment {
 	protected $selenium_port;
 
 	/**
+	 * MySQL port
+	 *
+	 * @var int
+	 */
+	protected $mysql_port;
+
+	/**
 	 * Suite config
 	 *
 	 * @var  array
@@ -83,6 +90,20 @@ class Environment {
 	 * @var boolean
 	 */
 	protected $preserve_containers = false;
+
+	/**
+	 * Snapshot instance
+	 *
+	 * @var \WPSnapshots\Snapshot
+	 */
+	protected $snapshot;
+
+	/**
+	 * MySQL client instance
+	 *
+	 * @var MySQL
+	 */
+	protected $mysql_client;
 
 	/**
 	 * Environment constructor
@@ -111,13 +132,13 @@ class Environment {
 
 		Log::instance()->write( 'Pulling snapshot...', 1 );
 
-		$snapshot = Snapshot::get( $this->snapshot_id );
+		$this->snapshot = Snapshot::get( $this->snapshot_id );
 
 		$site_mapping = [];
 
 		Log::instance()->write( 'Snapshot site mapping:', 1 );
 
-		foreach ( $snapshot->meta['sites'] as $site ) {
+		foreach ( $this->snapshot->meta['sites'] as $site ) {
 			$home_host = parse_url( $site['home_url'], PHP_URL_HOST );
 			$site_host = parse_url( $site['site_url'], PHP_URL_HOST );
 
@@ -377,6 +398,25 @@ class Environment {
 	}
 
 	/**
+	 * Get open port
+	 *
+	 * @return int|boolean
+	 */
+	protected function getOpenPort() {
+		static $used_ports = [];
+
+		for ( $i = 1000; $i <= 9999; $i++ ) {
+			if ( ! in_array( $i, $used_ports, true ) && Utils\is_open_port( '127.0.0.1', $i ) ) {
+				$used_ports[] = $i;
+
+				return $i;
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * Create Docker containers
 	 *
 	 * @return  bool
@@ -391,8 +431,19 @@ class Environment {
 		 * Create MySQL
 		 */
 
+		$this->mysql_port = $this->getOpenPort();
+
 		$host_config = new HostConfig();
 		$host_config->setNetworkMode( $this->network_id );
+
+		$port_binding = new PortBinding();
+		$port_binding->setHostPort( $this->mysql_port );
+		$port_binding->setHostIp( '0.0.0.0' );
+
+		$host_port_map           = new \ArrayObject();
+		$host_port_map['3306/tcp'] = [ $port_binding ];
+
+		$host_config->setPortBindings( $host_port_map );
 
 		$container_config = new ContainersCreatePostBody();
 		$container_config->setImage( 'mysql:5.7' );
@@ -429,7 +480,7 @@ class Environment {
 		 * Create WP container
 		 */
 
-		$this->wordpress_port = Utils\find_open_port( '127.0.0.1', 1000, 9999 );
+		$this->wordpress_port = $this->getOpenPort();
 
 		$host_config = new HostConfig();
 
@@ -477,13 +528,7 @@ class Environment {
 		 * Create selenium container
 		 */
 
-		for ( $i = 1000; $i <= 9999; $i++ ) {
-			$this->selenium_port = $i;
-
-			if ( $i !== $this->wordpress_port && Utils\is_open_port( '127.0.0.1', $i ) ) {
-				break;
-			}
-		}
+		$this->selenium_port = $this->getOpenPort();
 
 		$host_config = new HostConfig();
 		$host_config->setNetworkMode( $this->network_id );
@@ -668,6 +713,15 @@ class Environment {
 	}
 
 	/**
+	 * Get current snapshot
+	 *
+	 * @return \WPSnapshots\Snapshot
+	 */
+	public function getSnapshot() {
+		return $this->snapshot;
+	}
+
+	/**
 	 * Get MySQL credentials to use in WordPress
 	 *
 	 * @return array
@@ -679,6 +733,19 @@ class Environment {
 			'DB_USER'     => 'root',
 			'DB_PASSWORD' => 'password',
 		];
+	}
+
+	/**
+	 * Get MySQL client
+	 *
+	 * @return MySQL
+	 */
+	public function getMySQLClient() {
+		if ( empty( $this->mysql_client ) ) {
+			$this->mysql_client = new MySQL( $this->getMySQLCredentials(), $this->mysql_port, $this->snapshot->meta['table_prefix'] );
+		}
+
+		return $this->mysql_client;
 	}
 
 }

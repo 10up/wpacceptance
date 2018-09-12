@@ -22,10 +22,14 @@ class EnvironmentFactory {
 	 * Get an environment given an index
 	 *
 	 * @param  int $index Environments index
-	 * @return int
+	 * @return int|boolean;
 	 */
 	public static function get( $index = 0 ) {
-		return self::$environments[ $index ];
+		if ( ! empty( self::$environments[ $index ] ) ) {
+			return self::$environments[ $index ];
+		}
+
+		return false;
 	}
 
 	/**

@@ -14,6 +14,8 @@ use PHPUnit\Framework\TestCase;
 
 use WPAssure\Exception;
 use WPAssure\Log;
+use WPAssure\Utils;
+use WPAssure\EnvironmentFactory;
 use WPAssure\PHPUnit\Constraint;
 use WPAssure\PHPUnit\Constraints\Cookie as CookieConstrain;
 use WPAssure\PHPUnit\Constraints\PageContains as PageContainsConstrain;
@@ -803,7 +805,39 @@ class Actor {
 		);
 	}
 
-	public function seeInDatabase() {
-		$mysql = $this->getMySQLInstance();
+	/**
+	 * Find a post given criteria. The following criteria is supported:
+	 *
+	 * @param  array  $args Criteria array
+	 * @return boolean
+	 */
+	public function seePost( $args = [] ) {
+		$mysql = EnvironmentFactory::get()->getMySQLClient();
+
+		$defaults = [
+			'post_type'   => 'post',
+			'post_status' => 'publish',
+		];
+
+		// Merge defaults
+		$args = array_merge( $defaults, $args );
+
+		$where = 'WHERE 1=1 ';
+
+		if ( ! empty( $args['ID'] ) ) {
+			$where .= ' AND `ID` = "' . (int) $args['ID'] . '" ';
+		} if ( ! empty( $args['post_title'] ) ) {
+			$where .= ' AND `post_title` = "' . $mysql->escape( $args['post_title'] ) . '" ';
+		} if ( ! empty( $args['post_type'] ) ) {
+			$where .= ' AND `post_type` = "' . $mysql->escape( $args['post_type'] ) . '" ';
+		} if ( ! empty( $args['post_status'] ) ) {
+			$where .= ' AND `post_status` = "' . $mysql->escape( $args['post_status'] ) . '" ';
+		}
+
+		$query = 'SELECT * FROM ' . $mysql->getTablePrefix() . 'posts ' . $where;
+
+		$result = $mysql->query( $query );
+
+		return ( 1 <= $result->num_rows );
 	}
 }
