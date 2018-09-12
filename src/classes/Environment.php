@@ -525,12 +525,14 @@ class Environment {
 
 		sleep( 1 );
 
+		$mysql_creds = $this->getMySQLCredentials();
+
 		for ( $i = 0; $i < 20; $i ++ ) {
 			$exec_config = new ContainersIdExecPostBody();
 			$exec_config->setTty( true );
 			$exec_config->setAttachStdout( true );
 			$exec_config->setAttachStderr( true );
-			$exec_config->setCmd( [ '/bin/sh', '-c', 'mysqladmin ping -h"' . $this->getMySQLCredentials()['DB_HOST'] . '" -u root -ppassword' ] );
+			$exec_config->setCmd( [ '/bin/sh', '-c', 'mysqladmin ping -h"' . $mysql_creds['DB_HOST'] . '" -u ' . $mysql_creds['DB_USER'] . ' -p' . $mysql_creds['DB_PASSWORD'] ] );
 
 			$exec_id           = $this->docker->containerExec( 'wordpress-' . $this->network_id, $exec_config )->getId();
 			$exec_start_config = new ExecIdStartPostBody();
