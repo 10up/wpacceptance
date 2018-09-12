@@ -258,13 +258,6 @@ class Actor {
 	}
 
 	/**
-	 * End browser session
-	 */
-	public function close() {
-		$this->getWebDriver()->quit();
-	}
-
-	/**
 	 * Resize window to a new dimension.
 	 *
 	 * @access public

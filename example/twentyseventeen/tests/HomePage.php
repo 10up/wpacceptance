@@ -25,8 +25,6 @@ class HomePageTest extends \WPAssure\PHPUnit\TestCase {
 		$I->waitUntil( 'titleContains', 'Search Results' );
 
 		$this->assertTrue( true );
-
-		$I->close();
 	}
 
 	/**
@@ -46,8 +44,6 @@ class HomePageTest extends \WPAssure\PHPUnit\TestCase {
 		}
 
 		$this->assertNotEquals( $element, false );
-
-		$I->close();
 	}
 
 	/**
@@ -67,7 +63,5 @@ class HomePageTest extends \WPAssure\PHPUnit\TestCase {
 		}
 
 		$this->assertNotEquals( $element, false );
-
-		$I->close();
 	}
 }
