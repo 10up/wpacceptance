@@ -516,6 +516,40 @@ class Environment {
 	}
 
 	/**
+	 * Wait for MySQL to be available by continually running mysqladmin command on WP container
+	 */
+	public function waitForMySQL() {
+		Log::instance()->write( 'Waiting for MySQL to start...', 1 );
+
+		sleep( 1 );
+
+		for ( $i = 0; $i < 20; $i ++ ) {
+			$exec_config = new ContainersIdExecPostBody();
+			$exec_config->setTty( true );
+			$exec_config->setAttachStdout( true );
+			$exec_config->setAttachStderr( true );
+			$exec_config->setCmd( [ '/bin/sh', '-c', 'mysqladmin ping -h"' . $this->getMySQLCredentials()['DB_HOST'] . '" -u root -ppassword' ] );
+
+			$exec_id           = $this->docker->containerExec( 'wordpress-' . $this->network_id, $exec_config )->getId();
+			$exec_start_config = new ExecIdStartPostBody();
+			$exec_start_config->setDetach( false );
+
+			$stream = $this->docker->execStart( $exec_id, $exec_start_config );
+
+			$stream->wait();
+
+			$exit_code = $this->docker->execInspect( $exec_id )->getExitCode();
+
+			if ( 0 === $exit_code ) {
+				Log::instance()->write( 'MySQL connection available after ' . ( $i + 2 ) . ' seconds.', 2 );
+				break;
+			}
+
+			sleep( 1 );
+		}
+	}
+
+	/**
 	 * Start containers
 	 *
 	 * @return  bool
@@ -527,25 +561,7 @@ class Environment {
 			$response = $this->docker->containerStart( $container->getId() );
 		}
 
-		Log::instance()->write( 'Waiting for MySQL to start...', 1 );
-
-		$mysql_started = false;
-
-		$this->mysql_stream->onStdout(
-			function( $stdout ) {
-				if ( preg_match( '#MySQL init process done#i', $stdout ) ) {
-					$mysql_started = true;
-				}
-			}
-		);
-
-		for ( $i = 0; $i < 15; $i ++ ) {
-			if ( $mysql_started ) {
-				break;
-			}
-
-			sleep( 1 );
-		}
+		$this->waitForMySQL();
 
 		return true;
 	}
