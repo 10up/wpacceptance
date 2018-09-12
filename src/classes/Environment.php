@@ -134,7 +134,17 @@ class Environment {
 
 		$mysql_creds = $this->getMySQLCredentials();
 
-		$command = '/root/.composer/vendor/bin/wpsnapshots pull ' . $this->snapshot_id . ' --confirm --config_db_name="' . $mysql_creds['DB_NAME'] . '" --config_db_user="' . $mysql_creds['DB_USER'] . '" --config_db_password="' . $mysql_creds['DB_PASSWORD'] . '" --config_db_host="' . $mysql_creds['DB_HOST'] . '" --confirm_wp_download --confirm_config_create --site_mapping="' . addslashes( json_encode( $site_mapping ) ) . '"';
+		$verbose = '';
+
+		if ( 1 === Log::instance()->getVerbosity() ) {
+			$verbose = '-v';
+		} elseif ( 2 === Log::instance()->getVerbosity() ) {
+			$verbose = '-vv';
+		} elseif ( 3 === Log::instance()->getVerbosity() ) {
+			$verbose = '-vvv';
+		}
+
+		$command = '/root/.composer/vendor/bin/wpsnapshots pull ' . $this->snapshot_id . ' --confirm --config_db_name="' . $mysql_creds['DB_NAME'] . '" --config_db_user="' . $mysql_creds['DB_USER'] . '" --config_db_password="' . $mysql_creds['DB_PASSWORD'] . '" --config_db_host="' . $mysql_creds['DB_HOST'] . '" --confirm_wp_download --confirm_config_create --site_mapping="' . addslashes( json_encode( $site_mapping ) ) . '" ' . $verbose;
 
 		Log::instance()->write( 'Running command:', 1 );
 		Log::instance()->write( $command, 1 );
