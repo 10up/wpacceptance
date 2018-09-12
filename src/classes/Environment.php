@@ -517,6 +517,8 @@ class Environment {
 
 	/**
 	 * Wait for MySQL to be available by continually running mysqladmin command on WP container
+	 *
+	 * @return  bool
 	 */
 	public function waitForMySQL() {
 		Log::instance()->write( 'Waiting for MySQL to start...', 1 );
@@ -542,11 +544,16 @@ class Environment {
 
 			if ( 0 === $exit_code ) {
 				Log::instance()->write( 'MySQL connection available after ' . ( $i + 2 ) . ' seconds.', 2 );
-				break;
+
+				return true;
 			}
 
 			sleep( 1 );
 		}
+
+		Log::instance()->write( 'MySQL never became available.', 0, 'error' );
+
+		return false;
 	}
 
 	/**
@@ -561,9 +568,7 @@ class Environment {
 			$response = $this->docker->containerStart( $container->getId() );
 		}
 
-		$this->waitForMySQL();
-
-		return true;
+		return $this->waitForMySQL();
 	}
 
 	/**
