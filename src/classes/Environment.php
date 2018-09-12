@@ -132,7 +132,9 @@ class Environment {
 			Log::instance()->write( 'Site URL: ' . $map['site_url'], 1 );
 		}
 
-		$command = '/root/.composer/vendor/bin/wpsnapshots pull ' . $this->snapshot_id . ' --confirm --config_db_name="wordpress" --config_db_user="root" --config_db_password="password" --config_db_host="mysql-' . $this->network_id . '" --confirm_wp_download --confirm_config_create --site_mapping="' . addslashes( json_encode( $site_mapping ) ) . '"';
+		$mysql_creds = $this->getMySQLCredentials();
+
+		$command = '/root/.composer/vendor/bin/wpsnapshots pull ' . $this->snapshot_id . ' --confirm --config_db_name="' . $mysql_creds['DB_NAME'] . '" --config_db_user="' . $mysql_creds['DB_USER'] . '" --config_db_password="' . $mysql_creds['DB_PASSWORD'] . '" --config_db_host="' . $mysql_creds['DB_HOST'] . '" --confirm_wp_download --confirm_config_create --site_mapping="' . addslashes( json_encode( $site_mapping ) ) . '"';
 
 		Log::instance()->write( 'Running command:', 1 );
 		Log::instance()->write( $command, 1 );
@@ -630,6 +632,20 @@ class Environment {
 	 */
 	public function getGatewayIP() {
 		return $this->gateway_ip;
+	}
+
+	/**
+	 * Get MySQL credentials to use in WordPress
+	 *
+	 * @return array
+	 */
+	public function getMySQLCredentials() {
+		return [
+			'DB_HOST'     => 'mysql-' . $this->network_id,
+			'DB_NAME'     => 'wordpress',
+			'DB_USER'     => 'root',
+			'DB_PASSWORD' => 'password',
+		];
 	}
 
 }

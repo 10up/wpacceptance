@@ -13,7 +13,6 @@ use PHPUnit\Framework\ExpectationFailedException;
 use PHPUnit\Framework\TestCase;
 
 use WPAssure\Exception;
-use WPAssure\EnvironmentFactory;
 use WPAssure\Log;
 use WPAssure\PHPUnit\Constraint;
 use WPAssure\PHPUnit\Constraints\Cookie as CookieConstrain;
@@ -804,4 +803,7 @@ class Actor {
 		);
 	}
 
+	public function seeInDatabase() {
+		$mysql = $this->getMySQLInstance();
+	}
 }
