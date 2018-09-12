@@ -106,39 +106,6 @@ class Environment {
 	 */
 	public function pullSnapshot() {
 		/**
-		 * Optionally update WP Snapshots
-		 */
-		if ( true ) {
-			Log::instance()->write( 'Updating WP Snapshots...', 1 );
-
-			$exec_config = new ContainersIdExecPostBody();
-			$exec_config->setTty( true );
-			$exec_config->setAttachStdout( true );
-			$exec_config->setAttachStderr( true );
-			$exec_config->setCmd( [ 'composer', 'global', 'update', '10up/wpsnapshots' ] );
-
-			$exec_id           = $this->docker->containerExec( 'wordpress-' . $this->network_id, $exec_config )->getId();
-			$exec_start_config = new ExecIdStartPostBody();
-			$exec_start_config->setDetach( false );
-
-			$stream = $this->docker->execStart( $exec_id, $exec_start_config );
-
-			$stream->onStdout(
-				function( $stdout ) {
-						Log::instance()->write( $stdout, 1 );
-				}
-			);
-
-			$stream->onStderr(
-				function( $stderr ) {
-						Log::instance()->write( $stderr, 1 );
-				}
-			);
-
-			$stream->wait();
-		}
-
-		/**
 		 * Pulling snapshot
 		 */
 
@@ -364,11 +331,7 @@ class Environment {
 				'tag'  => '5.7',
 			],
 			[
-				'name' => 'wordpress',
-				'tag'  => 'latest',
-			],
-			[
-				'name' => 'nginx',
+				'name' => '10up/wpassure-wordpress',
 				'tag'  => 'latest',
 			],
 			[
@@ -454,19 +417,6 @@ class Environment {
 		 * Create WP container
 		 */
 
-		$context = new Context( __DIR__ . '/../../docker/wordpress' );
-
-		$input_stream = $context->toStream();
-
-		$build_stream = $this->docker->imageBuild( $input_stream, [ 't' => 'wpassure-wordpress' ] );
-		$build_stream->onFrame(
-			function( BuildInfo $build_info ) {
-					Log::instance()->write( $build_info->getStream(), 1 );
-			}
-		);
-
-		$build_stream->wait();
-
 		$this->wordpress_port = Utils\find_open_port( '127.0.0.1', 1000, 9999 );
 
 		$host_config = new HostConfig();
@@ -485,7 +435,7 @@ class Environment {
 
 		$container_config = new ContainersCreatePostBody();
 
-		$container_config->setImage( 'wpassure-wordpress' );
+		$container_config->setImage( '10up/wpassure-wordpress' );
 		$container_config->setAttachStdin( true );
 		$container_config->setAttachStdout( true );
 		$container_config->setExposedPorts( $container_port_map );
