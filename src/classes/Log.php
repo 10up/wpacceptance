@@ -18,26 +18,26 @@ class Log {
 	 *
 	 * @var OutputInterface
 	 */
-	protected $output;
+	protected $_output;
 
 	/**
 	 * Log to store to
 	 *
 	 * @var array
 	 */
-	protected $log = [];
+	protected $_log = [];
 
 	/**
 	 * Output verbosity
 	 *
 	 * @var int
 	 */
-	protected $verbosity = 0;
+	protected $_verbosity = 0;
 
 	/**
 	 * Singleton
 	 */
-	private function __construct() { }
+	protected function __construct() { }
 
 	/**
 	 * Do we want to log to the console? If so, set the output interface.
@@ -45,14 +45,14 @@ class Log {
 	 * @param OutputInterface $output Output to log to.
 	 */
 	public function setOutput( OutputInterface $output ) {
-		$this->output = $output;
+		$this->_output = $output;
 
 		if ( $output->isDebug() ) {
-			$this->verbosity = 3;
+			$this->_verbosity = 3;
 		} elseif ( $output->isVeryVerbose() ) {
-			$this->verbosity = 2;
+			$this->_verbosity = 2;
 		} elseif ( $output->isVerbose() ) {
-			$this->verbosity = 1;
+			$this->_verbosity = 1;
 		}
 	}
 
@@ -74,9 +74,9 @@ class Log {
 			'verbosity_level' => $verbosity_level,
 		];
 
-		$this->log[] = $entry;
+		$this->_log[] = $entry;
 
-		if ( ! empty( $this->output ) ) {
+		if ( ! empty( $this->_output ) ) {
 			if ( 'warning' === $type ) {
 				$message = '<comment>' . $message . '</comment>';
 			} elseif ( 'success' === $type ) {
@@ -95,7 +95,7 @@ class Log {
 				$console_verbosity_level = OutputInterface::VERBOSITY_DEBUG;
 			}
 
-			$this->output->writeln( $message, $console_verbosity_level );
+			$this->_output->writeln( $message, $console_verbosity_level );
 		}
 
 		return $entry;
@@ -107,7 +107,7 @@ class Log {
 	 * @return int
 	 */
 	public function getVerbosity() {
-		return $this->verbosity;
+		return $this->_verbosity;
 	}
 
 	/**

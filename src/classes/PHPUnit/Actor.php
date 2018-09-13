@@ -1,4 +1,9 @@
 <?php
+/**
+ * An Actor is used in a test to interact with the website
+ *
+ * @package  wpassure
+ */
 
 namespace WPAssure\PHPUnit;
 
@@ -25,6 +30,9 @@ use WPAssure\PHPUnit\Constraints\UrlContains as UrlContainsConstrain;
 use WPAssure\PHPUnit\Constraints\CheckboxChecked as CheckboxCheckedConstrain;
 use WPAssure\PHPUnit\Constraints\FieldValueContains as FieldValueContainsConstrain;
 
+/**
+ * Actor class
+ */
 class Actor {
 
 	/**
@@ -808,7 +816,7 @@ class Actor {
 	/**
 	 * Find a post given criteria. The following criteria is supported:
 	 *
-	 * @param  array  $args Criteria array
+	 * @param  array $args Criteria array
 	 * @return boolean
 	 */
 	public function seePost( $args = [] ) {
@@ -834,7 +842,7 @@ class Actor {
 			$where .= ' AND `post_status` = "' . $mysql->escape( $args['post_status'] ) . '" ';
 		}
 
-		$query = 'SELECT * FROM ' . $mysql->getTablePrefix() . 'posts ' . $where;
+		$query = 'SELECT * FROM ' . $mysql->getTablePrefix() . 'posts ' . $where . ' LIMIT 10';
 
 		$result = $mysql->query( $query );
 

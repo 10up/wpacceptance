@@ -21,7 +21,7 @@ class Config implements ArrayAccess {
 	 *
 	 * @var array
 	 */
-	protected $config;
+	protected $_config;
 
 	/**
 	 * Initiate class
@@ -29,7 +29,7 @@ class Config implements ArrayAccess {
 	 * @param  array $config Configuration array
 	 */
 	protected function __construct( array $config ) {
-		$this->config = $config;
+		$this->_config = $config;
 	}
 
 	/**
@@ -75,10 +75,10 @@ class Config implements ArrayAccess {
 	public function write() {
 		Log::instance()->write( 'Writing config.', 1 );
 
-		$file_config = $this->config;
+		$file_config = $this->_config;
 		unset( $file_config['path'] );
 
-		file_put_contents( $this->config['path'] . '/wpassure.json', json_encode( $file_config, JSON_PRETTY_PRINT ) );
+		file_put_contents( $this->_config['path'] . '/wpassure.json', json_encode( $file_config, JSON_PRETTY_PRINT ) );
 	}
 
 	/**
@@ -89,9 +89,9 @@ class Config implements ArrayAccess {
 	 */
 	public function offsetSet( $offset, $value ) {
 		if ( is_null( $offset ) ) {
-			$this->config[] = $value;
+			$this->_config[] = $value;
 		} else {
-			$this->config[ $offset ] = $value;
+			$this->_config[ $offset ] = $value;
 		}
 	}
 
@@ -102,7 +102,7 @@ class Config implements ArrayAccess {
 	 * @return bool
 	 */
 	public function offsetExists( $offset ) {
-		return isset( $this->config[ $offset ] );
+		return isset( $this->_config[ $offset ] );
 	}
 
 	/**
@@ -111,7 +111,7 @@ class Config implements ArrayAccess {
 	 * @param  int|string $offset Array key
 	 */
 	public function offsetUnset( $offset ) {
-		unset( $this->config[ $offset ] );
+		unset( $this->_config[ $offset ] );
 	}
 
 	/**
@@ -121,6 +121,6 @@ class Config implements ArrayAccess {
 	 * @return mixed
 	 */
 	public function offsetGet( $offset ) {
-		return isset( $this->config[ $offset ] ) ? $this->config[ $offset ] : null;
+		return isset( $this->_config[ $offset ] ) ? $this->_config[ $offset ] : null;
 	}
 }
