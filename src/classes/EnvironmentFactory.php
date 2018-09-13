@@ -33,6 +33,15 @@ class EnvironmentFactory {
 	}
 
 	/**
+	 * Clean up environments on shutdown
+	 */
+	public static function handleShutdown() {
+		foreach ( self::$environments as $environment ) {
+			$environment->destroy();
+		}
+	}
+
+	/**
 	 * Create environment
 	 *
 	 * @param  string  $snapshot_id WPSnapshot ID to load into environment
@@ -42,6 +51,10 @@ class EnvironmentFactory {
 	 */
 	public static function create( $snapshot_id, $suite_config, $preserve_containers = false ) {
 		$environment = new Environment( $snapshot_id, $suite_config, $preserve_containers );
+
+		if ( empty( self::$environments ) ) {
+			register_shutdown_function( [ '\WPAssure\EnvironmentFactory', 'handleShutdown' ] );
+		}
 
 		self::$environments[] = $environment;
 
@@ -58,14 +71,10 @@ class EnvironmentFactory {
 		}
 
 		if ( ! $environment->startContainers() ) {
-			$environment->destroy();
-
 			return false;
 		}
 
 		if ( ! $environment->pullSnapshot() ) {
-			$environment->destroy();
-
 			return false;
 		}
 

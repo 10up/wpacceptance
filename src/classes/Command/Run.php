@@ -68,14 +68,14 @@ class Run extends Command {
 
 		if ( ! function_exists( 'mysqli_init' ) ) {
 			Log::instance()->write( 'WPAssure requires the mysqli PHP extension is installed.', 0, 'error' );
-			return;
+			return 1;
 		}
 
 		$connection = Connection::instance()->connect();
 
 		if ( \WPSnapshots\Utils\is_error( $connection ) ) {
 			Log::instance()->write( 'Could not connect to WP Snapshots repository.', 0, 'error' );
-			return;
+			return 1;
 		}
 
 		$local = $input->getOption( 'local' );
@@ -89,7 +89,7 @@ class Run extends Command {
 
 			if ( empty( $wp_directory ) ) {
 				Log::instance()->write( 'This does not seem to be a WordPress installation. No wp-config.php found in directory tree.', 0, 'error' );
-				return;
+				return 1;
 			}
 		}
 
@@ -98,7 +98,7 @@ class Run extends Command {
 		$suite_config = Config::create( $suite_config_directory );
 
 		if ( false === $suite_config ) {
-			return;
+			return 1;
 		}
 
 		$snapshot_id = false;
@@ -117,13 +117,13 @@ class Run extends Command {
 
 				if ( ! is_a( $snapshot, '\WPSnapshots\Snapshot' ) ) {
 					Log::instance()->write( 'Could not download snapshot. Does it exist?', 0, 'error' );
-					return;
+					return 1;
 				}
 			}
 		} else {
 			if ( empty( $local ) ) {
 				Log::instance()->write( 'You must either provide --snapshot_id, have a snapshot ID in wpassure.json, or provide the --local parameter.', 0, 'error' );
-				return;
+				return 1;
 			}
 
 			Log::instance()->write( 'Creating snapshot...' );
@@ -152,7 +152,7 @@ class Run extends Command {
 		$environment = EnvironmentFactory::create( $snapshot_id, $suite_config, $input->getOption( 'preserve_containers' ) );
 
 		if ( ! $environment ) {
-			exit;
+			return 1;
 		}
 
 		Log::instance()->write( 'Running tests...' );
@@ -225,12 +225,10 @@ class Run extends Command {
 				} else {
 					Log::instance()->write( 'Could not push snapshot to repository.', 0, 'error' );
 					$environment->destroy();
-					return;
+					return 1;
 				}
 			}
 		}
-
-		$environment->destroy();
 
 		$output->writeln( 'Done.', 0, 'success' );
 	}
