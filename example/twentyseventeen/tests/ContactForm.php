@@ -44,7 +44,7 @@ class ContactFormTest extends \WPAssure\PHPUnit\TestCase {
 
 		$I->waitUntilElementVisible( '.nf-response-msg' );
 
-		$I->seeNewPosts( 'nf_sub', 'No new contact form entries in database.' );
+		$I->seeNewPosts( 'No new contact form entries in database.' );
 	}
 
 }
