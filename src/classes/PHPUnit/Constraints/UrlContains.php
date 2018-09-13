@@ -23,9 +23,9 @@ class UrlContains extends \WPAssure\PHPUnit\Constraint {
 	 * @param string $text A text to look for.
 	 */
 	public function __construct( $action, $text ) {
-		parent::__construct( $this->_verifyAction( $action ) );
+		parent::__construct( $this->verifyAction( $action ) );
 
-		$this->_text = $text;
+		$this->text = $text;
 	}
 
 	/**
@@ -36,7 +36,7 @@ class UrlContains extends \WPAssure\PHPUnit\Constraint {
 	 * @return boolean TRUE if the constrain is met, otherwise FALSE.
 	 */
 	protected function matches( $other ) {
-		$actor     = $this->_getActor( $other );
+		$actor     = $this->getActor( $other );
 		$webdriver = $actor->getWebDriver();
 
 		$url   = trim( $webdriver->getCurrentURL() );
@@ -52,7 +52,7 @@ class UrlContains extends \WPAssure\PHPUnit\Constraint {
 	 * @return string The description text.
 	 */
 	public function toString() {
-		return sprintf( ' "%s" text in the current URL', $this->_text );
+		return sprintf( ' "%s" text in the current URL', $this->text );
 	}
 
 }

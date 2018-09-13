@@ -147,7 +147,7 @@ class Actor {
 	 * @param \WPAssure\PHPUnit\Constraint $constraint An instance of constraint class.
 	 * @param string                       $message Optional. A message for a failure.
 	 */
-	protected function _assertThat( $constraint, $message = '' ) {
+	protected function assertThat( $constraint, $message = '' ) {
 		TestCase::assertThat( $this, $constraint, $message );
 	}
 
