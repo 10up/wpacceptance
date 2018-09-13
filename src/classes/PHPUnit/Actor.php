@@ -29,6 +29,7 @@ use WPAssure\PHPUnit\Constraints\LinkOnPage as LinkOnPageConstrain;
 use WPAssure\PHPUnit\Constraints\UrlContains as UrlContainsConstrain;
 use WPAssure\PHPUnit\Constraints\CheckboxChecked as CheckboxCheckedConstrain;
 use WPAssure\PHPUnit\Constraints\FieldValueContains as FieldValueContainsConstrain;
+use WPAssure\PHPUnit\Constraints\NewDatabaseEntry as NewDatabaseEntry;
 
 /**
  * Actor class
@@ -58,6 +59,15 @@ class Actor {
 	 * @var \PHPUnit\Framework\TestCase
 	 */
 	private $_test = null;
+
+	/**
+	 * Last MySQL ids
+	 *
+	 * @var array
+	 */
+	private $_last_ids = [
+		'posts' => 0,
+	];
 
 	/**
 	 * Constructor.
@@ -296,15 +306,27 @@ class Actor {
 	}
 
 	/**
-	 * Wait for condition
+	 * Wait until title contains
 	 *
-	 * @param  string  $condition  Condition matches to WebDriverExpectedCondition function name: titleIs, titleContaints, etc.
-	 * @param  string  $mixed_args [description]
-	 * @param  integer $max_wait   Max wait time in seconds
+	 * @param  string  $title     Title string
+	 * @param  integer $max_wait  Max wait time in seconds
 	 */
-	public function waitUntil( $condition, $mixed_args, $max_wait = 10 ) {
+	public function waitUntilTitleContains( $title, $max_wait = 10 ) {
 		$webdriver = $this->getWebDriver();
-		$webdriver->wait( $max_wait )->until( WebDriverExpectedCondition::$condition( $mixed_args ) );
+
+		$webdriver->wait( $max_wait )->until( WebDriverExpectedCondition::titleContains( $title ) );
+	}
+
+	/**
+	 * Wait until element is visible
+	 *
+	 * @param  string  $element_path Path to element to check
+	 * @param  integer $max_wait  Max wait time in seconds
+	 */
+	public function waitUntilElementVisible( $element_path, $max_wait = 10 ) {
+		$webdriver = $this->getWebDriver();
+
+		$webdriver->wait( $max_wait )->until( WebDriverExpectedCondition::visibilityOfElementLocated( WebDriverBy::cssSelector( $element_path ) ) );
 	}
 
 	/**
@@ -809,6 +831,36 @@ class Actor {
 	public function dontSeeFieldValue( $element, $value, $message = '' ) {
 		$this->_assertThat(
 			new FieldValueContainsConstrain( Constraint::ACTION_DONTSEE, $element, $value ),
+			$message
+		);
+	}
+
+	/**
+	 * Watch for new posts. We record the ID of the last post here so we can look for
+	 * new ids later.
+	 */
+	public function watchForPosts() {
+		$mysql = EnvironmentFactory::get()->getMySQLClient();
+
+		$query = 'SELECT ID FROM ' . $mysql->getTablePrefix() . 'posts ORDER BY `ID` DESC LIMIT 1';
+
+		$query = $mysql->query( $query );
+
+		$results = $query->fetch_assoc();
+
+		if ( ! empty( $results ) ) {
+			$this->_last_ids['posts'] = (int) $results['ID'];
+		}
+	}
+
+	/**
+	 * Check for new posts or other post type. Must have called watchForPosts first.
+	 *
+	 * @param  string $message Optional message to show if test fails
+	 */
+	public function seeNewPosts( $message = '' ) {
+		$this->_assertThat(
+			new NewDatabaseEntry( Constraint::ACTION_SEE, 'posts', (int) $this->_last_ids['posts'] ),
 			$message
 		);
 	}

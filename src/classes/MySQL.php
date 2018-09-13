@@ -64,7 +64,13 @@ class MySQL {
 	public function query( $query ) {
 		Log::instance()->write( 'Running MySQL query: ' . $query, 2 );
 
-		return $this->_mysqli_instance->query( $query );
+		$result = $this->_mysqli_instance->query( $query );
+
+		if ( ! $result ) {
+			Log::instance()->write( 'Query error: ' . $this->_mysqli_instance->error, 2 );
+		}
+
+		return $result;
 	}
 
 	/**

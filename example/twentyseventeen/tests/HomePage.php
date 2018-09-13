@@ -22,7 +22,7 @@ class HomePageTest extends \WPAssure\PHPUnit\TestCase {
 
 		$I->pressEnter( $element );
 
-		$I->waitUntil( 'titleContains', 'Search Results' );
+		$I->waitUntilTitleContains( 'Search Results' );
 
 		$I->seePost();
 

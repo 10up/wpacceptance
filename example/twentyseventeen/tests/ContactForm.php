@@ -19,25 +19,32 @@ class ContactFormTest extends \WPAssure\PHPUnit\TestCase {
 
 		$I->moveTo( '/contact' );
 
-		$I->click( '.wpforms-submit' );
+		$I->click( 'form .submit-wrap input' );
 
-		$I->seeText( 'This field is required', null, "Don't see required field error text." );
+		$I->seeText( 'Please correct errors before submitting this form', null, "Don't see required field error text." );
 	}
 
 	/**
-	 * When I fill out the form and submit, a new entry appears in the database
+	 * When I fill out the form and submit, a new entry of the proper post type appears in the database
 	 */
 	public function testSubmit() {
 		$I = $this->getAnonymousUser();
 
 		$I->moveTo( '/contact' );
 
-		$I->fillField( 'form.wpforms-form .wpforms-field-name-first', 'John' );
-		$I->fillField( 'form.wpforms-form .wpforms-field-name-last', 'Doe' );
+		$I->fillField( '#nf-field-1', 'John' );
 
-		$I->fillField( 'form.wpforms-form input[type=email]', 'test@test.com' );
+		$I->fillField( '#nf-field-2', 'test@test.com' );
 
-		$I->fillField( 'form.wpforms-form textarea', 'comment' );
+		$I->fillField( '#nf-field-3', 'message' );
+
+		$I->watchForPosts();
+
+		$I->click( 'form .submit-wrap input' );
+
+		$I->waitUntilElementVisible( '.nf-response-msg' );
+
+		$I->seeNewPosts( 'nf_sub', 'No new contact form entries in database.' );
 	}
 
 }
