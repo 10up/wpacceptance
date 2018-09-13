@@ -12,5 +12,6 @@ namespace WPAssure\PHPUnit;
  */
 abstract class TestCase extends \PHPUnit\Framework\TestCase {
 
-	use WebDriver;
+	use WebDriver, Database;
+
 }

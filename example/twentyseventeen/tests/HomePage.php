@@ -20,11 +20,9 @@ class HomePageTest extends \WPAssure\PHPUnit\TestCase {
 
 		$element = $I->fillField( '.search-form input[type=search]', 'test search' );
 
-		$I->pressEnter( $element );
+		$I->pressEnterKey( $element );
 
 		$I->waitUntilTitleContains( 'Search Results' );
-
-		$I->seePost();
 
 		$this->assertTrue( true );
 	}

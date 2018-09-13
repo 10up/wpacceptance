@@ -22,7 +22,7 @@ class EnvironmentFactory {
 	 * Get an environment given an index
 	 *
 	 * @param  int $index Environments index
-	 * @return int|boolean;
+	 * @return \WPAssure\Environment|boolean;
 	 */
 	public static function get( $index = 0 ) {
 		if ( ! empty( self::$environments[ $index ] ) ) {
@@ -47,7 +47,7 @@ class EnvironmentFactory {
 	 * @param  string  $snapshot_id WPSnapshot ID to load into environment
 	 * @param  array   $suite_config Config array
 	 * @param  boolean $preserve_containers Keep containers alive or not
-	 * @return  Environment|bool
+	 * @return  \WPAssure\Environment|bool
 	 */
 	public static function create( $snapshot_id, $suite_config, $preserve_containers = false ) {
 		$environment = new Environment( $snapshot_id, $suite_config, $preserve_containers );

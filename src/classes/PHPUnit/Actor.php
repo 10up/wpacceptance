@@ -61,15 +61,6 @@ class Actor {
 	private $_test = null;
 
 	/**
-	 * Last MySQL ids
-	 *
-	 * @var array
-	 */
-	private $_last_ids = [
-		'posts' => 0,
-	];
-
-	/**
 	 * Constructor.
 	 *
 	 * @access public
@@ -693,10 +684,35 @@ class Actor {
 		);
 	}
 
-	public function pressEnter( $element ) {
-		$element->sendKeys( WebDriverKeys::ENTER );
+	/**
+	 * Press a key on an element.
+	 *
+	 * @see \Facebook\WebDriver\WebDriverKeys
+	 *
+	 * @access public
+	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
+	 * @param string $key A key to press.
+	 */
+	public function pressKey( $element, $key ) {
+		$this->getElement( $element )->sendKeys( $key );
 	}
 
+	/**
+	 * Press "enter" key on an element.
+	 *
+	 * @access public
+	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
+	 */
+	public function pressEnterKey( $element ) {
+		$this->pressKey( $element, WebDriverKeys::ENTER );
+	}
+
+	/**
+	 * Return current active element.
+	 *
+	 * @access public
+	 * @return \Facebook\WebDriver\Remote\RemoteWebElement An instance of web elmeent.
+	 */
 	public function getActiveElement() {
 		return $this->getWebDriver()->switchTo()->activeElement();
 	}
@@ -835,69 +851,4 @@ class Actor {
 		);
 	}
 
-	/**
-	 * Watch for new posts. We record the ID of the last post here so we can look for
-	 * new ids later.
-	 */
-	public function watchForPosts() {
-		$mysql = EnvironmentFactory::get()->getMySQLClient();
-
-		$query = 'SELECT ID FROM ' . $mysql->getTablePrefix() . 'posts ORDER BY `ID` DESC LIMIT 1';
-
-		$query = $mysql->query( $query );
-
-		$results = $query->fetch_assoc();
-
-		if ( ! empty( $results ) ) {
-			$this->_last_ids['posts'] = (int) $results['ID'];
-		}
-	}
-
-	/**
-	 * Check for new posts or other post type. Must have called watchForPosts first.
-	 *
-	 * @param  string $message Optional message to show if test fails
-	 */
-	public function seeNewPosts( $message = '' ) {
-		$this->_assertThat(
-			new NewDatabaseEntry( Constraint::ACTION_SEE, 'posts', (int) $this->_last_ids['posts'] ),
-			$message
-		);
-	}
-
-	/**
-	 * Find a post given criteria. The following criteria is supported:
-	 *
-	 * @param  array $args Criteria array
-	 * @return boolean
-	 */
-	public function seePost( $args = [] ) {
-		$mysql = EnvironmentFactory::get()->getMySQLClient();
-
-		$defaults = [
-			'post_type'   => 'post',
-			'post_status' => 'publish',
-		];
-
-		// Merge defaults
-		$args = array_merge( $defaults, $args );
-
-		$where = 'WHERE 1=1 ';
-
-		if ( ! empty( $args['ID'] ) ) {
-			$where .= ' AND `ID` = "' . (int) $args['ID'] . '" ';
-		} if ( ! empty( $args['post_title'] ) ) {
-			$where .= ' AND `post_title` = "' . $mysql->escape( $args['post_title'] ) . '" ';
-		} if ( ! empty( $args['post_type'] ) ) {
-			$where .= ' AND `post_type` = "' . $mysql->escape( $args['post_type'] ) . '" ';
-		} if ( ! empty( $args['post_status'] ) ) {
-			$where .= ' AND `post_status` = "' . $mysql->escape( $args['post_status'] ) . '" ';
-		}
-
-		$query = 'SELECT * FROM ' . $mysql->getTablePrefix() . 'posts ' . $where . ' LIMIT 10';
-
-		$result = $mysql->query( $query );
-
-		return ( 1 <= $result->num_rows );
-	}
 }

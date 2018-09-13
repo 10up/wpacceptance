@@ -16,7 +16,6 @@ class ContactFormTest extends \WPAssure\PHPUnit\TestCase {
 	 */
 	public function testRequiredFieldsFail() {
 		$I = $this->getAnonymousUser();
-
 		$I->moveTo( '/contact' );
 
 		$I->click( 'form .submit-wrap input' );
@@ -28,23 +27,19 @@ class ContactFormTest extends \WPAssure\PHPUnit\TestCase {
 	 * When I fill out the form and submit, a new entry of the proper post type appears in the database
 	 */
 	public function testSubmit() {
-		$I = $this->getAnonymousUser();
+		$lastId = self::getLastPostId();
 
+		$I = $this->getAnonymousUser();
 		$I->moveTo( '/contact' );
 
 		$I->fillField( '#nf-field-1', 'John' );
-
 		$I->fillField( '#nf-field-2', 'test@test.com' );
-
 		$I->fillField( '#nf-field-3', 'message' );
 
-		$I->watchForPosts();
-
 		$I->click( 'form .submit-wrap input' );
-
 		$I->waitUntilElementVisible( '.nf-response-msg' );
 
-		$I->seeNewPosts( 'No new contact form entries in database.' );
+		self::assertNewPostsExist( $lastId, array(), 'No new contact form entries in database.' );
 	}
 
 }
