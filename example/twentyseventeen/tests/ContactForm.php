@@ -27,7 +27,7 @@ class ContactFormTest extends \WPAssure\PHPUnit\TestCase {
 	 * When I fill out the form and submit, a new entry of the proper post type appears in the database
 	 */
 	public function testSubmit() {
-		$lastId = self::getLastPostId( [ 'post_type' => 'nf_sub' ] );
+		$last_id = self::getLastPostId( [ 'post_type' => 'nf_sub' ] );
 
 		$I = $this->getAnonymousUser();
 		$I->moveTo( '/contact' );
@@ -39,7 +39,7 @@ class ContactFormTest extends \WPAssure\PHPUnit\TestCase {
 		$I->click( 'form .submit-wrap input' );
 		$I->waitUntilElementVisible( '.nf-response-msg' );
 
-		self::assertNewPostsExist( $lastId, [ 'post_type' => 'nf_sub' ], 'No new contact form entries in database.' );
+		self::assertNewPostsExist( $last_id, [ 'post_type' => 'nf_sub' ], 'No new contact form entries in database.' );
 	}
 
 }

@@ -42,7 +42,7 @@ class Actor {
 	 * @access private
 	 * @var string
 	 */
-	private $_name;
+	private $name;
 
 	/**
 	 * Facebook WebDrive instance.
@@ -50,7 +50,7 @@ class Actor {
 	 * @access private
 	 * @var \Facebook\WebDriver\Remote\RemoteWebDriver
 	 */
-	private $_webdriver = null;
+	private $webdriver = null;
 
 	/**
 	 * Test case instance.
@@ -58,7 +58,7 @@ class Actor {
 	 * @access private
 	 * @var \PHPUnit\Framework\TestCase
 	 */
-	private $_test = null;
+	private $test = null;
 
 	/**
 	 * Constructor.
@@ -67,7 +67,7 @@ class Actor {
 	 * @param string $name Actor name.
 	 */
 	public function __construct( $name = 'user' ) {
-		$this->_name = $name;
+		$this->name = $name;
 	}
 
 	/**
@@ -77,7 +77,7 @@ class Actor {
 	 * @param string $name Actor name.
 	 */
 	public function setActorName( $name ) {
-		$this->_name = $name;
+		$this->name = $name;
 	}
 
 	/**
@@ -87,7 +87,7 @@ class Actor {
 	 * @return string Actor name.
 	 */
 	public function getActorName() {
-		return $this->_name;
+		return $this->name;
 	}
 
 	/**
@@ -97,7 +97,7 @@ class Actor {
 	 * @param \Facebook\WebDriver\Remote\RemoteWebDriver $webdriver A web driver instance.
 	 */
 	public function setWebDriver( $webdriver ) {
-		$this->_webdriver = $webdriver;
+		$this->webdriver = $webdriver;
 	}
 
 	/**
@@ -108,11 +108,11 @@ class Actor {
 	 * @return \Facebook\WebDriver\Remote\RemoteWebDriver An instance of a web driver.
 	 */
 	public function getWebDriver() {
-		if ( ! $this->_webdriver ) {
+		if ( ! $this->webdriver ) {
 			throw new Exception( 'WebDriver is not provided.' );
 		}
 
-		return $this->_webdriver;
+		return $this->webdriver;
 	}
 
 	/**
@@ -122,7 +122,7 @@ class Actor {
 	 * @param \PHPUnit\Framework\TestCase $test A test case instance.
 	 */
 	public function setTest( TestCase $test ) {
-		$this->_test = $test;
+		$this->test = $test;
 	}
 
 	/**
@@ -133,11 +133,11 @@ class Actor {
 	 * @return \PHPUnit\Framework\TestCase An instance of a test case.
 	 */
 	public function getTest() {
-		if ( ! $this->_test ) {
+		if ( ! $this->test ) {
 			throw new Exception( 'Test case is not provided.' );
 		}
 
-		return $this->_test;
+		return $this->test;
 	}
 
 	/**
@@ -259,7 +259,7 @@ class Actor {
 			$path = '/' . $path;
 		}
 
-		$page = $this->_test->getWordPressUrl() . $path;
+		$page = $this->test->getWordPressUrl() . $path;
 
 		$webdriver = $this->getWebDriver();
 		$webdriver->get( $page );
@@ -290,7 +290,7 @@ class Actor {
 	 * @param string $message Optional. The message to use on a failure.
 	 */
 	public function seeCookie( $name, $value = null, $message = '' ) {
-		$this->_assertThat(
+		$this->assertThat(
 			new CookieConstrain( Constraint::ACTION_SEE, $name, $value ),
 			$message
 		);
@@ -329,7 +329,7 @@ class Actor {
 	 * @param string $message Optional. The message to use on a failure.
 	 */
 	public function dontSeeCookie( $name, $value = null, $message = '' ) {
-		$this->_assertThat(
+		$this->assertThat(
 			new CookieConstrain( Constraint::ACTION_DONTSEE, $name, $value ),
 			$message
 		);
@@ -632,7 +632,7 @@ class Actor {
 	 * @param string                                             $message Optional. The message to use on a failure.
 	 */
 	public function seeText( $text, $element = null, $message = '' ) {
-		$this->_assertThat(
+		$this->assertThat(
 			new PageContainsConstrain( Constraint::ACTION_SEE, $text, $element ),
 			$message
 		);
@@ -648,7 +648,7 @@ class Actor {
 	 * @param string                                             $message Optional. The message to use on a failure.
 	 */
 	public function dontSeeText( $text, $element = null, $message = '' ) {
-		$this->_assertThat(
+		$this->assertThat(
 			new PageContainsConstrain( Constraint::ACTION_DONTSEE, $text, $element ),
 			$message
 		);
@@ -663,7 +663,7 @@ class Actor {
 	 * @param string $message Optional. The message to use on a failure.
 	 */
 	public function seeTextInSource( $text, $message = '' ) {
-		$this->_assertThat(
+		$this->assertThat(
 			new PageSourceContainsConstrain( Constraint::ACTION_SEE, $text ),
 			$message
 		);
@@ -678,7 +678,7 @@ class Actor {
 	 * @param string $message Optional. The message to use on a failure.
 	 */
 	public function dontSeeTextInSource( $text, $message = '' ) {
-		$this->_assertThat(
+		$this->assertThat(
 			new PageSourceContainsConstrain( Constraint::ACTION_DONTSEE, $text ),
 			$message
 		);
@@ -691,7 +691,7 @@ class Actor {
 	 *
 	 * @access public
 	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
-	 * @param string $key A key to press.
+	 * @param string                                             $key A key to press.
 	 */
 	public function pressKey( $element, $key ) {
 		$this->getElement( $element )->sendKeys( $key );
@@ -728,7 +728,7 @@ class Actor {
 	 * @param string $message Optional. The message to use on a failure.
 	 */
 	public function seeLink( $text, $url = '', $message = '' ) {
-		$this->_assertThat(
+		$this->assertThat(
 			new LinkOnPageConstrain( Constraint::ACTION_SEE, $text, $url ),
 			$message
 		);
@@ -745,7 +745,7 @@ class Actor {
 	 * @param string $message Optional. The message to use on a failure.
 	 */
 	public function dontSeeLink( $text, $url = '', $message = '' ) {
-		$this->_assertThat(
+		$this->assertThat(
 			new LinkOnPageConstrain( Constraint::ACTION_DONTSEE, $text, $url ),
 			$message
 		);
@@ -760,7 +760,7 @@ class Actor {
 	 * @param string $message Optional. The message to use on a failure.
 	 */
 	public function seeTextInUrl( $text, $message = '' ) {
-		$this->_assertThat(
+		$this->assertThat(
 			new UrlContainsConstrain( Constraint::ACTION_SEE, $text ),
 			$message
 		);
@@ -775,7 +775,7 @@ class Actor {
 	 * @param string $message Optional. The message to use on a failure.
 	 */
 	public function dontSeeTextInUrl( $text, $message = '' ) {
-		$this->_assertThat(
+		$this->assertThat(
 			new UrlContainsConstrain( Constraint::ACTION_DONTSEE, $text ),
 			$message
 		);
@@ -796,10 +796,10 @@ class Actor {
 	 *
 	 * @access public
 	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A CSS selector for the element.
-	 * @param string $message Optional. The message to use on a failure.
+	 * @param string                                             $message Optional. The message to use on a failure.
 	 */
 	public function seeCheckboxIsChecked( $element, $message = '' ) {
-		$this->_assertThat(
+		$this->assertThat(
 			new CheckboxCheckedConstrain( Constraint::ACTION_SEE, $element ),
 			$message
 		);
@@ -810,10 +810,10 @@ class Actor {
 	 *
 	 * @access public
 	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A CSS selector for the element.
-	 * @param string $message Optional. The message to use on a failure.
+	 * @param string                                             $message Optional. The message to use on a failure.
 	 */
 	public function dontSeeCheckboxIsChecked( $element, $message = '' ) {
-		$this->_assertThat(
+		$this->assertThat(
 			new CheckboxCheckedConstrain( Constraint::ACTION_DONTSEE, $element ),
 			$message
 		);
@@ -825,11 +825,11 @@ class Actor {
 	 *
 	 * @access public
 	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A CSS selector for the element.
-	 * @param string $value A value to check.
-	 * @param string $message Optional. The message to use on a failure.
+	 * @param string                                             $value A value to check.
+	 * @param string                                             $message Optional. The message to use on a failure.
 	 */
 	public function seeFieldValue( $element, $value, $message = '' ) {
-		$this->_assertThat(
+		$this->assertThat(
 			new FieldValueContainsConstrain( Constraint::ACTION_SEE, $element, $value ),
 			$message
 		);
@@ -841,11 +841,11 @@ class Actor {
 	 *
 	 * @access public
 	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A CSS selector for the element.
-	 * @param string $value A value to check.
-	 * @param string $message Optional. The message to use on a failure.
+	 * @param string                                             $value A value to check.
+	 * @param string                                             $message Optional. The message to use on a failure.
 	 */
 	public function dontSeeFieldValue( $element, $value, $message = '' ) {
-		$this->_assertThat(
+		$this->assertThat(
 			new FieldValueContainsConstrain( Constraint::ACTION_DONTSEE, $element, $value ),
 			$message
 		);

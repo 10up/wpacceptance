@@ -12,7 +12,7 @@ class Cookie extends \WPAssure\PHPUnit\Constraint {
 	 * @access private
 	 * @var string
 	 */
-	private $_name = '';
+	private $name = '';
 
 	/**
 	 * The cookie value.
@@ -20,7 +20,7 @@ class Cookie extends \WPAssure\PHPUnit\Constraint {
 	 * @access private
 	 * @var mixed
 	 */
-	private $_value = null;
+	private $value = null;
 
 	/**
 	 * Constructor.
@@ -31,10 +31,10 @@ class Cookie extends \WPAssure\PHPUnit\Constraint {
 	 * @param mixed  $value Optional. Cookie vale.
 	 */
 	public function __construct( $action, $name, $value ) {
-		parent::__construct( $this->_verifyAction( $action ) );
+		parent::__construct( $this->verifyAction( $action ) );
 
-		$this->_name  = $name;
-		$this->_value = $value;
+		$this->name  = $name;
+		$this->value = $value;
 	}
 
 	/**
@@ -45,22 +45,22 @@ class Cookie extends \WPAssure\PHPUnit\Constraint {
 	 * @return boolean TRUE if the constrain is met, otherwise FALSE.
 	 */
 	protected function matches( $other ) {
-		$actor     = $this->_getActor( $other );
+		$actor     = $this->getActor( $other );
 		$webdriver = $actor->getWebDriver();
 
 		$cookies = $webdriver->manage()->getCookies();
 		foreach ( $cookies as $cookie ) {
-			if ( $cookie['name'] === $this->_name ) {
-				if ( empty( $this->_value ) ) {
+			if ( $cookie['name'] === $this->name ) {
+				if ( empty( $this->value ) ) {
 					// if current action is "see" then return "true" what means the constrain is met,
 					// otherwise it means that action is "dontSee" and the constrain isn't met, thus return "false"
-					return $this->_action === self::ACTION_SEE;
+					return $this->action === self::ACTION_SEE;
 				}
 
 				// if current action is "see" and cookie's value equals to what we are looking for,
 				// then return "true" what means the constrain is met, otherwise it means that action is
 				// "dontSee" or value doesn't match, thus return "false"
-				return $cookie['value'] == $this->_value && $this->_action === self::ACTION_SEE;
+				return $cookie['value'] == $this->value && $this->action === self::ACTION_SEE;
 			}
 		}
 
@@ -74,9 +74,9 @@ class Cookie extends \WPAssure\PHPUnit\Constraint {
 	 * @return string The description text.
 	 */
 	public function toString() {
-		$message = sprintf( ' "%s" cookie', $this->_name );
-		if ( ! empty( $this->_value ) ) {
-			$message .= sprintf( ' with "%s" value', $this->_value );
+		$message = sprintf( ' "%s" cookie', $this->name );
+		if ( ! empty( $this->value ) ) {
+			$message .= sprintf( ' with "%s" value', $this->value );
 		}
 
 		return $message;

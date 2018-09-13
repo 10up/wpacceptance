@@ -5,7 +5,7 @@ namespace WPAssure\PHPUnit\Constraints;
 class UrlContains extends \WPAssure\PHPUnit\Constraint {
 
 	use WPAssure\PHPUnit\Constraints\Traits\SeeableAction,
-	    WPAssure\PHPUnit\Constraints\Traits\StringOrPattern;
+		WPAssure\PHPUnit\Constraints\Traits\StringOrPattern;
 
 	/**
 	 * The text to look for.
@@ -13,7 +13,7 @@ class UrlContains extends \WPAssure\PHPUnit\Constraint {
 	 * @access private
 	 * @var string
 	 */
-	private $_text;
+	private $text;
 
 	/**
 	 * Constructor.
@@ -36,13 +36,13 @@ class UrlContains extends \WPAssure\PHPUnit\Constraint {
 	 * @return boolean TRUE if the constrain is met, otherwise FALSE.
 	 */
 	protected function matches( $other ) {
-		$actor = $this->_getActor( $other );
+		$actor     = $this->_getActor( $other );
 		$webdriver = $actor->getWebDriver();
 
-		$url = trim( $webdriver->getCurrentURL() );
-		$found = $this->_findMatch( $url, $this->_text );
+		$url   = trim( $webdriver->getCurrentURL() );
+		$found = $this->findMatch( $url, $this->text );
 
-		return ( $found && $this->_action === self::ACTION_SEE ) || ( ! $found && $this->_action === self::ACTION_DONTSEE );
+		return ( $found && $this->action === self::ACTION_SEE ) || ( ! $found && $this->action === self::ACTION_DONTSEE );
 	}
 
 	/**

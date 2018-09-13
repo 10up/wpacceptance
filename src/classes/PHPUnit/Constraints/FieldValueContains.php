@@ -7,8 +7,8 @@ use Facebook\WebDriver\WebDriverSelect;
 class FieldValueContains extends \WPAssure\PHPUnit\Constraint {
 
 	use WPAssure\PHPUnit\Constraints\Traits\SeeableAction,
-	    WPAssure\PHPUnit\Constraints\Traits\StringOrPattern,
-	    WPAssure\PHPUnit\Constraints\Traits\ElementToMessage;
+		WPAssure\PHPUnit\Constraints\Traits\StringOrPattern,
+		WPAssure\PHPUnit\Constraints\Traits\ElementToMessage;
 
 	/**
 	 * The element to look for.
@@ -16,7 +16,7 @@ class FieldValueContains extends \WPAssure\PHPUnit\Constraint {
 	 * @access private
 	 * @var string
 	 */
-	private $_element;
+	private $element;
 
 	/**
 	 * A value to check.
@@ -24,7 +24,7 @@ class FieldValueContains extends \WPAssure\PHPUnit\Constraint {
 	 * @access private
 	 * @var string
 	 */
-	private $_value;
+	private $value;
 
 	/**
 	 * Constructor.
@@ -35,10 +35,10 @@ class FieldValueContains extends \WPAssure\PHPUnit\Constraint {
 	 * @param string $value A value to check.
 	 */
 	public function __construct( $action, $element, $value ) {
-		parent::__construct( $this->_verifyAction( $action ) );
+		parent::__construct( $this->verifyAction( $action ) );
 
-		$this->_element = $element;
-		$this->_value = $value;
+		$this->element = $element;
+		$this->value   = $value;
 	}
 
 	/**
@@ -49,10 +49,10 @@ class FieldValueContains extends \WPAssure\PHPUnit\Constraint {
 	 * @return boolean TRUE if the constrain is met, otherwise FALSE.
 	 */
 	protected function matches( $other ) {
-		$actor = $this->_getActor( $other );
-		$element = $actor->getElement( $this->_element );
+		$actor   = $this->getActor( $other );
+		$element = $actor->getElement( $this->element );
 
-		$tag = strtolower( $element->getTagName() );
+		$tag     = strtolower( $element->getTagName() );
 		$content = '';
 		switch ( $tag ) {
 			case 'input':
@@ -62,7 +62,7 @@ class FieldValueContains extends \WPAssure\PHPUnit\Constraint {
 				$content = $element->getText();
 				break;
 			case 'select':
-				$select = new WebDriverSelect( $element );
+				$select  = new WebDriverSelect( $element );
 				$content = $select->getAllSelectedOptions();
 				break;
 		}
@@ -70,13 +70,13 @@ class FieldValueContains extends \WPAssure\PHPUnit\Constraint {
 		$found = false;
 		if ( is_array( $content ) ) {
 			foreach ( $content as $option ) {
-				$found |= $this->_findMatch( $option, $this->_value );
+				$found |= $this->findMatch( $option, $this->value );
 			}
 		} else {
-			$found = $this->_findMatch( $content, $this->_value );
+			$found = $this->findMatch( $content, $this->value );
 		}
 
-		return ( $found && $this->_action === self::ACTION_SEE ) || ( ! $found && $this->_action === self::ACTION_DONTSEE );
+		return ( $found && $this->action === self::ACTION_SEE ) || ( ! $found && $this->action === self::ACTION_DONTSEE );
 	}
 
 	/**
@@ -86,7 +86,7 @@ class FieldValueContains extends \WPAssure\PHPUnit\Constraint {
 	 * @return string The description text.
 	 */
 	public function toString() {
-		return sprintf( ' %s contains "%s" value', $this->_elementToMessage( $this->_element ), $this->_value );
+		return sprintf( ' %s contains "%s" value', $this->elementToMessage( $this->element ), $this->value );
 	}
 
 }

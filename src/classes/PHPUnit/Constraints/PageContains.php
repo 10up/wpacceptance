@@ -14,7 +14,7 @@ class PageContains extends \WPAssure\PHPUnit\Constraint {
 	 * @access private
 	 * @var string
 	 */
-	private $_text;
+	private $text;
 
 	/**
 	 * Optional element to look for a text.
@@ -22,7 +22,7 @@ class PageContains extends \WPAssure\PHPUnit\Constraint {
 	 * @access private
 	 * @var \Facebook\WebDriver\Remote\RemoteWebElement|string
 	 */
-	private $_element;
+	private $element;
 
 	/**
 	 * Constructor.
@@ -33,10 +33,10 @@ class PageContains extends \WPAssure\PHPUnit\Constraint {
 	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element Optional. An element to look for a text inside.
 	 */
 	public function __construct( $action, $text, $element ) {
-		parent::__construct( $this->_verifyAction( $action ) );
+		parent::__construct( $this->verifyAction( $action ) );
 
-		$this->_text    = $text;
-		$this->_element = $element;
+		$this->text    = $text;
+		$this->element = $element;
 	}
 
 	/**
@@ -47,19 +47,19 @@ class PageContains extends \WPAssure\PHPUnit\Constraint {
 	 * @return boolean TRUE if the constrain is met, otherwise FALSE.
 	 */
 	protected function matches( $other ): bool {
-		$actor   = $this->_getActor( $other );
-		$element = $actor->getElement( ! empty( $this->_element ) ? $this->_element : 'body' );
+		$actor   = $this->getActor( $other );
+		$element = $actor->getElement( ! empty( $this->element ) ? $this->element : 'body' );
 		if ( $element ) {
 			$content = trim( $element->getText() );
 			if ( empty( $content ) ) {
 				// if current action is "dontSee" then return "true" what means the constrain is met,
 				// otherwise it means that action is "see" and the constrain isn't met, thus return "false"
-				return $this->_action === self::ACTION_DONTSEE;
+				return $this->action === self::ACTION_DONTSEE;
 			}
 
-			$found = $this->_findMatch( $content, $this->_text );
+			$found = $this->findMatch( $content, $this->text );
 
-			return ( $found && $this->_action === self::ACTION_SEE ) || ( ! $found && $this->_action === self::ACTION_DONTSEE );
+			return ( $found && $this->action === self::ACTION_SEE ) || ( ! $found && $this->action === self::ACTION_DONTSEE );
 		}
 
 		return false;
@@ -72,9 +72,9 @@ class PageContains extends \WPAssure\PHPUnit\Constraint {
 	 * @return string The description text.
 	 */
 	public function toString(): string {
-		$message = sprintf( ' "%s" text', $this->_text );
-		if ( ! empty( $this->_element ) ) {
-			$message .= ' in the scope of ' . $this->_elementToMessage( $this->_element );
+		$message = sprintf( ' "%s" text', $this->text );
+		if ( ! empty( $this->element ) ) {
+			$message .= ' in the scope of ' . $this->elementToMessage( $this->element );
 		}
 
 		return $message;

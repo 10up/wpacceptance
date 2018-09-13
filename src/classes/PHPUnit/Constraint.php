@@ -1,7 +1,15 @@
 <?php
+/**
+ * Base constraint abstract class for WPAssure contraints to extend
+ *
+ * @package wpassure
+ */
 
 namespace WPAssure\PHPUnit;
 
+/**
+ * Constract abstract
+ */
 abstract class Constraint extends \PHPUnit\Framework\Constraint\Constraint {
 
 	const ACTION_SEE     = 'see';
@@ -13,7 +21,7 @@ abstract class Constraint extends \PHPUnit\Framework\Constraint\Constraint {
 	 * @access protected
 	 * @var string
 	 */
-	protected $_action = '';
+	protected $action = '';
 
 	/**
 	 * Constructor.
@@ -23,7 +31,7 @@ abstract class Constraint extends \PHPUnit\Framework\Constraint\Constraint {
 	 */
 	public function __construct( $action ) {
 		parent::__construct();
-		$this->_action = $action;
+		$this->action = $action;
 	}
 
 	/**
@@ -34,7 +42,7 @@ abstract class Constraint extends \PHPUnit\Framework\Constraint\Constraint {
 	 * @param \WPAssure\PHPUnit\Actor $other Incoming argument that used for this constrain.
 	 * @return \WPAssure\PHPUnit\Actor An instance of the Actor class.
 	 */
-	protected function _getActor( $other ) {
+	protected function getActor( $other ) {
 		if ( ! ( $other instanceof \WPAssure\PHPUnit\Actor ) ) {
 			throw new \WPAssure\Exception( 'The constrain must be used only with an instance of the Actor class.' );
 		}
@@ -48,8 +56,8 @@ abstract class Constraint extends \PHPUnit\Framework\Constraint\Constraint {
 	 * @access protected
 	 * @return string A description of the current action.
 	 */
-	protected function _getActionDescription() {
-		switch ( $this->_action ) {
+	protected function getActionDescription() {
+		switch ( $this->action ) {
 			case self::ACTION_SEE:
 				return ' sees';
 			case self::ACTION_DONTSEE:
@@ -67,8 +75,8 @@ abstract class Constraint extends \PHPUnit\Framework\Constraint\Constraint {
 	 * @return string A description of the failure.
 	 */
 	protected function failureDescription( $other ): string {
-		$actor = $this->_getActor( $other );
-		return $actor->getActorName() . $this->_getActionDescription() . $this->toString();
+		$actor = $this->getActor( $other );
+		return $actor->getActorName() . $this->getActionDescription() . $this->toString();
 	}
 
 }

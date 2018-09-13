@@ -15,7 +15,7 @@ class NewDatabaseEntry extends \WPAssure\PHPUnit\Constraint {
 	 * @access private
 	 * @var int
 	 */
-	private $_old_id;
+	private $old_id;
 
 	/**
 	 * Table to check
@@ -23,7 +23,7 @@ class NewDatabaseEntry extends \WPAssure\PHPUnit\Constraint {
 	 * @access private
 	 * @var int
 	 */
-	private $_table;
+	private $table;
 
 	/**
 	 * Constructor.
@@ -34,10 +34,10 @@ class NewDatabaseEntry extends \WPAssure\PHPUnit\Constraint {
 	 * @param int    $old_id Old newest DB entry ID
 	 */
 	public function __construct( $action, $table, $old_id ) {
-		parent::__construct( $this->_verifyAction( $action ) );
+		parent::__construct( $this->verifyAction( $action ) );
 
-		$this->_old_id = $old_id;
-		$this->_table = $table;
+		$this->old_id = $old_id;
+		$this->table  = $table;
 	}
 
 	/**
@@ -50,13 +50,13 @@ class NewDatabaseEntry extends \WPAssure\PHPUnit\Constraint {
 	protected function matches( $other ): bool {
 		$mysql = EnvironmentFactory::get()->getMySQLClient();
 
-		$query = 'SELECT ID FROM ' . $mysql->getTablePrefix() . $this->_table . ' WHERE `ID` > "' . (int) $this->_old_id . '" ORDER BY `ID` DESC LIMIT 1';
+		$query = 'SELECT ID FROM ' . $mysql->getTablePrefix() . $this->table . ' WHERE `ID` > "' . (int) $this->old_id . '" ORDER BY `ID` DESC LIMIT 1';
 
 		$result = $mysql->query( $query );
 
 		$new_entry = ( $result->num_rows >= 1 );
 
-		return ( $new_entry && self::ACTION_SEE === $this->_action ) || ( ! $new_entry && self::ACTION_DONTSEE === $this->_action );
+		return ( $new_entry && self::ACTION_SEE === $this->action ) || ( ! $new_entry && self::ACTION_DONTSEE === $this->action );
 	}
 
 	/**
@@ -66,7 +66,7 @@ class NewDatabaseEntry extends \WPAssure\PHPUnit\Constraint {
 	 * @return string The description text.
 	 */
 	public function toString(): string {
-		return sprintf( 'Entry with ID newer than %d in %s table.', $this->_old_id, $this->_table );
+		return sprintf( 'Entry with ID newer than %d in %s table.', $this->old_id, $this->table );
 	}
 
 }

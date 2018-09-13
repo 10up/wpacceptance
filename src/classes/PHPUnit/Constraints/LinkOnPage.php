@@ -16,7 +16,7 @@ class LinkOnPage extends \WPAssure\PHPUnit\Constraint {
 	 * @access private
 	 * @var string
 	 */
-	private $_text = '';
+	private $text = '';
 
 	/**
 	 * A url of a link to look for.
@@ -24,7 +24,7 @@ class LinkOnPage extends \WPAssure\PHPUnit\Constraint {
 	 * @access private
 	 * @var string
 	 */
-	private $_url = '';
+	private $url = '';
 
 	/**
 	 * Constructor.
@@ -35,10 +35,10 @@ class LinkOnPage extends \WPAssure\PHPUnit\Constraint {
 	 * @param string $url A url of a link to look for.
 	 */
 	public function __construct( $action, $text, $url ) {
-		parent::__construct( $this->_verifyAction( $action ) );
+		parent::__construct( $this->verifyAction( $action ) );
 
-		$this->_text = $text;
-		$this->_url  = $url;
+		$this->text = $text;
+		$this->url  = $url;
 	}
 
 	/**
@@ -49,25 +49,25 @@ class LinkOnPage extends \WPAssure\PHPUnit\Constraint {
 	 * @return boolean TRUE if the constrain is met, otherwise FALSE.
 	 */
 	protected function matches( $other ) {
-		$actor = $this->_getActor( $other );
-		$by    = WebDriverBy::partialLinkText( $this->_text );
+		$actor = $this->getActor( $other );
+		$by    = WebDriverBy::partialLinkText( $this->text );
 
 		try {
 			$elements = $actor->getElements( $by );
-			if ( ! empty( $this->_url ) ) {
+			if ( ! empty( $this->url ) ) {
 				foreach ( $elements as $element ) {
 					$href = $element->getAttribute( 'href' );
-					if ( $this->_findMatch( $href, $this->_url ) ) {
-						return $this->_action === self::ACTION_SEE;
+					if ( $this->findMatch( $href, $this->url ) ) {
+						return $this->action === self::ACTION_SEE;
 					}
 				}
 
-				return $this->_action === self::ACTION_DONTSEE;
+				return $this->action === self::ACTION_DONTSEE;
 			} else {
-				return $this->_action === self::ACTION_SEE;
+				return $this->action === self::ACTION_SEE;
 			}
 		} catch ( NoSuchElementException $e ) {
-			return $this->_action === self::ACTION_DONTSEE;
+			return $this->action === self::ACTION_DONTSEE;
 		}
 
 		return false;
@@ -80,9 +80,9 @@ class LinkOnPage extends \WPAssure\PHPUnit\Constraint {
 	 * @return string The description text.
 	 */
 	public function toString() {
-		$message = sprintf( ' a link with "%s" text', $this->_text );
-		if ( ! empty( $this->_url ) ) {
-			$message .= sprintf( ' that contains "%s" url in the href attribute', $this->_url );
+		$message = sprintf( ' a link with "%s" text', $this->text );
+		if ( ! empty( $this->url ) ) {
+			$message .= sprintf( ' that contains "%s" url in the href attribute', $this->url );
 		}
 
 		return $message;

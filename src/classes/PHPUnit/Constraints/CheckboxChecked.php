@@ -5,7 +5,7 @@ namespace WPAssure\PHPUnit\Constraints;
 class CheckboxChecked extends \WPAssure\PHPUnit\Constraint {
 
 	use WPAssure\PHPUnit\Constraints\Traits\SeeableAction,
-	    WPAssure\PHPUnit\Constraints\Traits\ElementToMessage;
+		WPAssure\PHPUnit\Constraints\Traits\ElementToMessage;
 
 	/**
 	 * The checkbox element to look for.
@@ -13,7 +13,7 @@ class CheckboxChecked extends \WPAssure\PHPUnit\Constraint {
 	 * @access private
 	 * @var string
 	 */
-	private $_element;
+	private $element;
 
 	/**
 	 * Constructor.
@@ -23,9 +23,9 @@ class CheckboxChecked extends \WPAssure\PHPUnit\Constraint {
 	 * @param string $element A text to look for.
 	 */
 	public function __construct( $action, $element ) {
-		parent::__construct( $this->_verifyAction( $action ) );
+		parent::__construct( $this->verifyAction( $action ) );
 
-		$this->_element = $element;
+		$this->element = $element;
 	}
 
 	/**
@@ -36,11 +36,11 @@ class CheckboxChecked extends \WPAssure\PHPUnit\Constraint {
 	 * @return boolean TRUE if the constrain is met, otherwise FALSE.
 	 */
 	protected function matches( $other ) {
-		$actor = $this->_getActor( $other );
-		$element = $actor->getElement( $this->_element );
+		$actor   = $this->getActor( $other );
+		$element = $actor->getElement( $this->element );
 		$checked = $element->getAttribute( 'checked' ) === 'checked';
 
-		return ( $checked && $this->_action === self::ACTION_SEE ) || ( ! $checked && $this->_action === self::ACTION_DONTSEE );
+		return ( $checked && $this->action === self::ACTION_SEE ) || ( ! $checked && $this->action === self::ACTION_DONTSEE );
 	}
 
 	/**
@@ -50,7 +50,7 @@ class CheckboxChecked extends \WPAssure\PHPUnit\Constraint {
 	 * @return string The description text.
 	 */
 	public function toString() {
-		return sprintf( ' %s is checked', $this->_elementToMessage( $this->_element ) );
+		return sprintf( ' %s is checked', $this->elementToMessage( $this->element ) );
 	}
 
 }

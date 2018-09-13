@@ -33,77 +33,77 @@ class Environment {
 	 *
 	 * @var array
 	 */
-	protected $_containers = [];
+	protected $containers = [];
 
 	/**
 	 * Network ID
 	 *
 	 * @var string
 	 */
-	protected $_network_id;
+	protected $network_id;
 
 	/**
 	 * Docker instance
 	 *
 	 * @var Docker\Docker
 	 */
-	protected $_docker;
+	protected $docker;
 
 	/**
 	 * WordPress port
 	 *
 	 * @var int
 	 */
-	protected $_wordpress_port;
+	protected $wordpress_port;
 
 	/**
 	 * Gateway IP
 	 *
 	 * @var string
 	 */
-	protected $_gateway_ip;
+	protected $gateway_ip;
 
 	/**
 	 * Selenium port
 	 *
 	 * @var int
 	 */
-	protected $_selenium_port;
+	protected $selenium_port;
 
 	/**
 	 * MySQL port
 	 *
 	 * @var int
 	 */
-	protected $_mysql_port;
+	protected $mysql_port;
 
 	/**
 	 * Suite config
 	 *
 	 * @var  array
 	 */
-	protected $_suite_config;
+	protected $suite_config;
 
 	/**
 	 * Preserve containers or not
 	 *
 	 * @var boolean
 	 */
-	protected $_preserve_containers = false;
+	protected $preserve_containers = false;
 
 	/**
 	 * Snapshot ID
 	 *
 	 * @var int
 	 */
-	protected $_snapshot_id;
+	protected $snapshot_id;
 
 	/**
 	 * Snapshot instance
 	 *
 	 * @var \WPSnapshots\Snapshot
 	 */
-	protected $_snapshot;
+	protected $snapshot;
 
 	/**
 	 * MySQL client instance
@@ -120,11 +120,11 @@ class Environment {
 	 * @param  boolean $preserve_containers Keep containers alive or not
 	 */
 	public function __construct( $snapshot_id, $suite_config, $preserve_containers = false ) {
-		$this->_network_id          = 'wpassure' . time();
-		$this->_docker              = Docker::create();
-		$this->_snapshot_id         = $snapshot_id;
-		$this->_suite_config        = $suite_config;
-		$this->_preserve_containers = $preserve_containers;
+		$this->network_id          = 'wpassure' . time();
+		$this->docker              = Docker::create();
+		$this->snapshot_id         = $snapshot_id;
+		$this->suite_config        = $suite_config;
+		$this->preserve_containers = $preserve_containers;
 	}
 
 	/**
@@ -139,19 +139,19 @@ class Environment {
 
 		Log::instance()->write( 'Pulling snapshot...', 1 );
 
-		$this->_snapshot = Snapshot::get( $this->_snapshot_id );
+		$this->snapshot = Snapshot::get( $this->snapshot_id );
 
 		$site_mapping = [];
 
 		Log::instance()->write( 'Snapshot site mapping:', 1 );
 
-		foreach ( $this->_snapshot->meta['sites'] as $site ) {
+		foreach ( $this->snapshot->meta['sites'] as $site ) {
 			$home_host = parse_url( $site['home_url'], PHP_URL_HOST );
 			$site_host = parse_url( $site['site_url'], PHP_URL_HOST );
 
 			$map = [
-				'home_url' => str_replace( '//' . $home_host, '//wpassure.test:' . $this->_wordpress_port, $site['home_url'] ),
-				'site_url' => str_replace( '//' . $site_host, '//wpassure.test:' . $this->_wordpress_port, $site['site_url'] ),
+				'home_url' => str_replace( '//' . $home_host, '//wpassure.test:' . $this->wordpress_port, $site['home_url'] ),
+				'site_url' => str_replace( '//' . $site_host, '//wpassure.test:' . $this->wordpress_port, $site['site_url'] ),
 			];
 
 			$site_mapping[] = $map;
@@ -172,7 +172,7 @@ class Environment {
 			$verbose = '-vvv';
 		}
 
-		$command = '/root/.composer/vendor/bin/wpsnapshots pull ' . $this->_snapshot_id . ' --confirm --config_db_name="' . $mysql_creds['DB_NAME'] . '" --config_db_user="' . $mysql_creds['DB_USER'] . '" --config_db_password="' . $mysql_creds['DB_PASSWORD'] . '" --config_db_host="' . $mysql_creds['DB_HOST'] . '" --confirm_wp_download --confirm_config_create --site_mapping="' . addslashes( json_encode( $site_mapping ) ) . '" ' . $verbose;
+		$command = '/root/.composer/vendor/bin/wpsnapshots pull ' . $this->snapshot_id . ' --confirm --config_db_name="' . $mysql_creds['DB_NAME'] . '" --config_db_user="' . $mysql_creds['DB_USER'] . '" --config_db_password="' . $mysql_creds['DB_PASSWORD'] . '" --config_db_host="' . $mysql_creds['DB_HOST'] . '" --confirm_wp_download --confirm_config_create --site_mapping="' . addslashes( json_encode( $site_mapping ) ) . '" ' . $verbose;
 
 		Log::instance()->write( 'Running command:', 1 );
 		Log::instance()->write( $command, 1 );
@@ -183,12 +183,12 @@ class Environment {
 		$exec_config->setAttachStderr( true );
 		$exec_config->setCmd( [ '/bin/sh', '-c', $command ] );
 
-		$exec_command      = $this->_docker->containerExec( 'wordpress-' . $this->_network_id, $exec_config );
+		$exec_command      = $this->docker->containerExec( 'wordpress-' . $this->network_id, $exec_config );
 		$exec_id           = $exec_command->getId();
 		$exec_start_config = new ExecIdStartPostBody();
 		$exec_start_config->setDetach( false );
 
-		$stream = $this->_docker->execStart( $exec_id, $exec_start_config );
+		$stream = $this->docker->execStart( $exec_id, $exec_start_config );
 
 		$stream->onStdout(
 			function( $stdout ) {
@@ -204,7 +204,7 @@ class Environment {
 
 		$stream->wait();
 
-		$exit_code = $this->_docker->execInspect( $exec_id )->getExitCode();
+		$exit_code = $this->docker->execInspect( $exec_id )->getExitCode();
 
 		if ( 0 !== $exit_code ) {
 			Log::instance()->write( 'Failed to pull snapshot into WordPress container.', 0, 'error' );
@@ -223,11 +223,11 @@ class Environment {
 		$exec_config->setAttachStderr( true );
 		$exec_config->setCmd( [ '/bin/sh', '-c', 'find /var/www/html -name "wpassure.json" -not -path "/var/www/html/wp-includes/*" -not -path "/var/www/html/wp-admin/*"' ] );
 
-		$exec_id           = $this->_docker->containerExec( 'wordpress-' . $this->_network_id, $exec_config )->getId();
+		$exec_id           = $this->docker->containerExec( 'wordpress-' . $this->network_id, $exec_config )->getId();
 		$exec_start_config = new ExecIdStartPostBody();
 		$exec_start_config->setDetach( false );
 
-		$stream = $this->_docker->execStart( $exec_id, $exec_start_config );
+		$stream = $this->docker->execStart( $exec_id, $exec_start_config );
 
 		$suite_config_files = [];
 
@@ -245,7 +245,7 @@ class Environment {
 
 		$stream->wait();
 
-		$exit_code = $this->_docker->execInspect( $exec_id )->getExitCode();
+		$exit_code = $this->docker->execInspect( $exec_id )->getExitCode();
 
 		if ( 0 !== $exit_code ) {
 			Log::instance()->write( 'Failed to find codebase in snapshot.', 0, 'error' );
@@ -261,11 +261,11 @@ class Environment {
 			$exec_config->setAttachStderr( true );
 			$exec_config->setCmd( [ '/bin/sh', '-c', 'php -r "\$config = json_decode(file_get_contents(\"' . $suite_config_file . '\"), true); echo \$config[\"name\"];"' ] );
 
-			$exec_id           = $this->_docker->containerExec( 'wordpress-' . $this->_network_id, $exec_config )->getId();
+			$exec_id           = $this->docker->containerExec( 'wordpress-' . $this->network_id, $exec_config )->getId();
 			$exec_start_config = new ExecIdStartPostBody();
 			$exec_start_config->setDetach( false );
 
-			$stream = $this->_docker->execStart( $exec_id, $exec_start_config );
+			$stream = $this->docker->execStart( $exec_id, $exec_start_config );
 
 			$suite_config_files = [];
 			$suite_config_name  = '';
@@ -284,7 +284,7 @@ class Environment {
 
 			$stream->wait();
 
-			if ( $suite_config_name === $this->_suite_config['name'] ) {
+			if ( $suite_config_name === $this->suite_config['name'] ) {
 				$snapshot_repo_path = dirname( $suite_config_file );
 				break;
 			}
@@ -307,11 +307,11 @@ class Environment {
 		$exec_config->setAttachStderr( true );
 		$exec_config->setCmd( [ '/bin/sh', '-c', 'cp -rf /root/repo/* ' . $snapshot_repo_path ] );
 
-		$exec_id           = $this->_docker->containerExec( 'wordpress-' . $this->_network_id, $exec_config )->getId();
+		$exec_id           = $this->docker->containerExec( 'wordpress-' . $this->network_id, $exec_config )->getId();
 		$exec_start_config = new ExecIdStartPostBody();
 		$exec_start_config->setDetach( false );
 
-		$stream = $this->_docker->execStart( $exec_id, $exec_start_config );
+		$stream = $this->docker->execStart( $exec_id, $exec_start_config );
 
 		$stream->onStdout(
 			function( $stdout ) {
@@ -327,7 +327,7 @@ class Environment {
 
 		$stream->wait();
 
-		$exit_code = $this->_docker->execInspect( $exec_id )->getExitCode();
+		$exit_code = $this->docker->execInspect( $exec_id )->getExitCode();
 
 		if ( 0 !== $exit_code ) {
 			Log::instance()->write( 'Failed to copy codebase into WordPress container.', 0, 'error' );
@@ -343,7 +343,7 @@ class Environment {
 	 * @return  bool
 	 */
 	public function destroy() {
-		if ( $this->_preserve_containers ) {
+		if ( $this->preserve_containers ) {
 			Log::instance()->write( 'Keeping containers alive...', 1 );
 			return false;
 		}
@@ -381,7 +381,7 @@ class Environment {
 		];
 
 		foreach ( $images as $image ) {
-			$create_image = $this->_docker->imageCreate(
+			$create_image = $this->docker->imageCreate(
 				'',
 				[
 					'fromImage' => $image['name'],
@@ -401,7 +401,7 @@ class Environment {
 	 * @return string
 	 */
 	public function getNetworkId() {
-		return $this->_network_id;
+		return $this->network_id;
 	}
 
 	/**
@@ -431,23 +431,23 @@ class Environment {
 	public function createContainers() {
 		Log::instance()->write( 'Creating containers...' );
 
-		$streamFactory = \Http\Discovery\StreamFactoryDiscovery::find();
-		$serializer    = new \Symfony\Component\Serializer\Serializer( \Docker\API\Normalizer\NormalizerFactory::create(), [ new \Symfony\Component\Serializer\Encoder\JsonEncoder( new \Symfony\Component\Serializer\Encoder\JsonEncode(), new \Symfony\Component\Serializer\Encoder\JsonDecode() ) ] );
+		$stream_factory = \Http\Discovery\StreamFactoryDiscovery::find();
+		$serializer     = new \Symfony\Component\Serializer\Serializer( \Docker\API\Normalizer\NormalizerFactory::create(), [ new \Symfony\Component\Serializer\Encoder\JsonEncoder( new \Symfony\Component\Serializer\Encoder\JsonEncode(), new \Symfony\Component\Serializer\Encoder\JsonDecode() ) ] );
 
 		/**
 		 * Create MySQL
 		 */
 
-		$this->_mysql_port = $this->getOpenPort();
+		$this->mysql_port = $this->getOpenPort();
 
 		$host_config = new HostConfig();
-		$host_config->setNetworkMode( $this->_network_id );
+		$host_config->setNetworkMode( $this->network_id );
 
 		$port_binding = new PortBinding();
-		$port_binding->setHostPort( $this->_mysql_port );
+		$port_binding->setHostPort( $this->mysql_port );
 		$port_binding->setHostIp( '0.0.0.0' );
 
-		$host_port_map           = new \ArrayObject();
+		$host_port_map             = new \ArrayObject();
 		$host_port_map['3306/tcp'] = [ $port_binding ];
 
 		$host_config->setPortBindings( $host_port_map );
@@ -467,15 +467,16 @@ class Environment {
 
 		$container_create = new ContainerCreate( $container_config );
 
-		$container_body = $container_create->getBody( $serializer, $streamFactory );
+		$container_body = $container_create->getBody( $serializer, $stream_factory );
 
 		Log::instance()->write( 'Container Request Body (MySQL):', 2 );
 		Log::instance()->write( $container_body[1], 2 );
 
-		$this->_containers['mysql'] = $this->_docker->containerCreate( $container_config, [ 'name' => 'mysql-' . $this->_network_id ] );
+		$this->containers['mysql'] = $this->docker->containerCreate( $container_config, [ 'name' => 'mysql-' . $this->network_id ] );
 
-		$this->mysql_stream = $this->_docker->containerAttach(
-			'mysql-' . $this->_network_id, [
+		$this->mysql_stream = $this->docker->containerAttach(
+			'mysql-' . $this->network_id,
+			[
 				'stream' => true,
 				'stdin'  => true,
 				'stdout' => true,
@@ -487,16 +488,16 @@ class Environment {
 		 * Create WP container
 		 */
 
-		$this->_wordpress_port = $this->getOpenPort();
+		$this->wordpress_port = $this->getOpenPort();
 
 		$host_config = new HostConfig();
 
-		$host_config->setNetworkMode( $this->_network_id );
+		$host_config->setNetworkMode( $this->network_id );
 		$host_config->setBinds(
 			[
-				\WPSnapshots\Utils\get_snapshot_directory() . $this->_snapshot_id . ':/root/.wpsnapshots/' . $this->_snapshot_id,
+				\WPSnapshots\Utils\get_snapshot_directory() . $this->snapshot_id . ':/root/.wpsnapshots/' . $this->snapshot_id,
 				\WPSnapshots\Utils\get_snapshot_directory() . 'config.json:/root/.wpsnapshots/config.json',
-				$this->_suite_config['path'] . ':/root/repo',
+				$this->suite_config['path'] . ':/root/repo',
 			]
 		);
 
@@ -513,7 +514,7 @@ class Environment {
 		$container_config->setTty( true );
 
 		$port_binding = new PortBinding();
-		$port_binding->setHostPort( $this->_wordpress_port );
+		$port_binding->setHostPort( $this->wordpress_port );
 		$port_binding->setHostIp( '0.0.0.0' );
 
 		$host_port_map           = new \ArrayObject();
@@ -524,29 +525,29 @@ class Environment {
 
 		$container_create = new ContainerCreate( $container_config );
 
-		$container_body = $container_create->getBody( $serializer, $streamFactory );
+		$container_body = $container_create->getBody( $serializer, $stream_factory );
 
 		Log::instance()->write( 'Container Request Body (WordPress):', 2 );
 		Log::instance()->write( $container_body[1], 2 );
 
-		$this->_containers['wordpress'] = $this->_docker->containerCreate( $container_config, [ 'name' => 'wordpress-' . $this->_network_id ] );
+		$this->containers['wordpress'] = $this->docker->containerCreate( $container_config, [ 'name' => 'wordpress-' . $this->network_id ] );
 
 		/**
 		 * Create selenium container
 		 */
 
-		$this->_selenium_port = $this->getOpenPort();
+		$this->selenium_port = $this->getOpenPort();
 
 		$host_config = new HostConfig();
-		$host_config->setNetworkMode( $this->_network_id );
-		$host_config->setExtraHosts( [ 'wpassure.test:' . $this->_gateway_ip ] );
+		$host_config->setNetworkMode( $this->network_id );
+		$host_config->setExtraHosts( [ 'wpassure.test:' . $this->gateway_ip ] );
 		$host_config->setShmSize( ( 1000 * 1000 * 1000 ) ); // 1GB in bytes
 
 		$container_config = new ContainersCreatePostBody();
 		$container_config->setImage( 'selenium/standalone-chrome:3.4.0' );
 
 		$port_binding = new PortBinding();
-		$port_binding->setHostPort( $this->_selenium_port );
+		$port_binding->setHostPort( $this->selenium_port );
 		$port_binding->setHostIp( '0.0.0.0' );
 
 		$host_port_map             = new \ArrayObject();
@@ -557,12 +558,12 @@ class Environment {
 
 		$container_create = new ContainerCreate( $container_config );
 
-		$container_body = $container_create->getBody( $serializer, $streamFactory );
+		$container_body = $container_create->getBody( $serializer, $stream_factory );
 
 		Log::instance()->write( 'Container Request Body (Selenium):', 2 );
 		Log::instance()->write( $container_body[1], 2 );
 
-		$this->_containers['selenium'] = $this->_docker->containerCreate( $container_config, [ 'name' => 'selenium-' . $this->_network_id ] );
+		$this->containers['selenium'] = $this->docker->containerCreate( $container_config, [ 'name' => 'selenium-' . $this->network_id ] );
 
 		return true;
 	}
@@ -586,15 +587,15 @@ class Environment {
 			$exec_config->setAttachStderr( true );
 			$exec_config->setCmd( [ '/bin/sh', '-c', 'mysqladmin ping -h"' . $mysql_creds['DB_HOST'] . '" -u ' . $mysql_creds['DB_USER'] . ' -p' . $mysql_creds['DB_PASSWORD'] ] );
 
-			$exec_id           = $this->_docker->containerExec( 'wordpress-' . $this->_network_id, $exec_config )->getId();
+			$exec_id           = $this->docker->containerExec( 'wordpress-' . $this->network_id, $exec_config )->getId();
 			$exec_start_config = new ExecIdStartPostBody();
 			$exec_start_config->setDetach( false );
 
-			$stream = $this->_docker->execStart( $exec_id, $exec_start_config );
+			$stream = $this->docker->execStart( $exec_id, $exec_start_config );
 
 			$stream->wait();
 
-			$exit_code = $this->_docker->execInspect( $exec_id )->getExitCode();
+			$exit_code = $this->docker->execInspect( $exec_id )->getExitCode();
 
 			if ( 0 === $exit_code ) {
 				Log::instance()->write( 'MySQL connection available after ' . ( $i + 2 ) . ' seconds.', 2 );
@@ -618,8 +619,8 @@ class Environment {
 	public function startContainers() {
 		Log::instance()->write( 'Starting containers...', 1 );
 
-		foreach ( $this->_containers as $container ) {
-			$response = $this->_docker->containerStart( $container->getId() );
+		foreach ( $this->containers as $container ) {
+			$response = $this->docker->containerStart( $container->getId() );
 		}
 
 		return $this->waitForMySQL();
@@ -633,8 +634,8 @@ class Environment {
 	public function stopContainers() {
 		Log::instance()->write( 'Stopping containers...', 1 );
 
-		foreach ( $this->_containers as $container ) {
-			$this->_docker->containerStop( $container->getId() );
+		foreach ( $this->containers as $container ) {
+			$this->docker->containerStop( $container->getId() );
 		}
 
 		return true;
@@ -648,8 +649,8 @@ class Environment {
 	public function deleteContainers() {
 		Log::instance()->write( 'Deleting containers...', 1 );
 
-		foreach ( $this->_containers as $container ) {
-			$this->_docker->containerDelete( $container->getId() );
+		foreach ( $this->containers as $container ) {
+			$this->docker->containerDelete( $container->getId() );
 		}
 
 		return true;
@@ -664,17 +665,17 @@ class Environment {
 		Log::instance()->write( 'Creating network...', 1 );
 
 		$network_config = new NetworksCreatePostBody();
-		$network_config->setName( $this->_network_id );
+		$network_config->setName( $this->network_id );
 
-		$this->network = $this->_docker->networkCreate( $network_config );
+		$this->network = $this->docker->networkCreate( $network_config );
 
-		$network     = $this->_docker->networkInspect( $this->_network_id );
+		$network     = $this->docker->networkInspect( $this->network_id );
 		$ipam_config = $network->getIPAM()->getConfig();
 
-		$this->_gateway_ip = $ipam_config[0]['Gateway'];
+		$this->gateway_ip = $ipam_config[0]['Gateway'];
 
-		Log::instance()->write( 'Network ID: ' . $this->_network_id, 1 );
-		Log::instance()->write( 'Gateway IP: ' . $this->_gateway_ip, 1 );
+		Log::instance()->write( 'Network ID: ' . $this->network_id, 1 );
+		Log::instance()->write( 'Gateway IP: ' . $this->gateway_ip, 1 );
 
 		return true;
 	}
@@ -687,7 +688,7 @@ class Environment {
 	public function deleteNetwork() {
 		Log::instance()->write( 'Deleting network...', 1 );
 
-		$this->_docker->networkDelete( $this->_network_id );
+		$this->docker->networkDelete( $this->network_id );
 
 		return true;
 	}
@@ -698,7 +699,7 @@ class Environment {
 	 * @return string
 	 */
 	public function getSeleniumServerUrl() {
-		return 'http://localhost:' . intval( $this->_selenium_port ) . '/wd/hub';
+		return 'http://localhost:' . intval( $this->selenium_port ) . '/wd/hub';
 	}
 
 	/**
@@ -707,7 +708,7 @@ class Environment {
 	 * @return string
 	 */
 	public function getWpHomepageUrl() {
-		return 'http://wpassure.test:' . intval( $this->_wordpress_port );
+		return 'http://wpassure.test:' . intval( $this->wordpress_port );
 	}
 
 	/**
@@ -716,7 +717,7 @@ class Environment {
 	 * @return string
 	 */
 	public function getGatewayIP() {
-		return $this->_gateway_ip;
+		return $this->gateway_ip;
 	}
 
 	/**
@@ -725,7 +726,7 @@ class Environment {
 	 * @return \WPSnapshots\Snapshot
 	 */
 	public function getSnapshot() {
-		return $this->_snapshot;
+		return $this->snapshot;
 	}
 
 	/**
@@ -735,7 +736,7 @@ class Environment {
 	 */
 	public function getMySQLCredentials() {
 		return [
-			'DB_HOST'     => 'mysql-' . $this->_network_id,
+			'DB_HOST'     => 'mysql-' . $this->network_id,
 			'DB_NAME'     => 'wordpress',
 			'DB_USER'     => 'root',
 			'DB_PASSWORD' => 'password',
@@ -748,11 +749,11 @@ class Environment {
 	 * @return \WPAssure\MySQL
 	 */
 	public function getMySQLClient() {
-		if ( empty( $this->_mysql_client ) ) {
-			$this->_mysql_client = new MySQL( $this->getMySQLCredentials(), $this->_mysql_port, $this->_snapshot->meta['table_prefix'] );
+		if ( empty( $this->mysql_client ) ) {
+			$this->mysql_client = new MySQL( $this->getMySQLCredentials(), $this->mysql_port, $this->snapshot->meta['table_prefix'] );
 		}
 
-		return $this->_mysql_client;
+		return $this->mysql_client;
 	}
 
 }

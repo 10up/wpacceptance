@@ -5,7 +5,7 @@ namespace WPAssure\PHPUnit\Constraints;
 class PageSourceContains extends \WPAssure\PHPUnit\Constraint {
 
 	use WPAssure\PHPUnit\Constraints\Traits\StringOrPattern,
-	    WPAssure\PHPUnit\Constraints\Traits\SeeableAction;
+		WPAssure\PHPUnit\Constraints\Traits\SeeableAction;
 
 	/**
 	 * The text to look for.
@@ -13,7 +13,7 @@ class PageSourceContains extends \WPAssure\PHPUnit\Constraint {
 	 * @access private
 	 * @var string
 	 */
-	private $_text;
+	private $text;
 
 	/**
 	 * Constructor.
@@ -23,8 +23,8 @@ class PageSourceContains extends \WPAssure\PHPUnit\Constraint {
 	 * @param string $text A text to look for.
 	 */
 	public function __construct( $action, $text ) {
-		parent::__construct( $this->_verifyAction( $action ) );
-		$this->_text = $text;
+		parent::__construct( $this->verifyAction( $action ) );
+		$this->text = $text;
 	}
 
 	/**
@@ -35,18 +35,18 @@ class PageSourceContains extends \WPAssure\PHPUnit\Constraint {
 	 * @return boolean TRUE if the constrain is met, otherwise FALSE.
 	 */
 	protected function matches( $other ) {
-		$actor = $this->_getActor( $other );
+		$actor = $this->getActor( $other );
 
 		$content = trim( $actor->getPageSource() );
 		if ( empty( $content ) ) {
 			// if current action is "dontSee" then return "true" what means the constrain is met,
 			// otherwise it means that action is "see" and the constrain isn't met, thus return "false"
-			return $this->_action === self::ACTION_DONTSEE;
+			return $this->action === self::ACTION_DONTSEE;
 		}
 
-		$found = $this->_findMatch( $content, $this->_text );
+		$found = $this->findMatch( $content, $this->text );
 
-		return ( $found && $this->_action === self::ACTION_SEE ) || ( ! $found && $this->_action === self::ACTION_DONTSEE );
+		return ( $found && $this->action === self::ACTION_SEE ) || ( ! $found && $this->action === self::ACTION_DONTSEE );
 	}
 
 	/**
@@ -56,7 +56,7 @@ class PageSourceContains extends \WPAssure\PHPUnit\Constraint {
 	 * @return string The description text.
 	 */
 	public function toString() {
-		return sprintf( ' "%s" text in the page source', $this->_text );
+		return sprintf( ' "%s" text in the page source', $this->text );
 	}
 
 }

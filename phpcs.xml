@@ -3,8 +3,8 @@
 	<rule ref="10up-Default">
 		<exclude name="WordPress.PHP.DiscouragedPHPFunctions.runtime_configuration_ini_set" />
 		<exclude name="WordPress.NamingConventions.ValidFunctionName.MethodNameInvalid" />
-		<exclude name="WordPress.NamingConventions.ValidVariableName.NotSnakeCase" />
 		<exclude name="WordPress.WP.CapitalPDangit.Misspelled" />
 		<exclude name="WordPress.WP.AlternativeFunctions" />
+		<exclude name="Squiz.Commenting.FunctionComment.ThrowsNotCapital" />
 	</rule>
 </ruleset>

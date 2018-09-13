@@ -9,13 +9,13 @@ trait StringOrPattern {
 	 *
 	 * @access protected
 	 * @param string $content The content to search in.
-	 * @param string $stringOrPattern The string to search or pattern to match.
+	 * @param string $string_or_pattern The string to search or pattern to match.
 	 * @return boolean TRUE if the content contains a needle, otherwise FALSE.
 	 */
-	protected function _findMatch( $content, $stringOrPattern ) {
+	protected function findMatch( $content, $string_or_pattern ) {
 		return preg_match( '#^/[^/]+/(\w?)$#', $stringOrPattern )
 			? preg_match( $stringOrPattern, $content ) > 0
-			: mb_stripos( $content, $stringOrPattern ) !== false;
+			: mb_stripos( $content, $string_or_pattern ) !== false;
 	}
 
 }

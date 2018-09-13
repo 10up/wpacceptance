@@ -1,4 +1,9 @@
 <?php
+/**
+ * Functionality for setting up web driver. See https://github.com/facebook/php-webdriver
+ *
+ * @package  wpassure
+ */
 
 namespace WPAssure\PHPUnit;
 
@@ -8,6 +13,9 @@ use WPAssure\PHPUnit\Actor;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
 
+/**
+ * Web Driver trait for use with PHPUnit test class
+ */
 trait WebDriver {
 
 	/**
@@ -16,7 +24,7 @@ trait WebDriver {
 	 * @access private
 	 * @var \Facebook\WebDriver\Remote\RemoteWebDriver
 	 */
-	private $_webDriver = null;
+	private $web_driver = null;
 
 	/**
 	 * Returns web driver instance.
@@ -24,14 +32,14 @@ trait WebDriver {
 	 * @access protected
 	 * @return \Facebook\WebDriver\Remote\RemoteWebDriver Instance of remote web driver.
 	 */
-	protected function _getWebDriver() {
-		if ( is_null( $this->_webDriver ) ) {
+	protected function getWebDriver() {
+		if ( is_null( $this->web_driver ) ) {
 
 			$capabilities     = DesiredCapabilities::chrome();
-			$this->_webDriver = RemoteWebDriver::create( $this->getSeleniumServerUrl(), $capabilities, 20000 );
+			$this->web_driver = RemoteWebDriver::create( $this->getSeleniumServerUrl(), $capabilities, 20000 );
 		}
 
-		return $this->_webDriver;
+		return $this->web_driver;
 	}
 
 	/**
@@ -60,7 +68,7 @@ trait WebDriver {
 	 * @return \WPAssure\PHPUnit\Actor An actor instance.
 	 */
 	public function getAnonymousUser( $name = 'anonymous user' ) {
-		$webdriver = $this->_getWebDriver();
+		$webdriver = $this->getWebDriver();
 
 		$actor = new Actor( $name );
 		$actor->setWebDriver( $webdriver );

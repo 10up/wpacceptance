@@ -13,7 +13,7 @@ trait ElementToMessage {
 	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element An element to convert.
 	 * @return string A message.
 	 */
-	protected function _elementToMessage( $element ) {
+	protected function elementToMessage( $element ) {
 		if ( is_string( $element ) && ! empty( $element ) ) {
 			return sprintf( ' "%s" selector', $element );
 		} elseif ( $element instanceof RemoteWebElement ) {
@@ -26,7 +26,7 @@ trait ElementToMessage {
 
 			$class = trim( $element->getAttribute( 'class' ) );
 			if ( ! empty( $class ) ) {
-				$classes = array_filter( array_map( 'trim', split( ' ', $class ) ) );
+				$classes = array_filter( array_map( 'trim', explode( ' ', $class ) ) );
 				if ( ! empty( $classes ) ) {
 					$message .= '.' . implode( '.', $classes );
 				}
