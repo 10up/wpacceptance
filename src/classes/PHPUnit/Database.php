@@ -95,6 +95,7 @@ trait Database {
 		}
 
 		$results = self::_query( "SELECT ID FROM {$table}{$where} ORDER BY `ID` DESC LIMIT 1" )->fetch_assoc();
+
 		if ( ! empty( $results ) ) {
 			return (int) $results['ID'];
 		}
@@ -118,7 +119,7 @@ trait Database {
 			$message = 'The latest ID must be bigger than provided post ID.';
 		}
 
-		static::assertGreaterThan( $sincePostId, $newLastId, $message );
+		static::assertGreaterThan( (int) $sincePostId, (int) $newLastId, $message );
 	}
 
 	/**
@@ -141,7 +142,7 @@ trait Database {
 			$message = 'A post must exist in the database.';
 		}
 
-		static::assertGreaterThan( 0, $postId, $message );
+		static::assertGreaterThan( 0, (int) $postId, $message );
 	}
 
 }
