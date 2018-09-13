@@ -42,6 +42,7 @@ class Run extends Command {
 
 		$this->addOption( 'local', false, InputOption::VALUE_NONE, 'Run tests against local WordPress install.' );
 		$this->addOption( 'save', false, InputOption::VALUE_NONE, 'If tests are successful, save snapshot ID to wpassure.json and push it to the remote repository.' );
+		$this->addOption( 'force_save', false, InputOption::VALUE_NONE, 'No matter the outcome of the tests, save snapshot ID to wpassure.json and push it to the remote repository.' );
 
 		$this->addOption( 'snapshot_id', null, InputOption::VALUE_REQUIRED, 'WP Snapshot ID.' );
 		$this->addOption( 'wp_directory', null, InputOption::VALUE_REQUIRED, 'Path to WordPress wp-config.php directory.' );
@@ -211,22 +212,23 @@ class Run extends Command {
 			Log::instance()->write( 'Test(s) have failed.', 0, 'error' );
 		} else {
 			Log::instance()->write( 'Test(s) passed!', 0, 'success' );
+		}
 
-			if ( $input->getOption( 'save' ) ) {
-				Log::instance()->write( 'Pushing snapshot to repository...', 1 );
-				Log::instance()->write( 'Snapshot ID - ' . $snapshot_id, 1 );
-				Log::instance()->write( 'Snapshot Project Slug - ' . $snapshot->meta['project'], 1 );
+		if ( ( ! $error && $input->getOption( 'save' ) ) || $input->getOption( 'force_save' ) ) {
+			Log::instance()->write( 'Pushing snapshot to repository...', 1 );
+			Log::instance()->write( 'Snapshot ID - ' . $snapshot_id, 1 );
+			Log::instance()->write( 'Snapshot Project Slug - ' . $snapshot->meta['project'], 1 );
 
-				if ( $snapshot->push() ) {
-					Log::instance()->write( 'Snapshot ID saved to wpassure.json', 0, 'success' );
+			if ( $snapshot->push() ) {
+				Log::instance()->write( 'Snapshot ID saved to wpassure.json', 0, 'success' );
 
-					$suite_config['snapshot_id'] = $snapshot_id;
-					$suite_config->write();
-				} else {
-					Log::instance()->write( 'Could not push snapshot to repository.', 0, 'error' );
-					$environment->destroy();
-					return 1;
-				}
+				$suite_config['snapshot_id'] = $snapshot_id;
+				$suite_config->write();
+			} else {
+				Log::instance()->write( 'Could not push snapshot to repository.', 0, 'error' );
+				$environment->destroy();
+
+				return 1;
 			}
 		}
 
