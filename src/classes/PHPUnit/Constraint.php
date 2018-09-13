@@ -66,7 +66,7 @@ abstract class Constraint extends \PHPUnit\Framework\Constraint\Constraint {
 	 * @param mixed $other An instance of an actor.
 	 * @return string A description of the failure.
 	 */
-	protected function failureDescription( $other ) {
+	protected function failureDescription( $other ): string {
 		$actor = $this->_getActor( $other );
 		return $actor->getActorName() . $this->_getActionDescription() . $this->toString();
 	}

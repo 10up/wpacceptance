@@ -14,15 +14,37 @@ class ContactFormTest extends \WPAssure\PHPUnit\TestCase {
 	/**
 	 * When I don't fill out required fields, contact form wont submit
 	 */
-	public function testRequiredFields() {
-		$this->markTestIncomplete( 'This test has not been implemented yet.' );
+	public function testRequiredFieldsFail() {
+		$I = $this->getAnonymousUser();
+
+		$I->moveTo( '/contact' );
+
+		$I->click( 'form .submit-wrap input' );
+
+		$I->seeText( 'Please correct errors before submitting this form', null, "Don't see required field error text." );
 	}
 
 	/**
-	 * When I fill out the form and submit, a new entry appears in the database
+	 * When I fill out the form and submit, a new entry of the proper post type appears in the database
 	 */
 	public function testSubmit() {
-		$this->markTestIncomplete( 'This test has not been implemented yet.' );
+		$I = $this->getAnonymousUser();
+
+		$I->moveTo( '/contact' );
+
+		$I->fillField( '#nf-field-1', 'John' );
+
+		$I->fillField( '#nf-field-2', 'test@test.com' );
+
+		$I->fillField( '#nf-field-3', 'message' );
+
+		$I->watchForPosts();
+
+		$I->click( 'form .submit-wrap input' );
+
+		$I->waitUntilElementVisible( '.nf-response-msg' );
+
+		$I->seeNewPosts( 'No new contact form entries in database.' );
 	}
 
 }

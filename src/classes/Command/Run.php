@@ -38,8 +38,11 @@ class Run extends Command {
 
 		$this->addArgument( 'suite_config_directory', InputArgument::OPTIONAL, 'Path to a directory that contains wpassure.json.' );
 
+		$this->addOption( 'preserve_containers', false, InputOption::VALUE_NONE, "Don't destroy containers after completion." );
+
 		$this->addOption( 'local', false, InputOption::VALUE_NONE, 'Run tests against local WordPress install.' );
 		$this->addOption( 'save', false, InputOption::VALUE_NONE, 'If tests are successful, save snapshot ID to wpassure.json and push it to the remote repository.' );
+		$this->addOption( 'force_save', false, InputOption::VALUE_NONE, 'No matter the outcome of the tests, save snapshot ID to wpassure.json and push it to the remote repository.' );
 
 		$this->addOption( 'snapshot_id', null, InputOption::VALUE_REQUIRED, 'WP Snapshot ID.' );
 		$this->addOption( 'wp_directory', null, InputOption::VALUE_REQUIRED, 'Path to WordPress wp-config.php directory.' );
@@ -66,14 +69,14 @@ class Run extends Command {
 
 		if ( ! function_exists( 'mysqli_init' ) ) {
 			Log::instance()->write( 'WPAssure requires the mysqli PHP extension is installed.', 0, 'error' );
-			return;
+			return 1;
 		}
 
 		$connection = Connection::instance()->connect();
 
 		if ( \WPSnapshots\Utils\is_error( $connection ) ) {
 			Log::instance()->write( 'Could not connect to WP Snapshots repository.', 0, 'error' );
-			return;
+			return 1;
 		}
 
 		$local = $input->getOption( 'local' );
@@ -87,7 +90,7 @@ class Run extends Command {
 
 			if ( empty( $wp_directory ) ) {
 				Log::instance()->write( 'This does not seem to be a WordPress installation. No wp-config.php found in directory tree.', 0, 'error' );
-				return;
+				return 1;
 			}
 		}
 
@@ -96,7 +99,7 @@ class Run extends Command {
 		$suite_config = Config::create( $suite_config_directory );
 
 		if ( false === $suite_config ) {
-			return;
+			return 1;
 		}
 
 		$snapshot_id = false;
@@ -115,13 +118,13 @@ class Run extends Command {
 
 				if ( ! is_a( $snapshot, '\WPSnapshots\Snapshot' ) ) {
 					Log::instance()->write( 'Could not download snapshot. Does it exist?', 0, 'error' );
-					return;
+					return 1;
 				}
 			}
 		} else {
 			if ( empty( $local ) ) {
 				Log::instance()->write( 'You must either provide --snapshot_id, have a snapshot ID in wpassure.json, or provide the --local parameter.', 0, 'error' );
-				return;
+				return 1;
 			}
 
 			Log::instance()->write( 'Creating snapshot...' );
@@ -147,10 +150,10 @@ class Run extends Command {
 
 		Log::instance()->write( 'Creating environment...' );
 
-		$environment = EnvironmentFactory::create( $snapshot_id, $suite_config );
+		$environment = EnvironmentFactory::create( $snapshot_id, $suite_config, $input->getOption( 'preserve_containers' ) );
 
 		if ( ! $environment ) {
-			exit;
+			return 1;
 		}
 
 		Log::instance()->write( 'Running tests...' );
@@ -183,6 +186,7 @@ class Run extends Command {
 		}
 
 		$suite = new PHPUnitTestSuite();
+
 		foreach ( $test_files as $test_file ) {
 			if ( empty( $filter_test_files ) || in_array( basename( $test_file ), $filter_test_files, true ) ) {
 				$suite->addTestFile( $test_file );
@@ -192,6 +196,7 @@ class Run extends Command {
 		$suite_args = array();
 
 		$colors = $input->getOption( 'colors' );
+
 		$suite_args['colors'] = $colors ?: PHPUnitResultPrinter::COLOR_AUTO;
 
 		if ( ! empty( $filter_tests ) ) {
@@ -207,26 +212,25 @@ class Run extends Command {
 			Log::instance()->write( 'Test(s) have failed.', 0, 'error' );
 		} else {
 			Log::instance()->write( 'Test(s) passed!', 0, 'success' );
-
-			if ( $input->getOption( 'save' ) ) {
-				Log::instance()->write( 'Pushing snapshot to repository...', 1 );
-				Log::instance()->write( 'Snapshot ID - ' . $snapshot_id, 1 );
-				Log::instance()->write( 'Snapshot Project Slug - ' . $snapshot->meta['project'], 1 );
-
-				if ( $snapshot->push() ) {
-					Log::instance()->write( 'Snapshot ID saved to wpassure.json', 0, 'success' );
-
-					$suite_config['snapshot_id'] = $snapshot_id;
-					$suite_config->write();
-				} else {
-					Log::instance()->write( 'Could not push snapshot to repository.', 0, 'error' );
-					$environment->destroy();
-					return;
-				}
-			}
 		}
 
-		$environment->destroy();
+		if ( ( ! $error && $input->getOption( 'save' ) ) || $input->getOption( 'force_save' ) ) {
+			Log::instance()->write( 'Pushing snapshot to repository...', 1 );
+			Log::instance()->write( 'Snapshot ID - ' . $snapshot_id, 1 );
+			Log::instance()->write( 'Snapshot Project Slug - ' . $snapshot->meta['project'], 1 );
+
+			if ( $snapshot->push() ) {
+				Log::instance()->write( 'Snapshot ID saved to wpassure.json', 0, 'success' );
+
+				$suite_config['snapshot_id'] = $snapshot_id;
+				$suite_config->write();
+			} else {
+				Log::instance()->write( 'Could not push snapshot to repository.', 0, 'error' );
+				$environment->destroy();
+
+				return 1;
+			}
+		}
 
 		$output->writeln( 'Done.', 0, 'success' );
 	}

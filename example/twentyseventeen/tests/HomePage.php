@@ -16,13 +16,15 @@ class HomePageTest extends \WPAssure\PHPUnit\TestCase {
 	public function testSearchForm() {
 		$I = $this->getAnonymousUser();
 
-		$I->amOnPage( '/' );
+		$I->moveTo( '/' );
 
 		$element = $I->fillField( '.search-form input[type=search]', 'test search' );
 
 		$I->pressEnter( $element );
 
-		$I->waitUntil( 'titleContains', 'Search Results' );
+		$I->waitUntilTitleContains( 'Search Results' );
+
+		$I->seePost();
 
 		$this->assertTrue( true );
 	}
@@ -33,7 +35,7 @@ class HomePageTest extends \WPAssure\PHPUnit\TestCase {
 	public function testTitleShowing() {
 		$I = $this->getAnonymousUser();
 
-		$I->amOnPage( '/' );
+		$I->moveTo( '/' );
 
 		$element = false;
 
@@ -52,7 +54,7 @@ class HomePageTest extends \WPAssure\PHPUnit\TestCase {
 	public function testMainMenuShowing() {
 		$I = $this->getAnonymousUser();
 
-		$I->amOnPage( '/' );
+		$I->moveTo( '/' );
 
 		$element = false;
 

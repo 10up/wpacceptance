@@ -22,21 +22,39 @@ class EnvironmentFactory {
 	 * Get an environment given an index
 	 *
 	 * @param  int $index Environments index
-	 * @return int
+	 * @return int|boolean;
 	 */
 	public static function get( $index = 0 ) {
-		return self::$environments[ $index ];
+		if ( ! empty( self::$environments[ $index ] ) ) {
+			return self::$environments[ $index ];
+		}
+
+		return false;
+	}
+
+	/**
+	 * Clean up environments on shutdown
+	 */
+	public static function handleShutdown() {
+		foreach ( self::$environments as $environment ) {
+			$environment->destroy();
+		}
 	}
 
 	/**
 	 * Create environment
 	 *
-	 * @param  string $snapshot_id WPSnapshot ID to load into environment
-	 * @param  array  $suite_config Config array
+	 * @param  string  $snapshot_id WPSnapshot ID to load into environment
+	 * @param  array   $suite_config Config array
+	 * @param  boolean $preserve_containers Keep containers alive or not
 	 * @return  Environment|bool
 	 */
-	public static function create( $snapshot_id, $suite_config ) {
-		$environment = new Environment( $snapshot_id, $suite_config );
+	public static function create( $snapshot_id, $suite_config, $preserve_containers = false ) {
+		$environment = new Environment( $snapshot_id, $suite_config, $preserve_containers );
+
+		if ( empty( self::$environments ) ) {
+			register_shutdown_function( [ '\WPAssure\EnvironmentFactory', 'handleShutdown' ] );
+		}
 
 		self::$environments[] = $environment;
 
@@ -53,14 +71,10 @@ class EnvironmentFactory {
 		}
 
 		if ( ! $environment->startContainers() ) {
-			$environment->destroy();
-
 			return false;
 		}
 
 		if ( ! $environment->pullSnapshot() ) {
-			$environment->destroy();
-
 			return false;
 		}
 

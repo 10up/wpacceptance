@@ -1,4 +1,9 @@
 <?php
+/**
+ * An Actor is used in a test to interact with the website
+ *
+ * @package  wpassure
+ */
 
 namespace WPAssure\PHPUnit;
 
@@ -13,8 +18,9 @@ use PHPUnit\Framework\ExpectationFailedException;
 use PHPUnit\Framework\TestCase;
 
 use WPAssure\Exception;
-use WPAssure\EnvironmentFactory;
 use WPAssure\Log;
+use WPAssure\Utils;
+use WPAssure\EnvironmentFactory;
 use WPAssure\PHPUnit\Constraint;
 use WPAssure\PHPUnit\Constraints\Cookie as CookieConstrain;
 use WPAssure\PHPUnit\Constraints\PageContains as PageContainsConstrain;
@@ -23,7 +29,11 @@ use WPAssure\PHPUnit\Constraints\LinkOnPage as LinkOnPageConstrain;
 use WPAssure\PHPUnit\Constraints\UrlContains as UrlContainsConstrain;
 use WPAssure\PHPUnit\Constraints\CheckboxChecked as CheckboxCheckedConstrain;
 use WPAssure\PHPUnit\Constraints\FieldValueContains as FieldValueContainsConstrain;
+use WPAssure\PHPUnit\Constraints\NewDatabaseEntry as NewDatabaseEntry;
 
+/**
+ * Actor class
+ */
 class Actor {
 
 	/**
@@ -49,6 +59,15 @@ class Actor {
 	 * @var \PHPUnit\Framework\TestCase
 	 */
 	private $_test = null;
+
+	/**
+	 * Last MySQL ids
+	 *
+	 * @var array
+	 */
+	private $_last_ids = [
+		'posts' => 0,
+	];
 
 	/**
 	 * Constructor.
@@ -142,32 +161,6 @@ class Actor {
 	}
 
 	/**
-	 * Return a new actor that is initialized on a specific page.
-	 *
-	 * @access public
-	 * @param string $url_path The relative path to a landing page.
-	 * @return \WPAssure\PHPUnit\Actor An actor instance.
-	 */
-	public function amOnPage( $url_path ) {
-		$url_parts = parse_url( $url_path );
-
-		$path = $url_parts['path'];
-
-		if ( empty( $path ) ) {
-			$path = '/';
-		} elseif ( '/' !== substr( $path, 0, 1 ) ) {
-			$path = '/' . $path;
-		}
-
-		$page = $this->_test->getWordPressUrl() . $path;
-
-		$webdriver = $this->getWebDriver();
-		$webdriver->get( $page );
-
-		Log::instance()->write( 'Navigating to URL: ' . $page, 1 );
-	}
-
-	/**
 	 * Return a page source.
 	 *
 	 * @access public
@@ -186,6 +179,16 @@ class Actor {
 	public function acceptPopup() {
 		$this->getWebDriver()->switchTo()->alert()->accept();
 		Log::instance()->write( 'Accepted the current popup.', 1 );
+	}
+
+	/**
+	 * Get current page title
+	 *
+	 * @access public
+	 * @return  string
+	 */
+	public function getPageTitle() {
+		return $this->getWebDriver()->getTitle();
 	}
 
 	/**
@@ -251,12 +254,26 @@ class Actor {
 	 * Navigate to a new URL.
 	 *
 	 * @access public
-	 * @param string $url A new URl.
+	 * @param string $url_path URL path
 	 */
-	public function moveTo( $url ) {
+	public function moveTo( $url_path ) {
+
+		$url_parts = parse_url( $url_path );
+
+		$path = $url_parts['path'];
+
+		if ( empty( $path ) ) {
+			$path = '/';
+		} elseif ( '/' !== substr( $path, 0, 1 ) ) {
+			$path = '/' . $path;
+		}
+
+		$page = $this->_test->getWordPressUrl() . $path;
+
 		$webdriver = $this->getWebDriver();
-		$webdriver->navigate()->to( $url );
-		Log::instance()->write( 'Navigate to ' . $webdriver->getCurrentURL(), 1 );
+		$webdriver->get( $page );
+
+		Log::instance()->write( 'Navigating to URL: ' . $page, 1 );
 	}
 
 	/**
@@ -289,15 +306,27 @@ class Actor {
 	}
 
 	/**
-	 * Wait for condition
+	 * Wait until title contains
 	 *
-	 * @param  string  $condition  Condition matches to WebDriverExpectedCondition function name: titleIs, titleContaints, etc.
-	 * @param  string  $mixed_args [description]
-	 * @param  integer $max_wait   Max wait time in seconds
+	 * @param  string  $title     Title string
+	 * @param  integer $max_wait  Max wait time in seconds
 	 */
-	public function waitUntil( $condition, $mixed_args, $max_wait = 10 ) {
+	public function waitUntilTitleContains( $title, $max_wait = 10 ) {
 		$webdriver = $this->getWebDriver();
-		$webdriver->wait( $max_wait )->until( WebDriverExpectedCondition::$condition( $mixed_args ) );
+
+		$webdriver->wait( $max_wait )->until( WebDriverExpectedCondition::titleContains( $title ) );
+	}
+
+	/**
+	 * Wait until element is visible
+	 *
+	 * @param  string  $element_path Path to element to check
+	 * @param  integer $max_wait  Max wait time in seconds
+	 */
+	public function waitUntilElementVisible( $element_path, $max_wait = 10 ) {
+		$webdriver = $this->getWebDriver();
+
+		$webdriver->wait( $max_wait )->until( WebDriverExpectedCondition::visibilityOfElementLocated( WebDriverBy::cssSelector( $element_path ) ) );
 	}
 
 	/**
@@ -806,4 +835,69 @@ class Actor {
 		);
 	}
 
+	/**
+	 * Watch for new posts. We record the ID of the last post here so we can look for
+	 * new ids later.
+	 */
+	public function watchForPosts() {
+		$mysql = EnvironmentFactory::get()->getMySQLClient();
+
+		$query = 'SELECT ID FROM ' . $mysql->getTablePrefix() . 'posts ORDER BY `ID` DESC LIMIT 1';
+
+		$query = $mysql->query( $query );
+
+		$results = $query->fetch_assoc();
+
+		if ( ! empty( $results ) ) {
+			$this->_last_ids['posts'] = (int) $results['ID'];
+		}
+	}
+
+	/**
+	 * Check for new posts or other post type. Must have called watchForPosts first.
+	 *
+	 * @param  string $message Optional message to show if test fails
+	 */
+	public function seeNewPosts( $message = '' ) {
+		$this->_assertThat(
+			new NewDatabaseEntry( Constraint::ACTION_SEE, 'posts', (int) $this->_last_ids['posts'] ),
+			$message
+		);
+	}
+
+	/**
+	 * Find a post given criteria. The following criteria is supported:
+	 *
+	 * @param  array $args Criteria array
+	 * @return boolean
+	 */
+	public function seePost( $args = [] ) {
+		$mysql = EnvironmentFactory::get()->getMySQLClient();
+
+		$defaults = [
+			'post_type'   => 'post',
+			'post_status' => 'publish',
+		];
+
+		// Merge defaults
+		$args = array_merge( $defaults, $args );
+
+		$where = 'WHERE 1=1 ';
+
+		if ( ! empty( $args['ID'] ) ) {
+			$where .= ' AND `ID` = "' . (int) $args['ID'] . '" ';
+		} if ( ! empty( $args['post_title'] ) ) {
+			$where .= ' AND `post_title` = "' . $mysql->escape( $args['post_title'] ) . '" ';
+		} if ( ! empty( $args['post_type'] ) ) {
+			$where .= ' AND `post_type` = "' . $mysql->escape( $args['post_type'] ) . '" ';
+		} if ( ! empty( $args['post_status'] ) ) {
+			$where .= ' AND `post_status` = "' . $mysql->escape( $args['post_status'] ) . '" ';
+		}
+
+		$query = 'SELECT * FROM ' . $mysql->getTablePrefix() . 'posts ' . $where . ' LIMIT 10';
+
+		$result = $mysql->query( $query );
+
+		return ( 1 <= $result->num_rows );
+	}
 }

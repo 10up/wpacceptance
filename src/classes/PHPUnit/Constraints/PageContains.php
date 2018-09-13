@@ -4,9 +4,9 @@ namespace WPAssure\PHPUnit\Constraints;
 
 class PageContains extends \WPAssure\PHPUnit\Constraint {
 
-	use WPAssure\PHPUnit\Constraints\Traits\StringOrPattern,
-	    WPAssure\PHPUnit\Constraints\Traits\SeeableAction,
-	    WPAssure\PHPUnit\Constraints\Traits\ElementToMessage;
+	use Traits\StringOrPattern,
+		Traits\SeeableAction,
+		Traits\ElementToMessage;
 
 	/**
 	 * The text to look for.
@@ -46,7 +46,7 @@ class PageContains extends \WPAssure\PHPUnit\Constraint {
 	 * @param \WPAssure\PHPUnit\Actor $other The actor instance.
 	 * @return boolean TRUE if the constrain is met, otherwise FALSE.
 	 */
-	protected function matches( $other ) {
+	protected function matches( $other ): bool {
 		$actor   = $this->_getActor( $other );
 		$element = $actor->getElement( ! empty( $this->_element ) ? $this->_element : 'body' );
 		if ( $element ) {
@@ -71,7 +71,7 @@ class PageContains extends \WPAssure\PHPUnit\Constraint {
 	 * @access public
 	 * @return string The description text.
 	 */
-	public function toString() {
+	public function toString(): string {
 		$message = sprintf( ' "%s" text', $this->_text );
 		if ( ! empty( $this->_element ) ) {
 			$message .= ' in the scope of ' . $this->_elementToMessage( $this->_element );
