@@ -112,7 +112,7 @@ trait Database {
 	 * @param string $message Optinal. A message to use on failure.
 	 */
 	public static function assertNewPostsExist( $sincePostId, array $args = array(), $message = '' ) {
-		$newLastId = $this->getLastPostId( $args );
+		$newLastId = self::getLastPostId( $args );
 
 		if ( empty( $message ) ) {
 			$message = 'The latest ID must be bigger than provided post ID.';
