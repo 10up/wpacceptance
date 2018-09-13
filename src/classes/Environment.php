@@ -745,7 +745,7 @@ class Environment {
 	/**
 	 * Get MySQL client
 	 *
-	 * @return MySQL
+	 * @return \WPAssure\MySQL
 	 */
 	public function getMySQLClient() {
 		if ( empty( $this->_mysql_client ) ) {
