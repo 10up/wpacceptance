@@ -9,7 +9,7 @@
   ],
   "require": {
     "symfony/console": "^3.3",
-    "10up/wpsnapshots": "dev-feature/create",
+    "10up/wpsnapshots": "dev-master",
     "facebook/webdriver": "^1.6",
     "docker-php/docker-php": "^2.0",
     "phpunit/phpunit": "^7.3",
