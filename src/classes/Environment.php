@@ -113,6 +113,13 @@ class Environment {
 	protected $mysql_client;
 
 	/**
+	 * Current MySQL db to use
+	 *
+	 * @var string
+	 */
+	protected $current_mysql_db = 'wordpress_clean';
+
+	/**
 	 * Environment constructor
 	 *
 	 * @param  string  $snapshot_id WPSnapshot ID to load into environment
@@ -125,6 +132,70 @@ class Environment {
 		$this->snapshot_id         = $snapshot_id;
 		$this->suite_config        = $suite_config;
 		$this->preserve_containers = $preserve_containers;
+	}
+
+	/**
+	 * Clone the clean WordPress DB into another DB. Set the new db name as the current DB
+	 *
+	 * @return string
+	 */
+	public function makeCleanDB() {
+		static $db_number = 0;
+
+		$db_name = 'wordpress';
+
+		if ( 0 < $db_number ) {
+			$db_name .= $db_number;
+		}
+
+		$this->duplicateDB( 'wordpress_clean', $db_name );
+
+		$this->current_mysql_db = $db_name;
+
+		$db_number++;
+
+		$this->mysql_client = new MySQL( $this->getMySQLCredentials(), $this->mysql_port, $this->snapshot->meta['table_prefix'] );
+
+		return $this->current_mysql_db;
+	}
+
+	/**
+	 * Duplicate a MySQL DB
+	 *
+	 * @param  string $original Original db name
+	 * @param  string $copy     New DB name
+	 */
+	protected function duplicateDB( $original, $copy ) {
+		Log::instance()->write( 'Duplicating MySQL database...', 1 );
+
+		$command = 'echo "create database if not exists ' . $copy . '" | mysql --password=password && mysqldump ' . $original . ' --password=password | mysql ' . $copy . ' --password=password';
+
+		$exec_config = new ContainersIdExecPostBody();
+		$exec_config->setTty( true );
+		$exec_config->setAttachStdout( true );
+		$exec_config->setAttachStderr( true );
+		$exec_config->setCmd( [ '/bin/sh', '-c', $command ] );
+
+		$exec_command      = $this->docker->containerExec( 'mysql-' . $this->network_id, $exec_config );
+		$exec_id           = $exec_command->getId();
+		$exec_start_config = new ExecIdStartPostBody();
+		$exec_start_config->setDetach( false );
+
+		$stream = $this->docker->execStart( $exec_id, $exec_start_config );
+
+		$stream->onStdout(
+			function( $stdout ) {
+				Log::instance()->write( $stdout, 2 );
+			}
+		);
+
+		$stream->onStderr(
+			function( $stderr ) {
+				Log::instance()->write( $stderr, 2 );
+			}
+		);
+
+		$stream->wait();
 	}
 
 	/**
@@ -211,6 +282,12 @@ class Environment {
 			return false;
 		}
 
+		$this->mysql_client = new MySQL( $this->getMySQLCredentials(), $this->mysql_port, $this->snapshot->meta['table_prefix'] );
+
+		/**
+		 * Create duplicate WP DB to dirty
+		 */
+		$this->makeCleanDB();
 		/**
 		 * Determine where codebase is located in snapshot
 		 */
@@ -442,6 +519,11 @@ class Environment {
 
 		$host_config = new HostConfig();
 		$host_config->setNetworkMode( $this->network_id );
+		$host_config->setBinds(
+			[
+				WPASSURE_DIR . '/docker/mysql:/etc/mysql/conf.d',
+			]
+		);
 
 		$port_binding = new PortBinding();
 		$port_binding->setHostPort( $this->mysql_port );
@@ -460,7 +542,7 @@ class Environment {
 		$container_config->setEnv(
 			[
 				'MYSQL_ROOT_PASSWORD=password',
-				'MYSQL_DATABASE=wordpress',
+				'MYSQL_DATABASE=wordpress_clean',
 			]
 		);
 		$container_config->setHostConfig( $host_config );
@@ -737,7 +819,7 @@ class Environment {
 	public function getMySQLCredentials() {
 		return [
 			'DB_HOST'     => 'mysql-' . $this->network_id,
-			'DB_NAME'     => 'wordpress',
+			'DB_NAME'     => $this->current_mysql_db,
 			'DB_USER'     => 'root',
 			'DB_PASSWORD' => 'password',
 		];
@@ -749,10 +831,6 @@ class Environment {
 	 * @return \WPAssure\MySQL
 	 */
 	public function getMySQLClient() {
-		if ( empty( $this->mysql_client ) ) {
-			$this->mysql_client = new MySQL( $this->getMySQLCredentials(), $this->mysql_port, $this->snapshot->meta['table_prefix'] );
-		}
-
 		return $this->mysql_client;
 	}
 

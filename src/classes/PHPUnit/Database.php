@@ -30,6 +30,23 @@ trait Database {
 	}
 
 	/**
+	 * Get the last INSERT, UPDATE, or DELETE that happened in the MySQL server
+	 *
+	 * @return array
+	 */
+	protected static function getLastModifyingQuery() {
+		$mysql = EnvironmentFactory::get()->getMySQLClient();
+
+		$result = $mysql->query( "SELECT * FROM mysql.general_log WHERE command_type = 'Query' AND user_host LIKE '%wordpress-wpassure%' AND argument REGEXP '^(UPDATE|INSERT|DELETE).*' ORDER BY event_time DESC LIMIT 1" );
+
+		if ( ! $result ) {
+			Log::instance()->write( 'Query error: ' . $this->mysqli_instance->error, 2 );
+		}
+
+		return $result->fetch_assoc();
+	}
+
+	/**
 	 * Return table name with proper prefix.
 	 *
 	 * @static
@@ -39,6 +56,17 @@ trait Database {
 	 */
 	protected static function getTableName( $table ) {
 		return EnvironmentFactory::get()->getMySQLClient()->getTablePrefix() . $table;
+	}
+
+	/**
+	 * Return table name with proper prefix.
+	 *
+	 * @static
+	 * @access protected
+	 * @return string
+	 */
+	protected static function getCurrentDatabaseName() {
+		return EnvironmentFactory::get()->getMySQLCredentials()['DB_NAME'];
 	}
 
 	/**
