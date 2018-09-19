@@ -196,6 +196,49 @@ class Environment {
 		);
 
 		$stream->wait();
+
+		$exit_code = $this->docker->execInspect( $exec_id )->getExitCode();
+
+		if ( 0 !== $exit_code ) {
+			Log::instance()->write( 'Could not duplicate MySQL database.', 0, 'error' );
+			return false;
+		}
+
+		$command = 'sed -i -e "s/[\'\"]DB_NAME[\'\"],[ \t]*[\'\"].*[\'\"]/\'DB_NAME\', \'TEST\'/g" /var/www/html/wp-config.php';
+
+		$exec_config = new ContainersIdExecPostBody();
+		$exec_config->setTty( true );
+		$exec_config->setAttachStdout( true );
+		$exec_config->setAttachStderr( true );
+		$exec_config->setCmd( [ '/bin/sh', '-c', $command ] );
+
+		$exec_command      = $this->docker->containerExec( 'wordpress-' . $this->network_id, $exec_config );
+		$exec_id           = $exec_command->getId();
+		$exec_start_config = new ExecIdStartPostBody();
+		$exec_start_config->setDetach( false );
+
+		$stream = $this->docker->execStart( $exec_id, $exec_start_config );
+
+		$stream->onStdout(
+			function( $stdout ) {
+				Log::instance()->write( $stdout, 2 );
+			}
+		);
+
+		$stream->onStderr(
+			function( $stderr ) {
+				Log::instance()->write( $stderr, 2 );
+			}
+		);
+
+		$stream->wait();
+
+		$exit_code = $this->docker->execInspect( $exec_id )->getExitCode();
+
+		if ( 0 !== $exit_code ) {
+			Log::instance()->write( 'Could not database in wp-config.php.', 0, 'error' );
+			return false;
+		}
 	}
 
 	/**
@@ -717,7 +760,11 @@ class Environment {
 		Log::instance()->write( 'Stopping containers...', 1 );
 
 		foreach ( $this->containers as $container ) {
-			$this->docker->containerStop( $container->getId() );
+			try {
+				$this->docker->containerStop( $container->getId() );
+			} catch ( \Exception $exception ) {
+				// Proceed no matter what
+			}
 		}
 
 		return true;
@@ -732,7 +779,11 @@ class Environment {
 		Log::instance()->write( 'Deleting containers...', 1 );
 
 		foreach ( $this->containers as $container ) {
-			$this->docker->containerDelete( $container->getId() );
+			try {
+				$this->docker->containerDelete( $container->getId() );
+			} catch ( \Exception $exception ) {
+				// Proceed no matter what
+			}
 		}
 
 		return true;
