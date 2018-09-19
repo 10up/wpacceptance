@@ -41,6 +41,7 @@ class Run extends Command {
 		$this->addOption( 'preserve_containers', false, InputOption::VALUE_NONE, "Don't destroy containers after completion." );
 
 		$this->addOption( 'local', false, InputOption::VALUE_NONE, 'Run tests against local WordPress install.' );
+		$this->addOption( 'test_clean_db', false, InputOption::VALUE_NONE, 'Ensure each test has a clean version of the snapshot database.' );
 		$this->addOption( 'save', false, InputOption::VALUE_NONE, 'If tests are successful, save snapshot ID to wpassure.json and push it to the remote repository.' );
 		$this->addOption( 'force_save', false, InputOption::VALUE_NONE, 'No matter the outcome of the tests, save snapshot ID to wpassure.json and push it to the remote repository.' );
 
@@ -97,6 +98,12 @@ class Run extends Command {
 		$suite_config_directory = $input->getArgument( 'suite_config_directory' );
 
 		$suite_config = Config::create( $suite_config_directory );
+
+		$test_clean_db = $input->getOption( 'test_clean_db' );
+
+		if ( ! empty( $test_clean_db ) ) {
+			$suite_config['test_clean_db'] = true;
+		}
 
 		if ( false === $suite_config ) {
 			return 1;

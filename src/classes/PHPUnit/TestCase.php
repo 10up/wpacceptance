@@ -49,6 +49,13 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase {
 		if ( ! empty( $new_last_modifying_query ) && $new_last_modifying_query['event_time'] !== $this->last_modifying_query['event_time'] ) {
 			Log::instance()->write( 'Test modified the database (' . $this->getName() . ').', 1, 'warning' );
 			Log::instance()->write( 'Last query at ' . $new_last_modifying_query['event_time'] . ': ' . $new_last_modifying_query['argument'], 2 );
+
+			$config = EnvironmentFactory::get()->getSuiteConfig();
+
+			if ( ! empty( $config['test_clean_db'] ) ) {
+				Log::instance()->write( 'Setting up clean database.', 1 );
+				EnvironmentFactory::get()->makeCleanDB();
+			}
 		}
 
 		$this->last_modifying_query = $new_last_modifying_query;

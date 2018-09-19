@@ -148,11 +148,52 @@ class Environment {
 			$db_name .= $db_number;
 		}
 
+		Log::instance()->write( 'Setting up clean MySQL database: ' . $db_name, 1 );
+
 		$this->duplicateDB( 'wordpress_clean', $db_name );
 
 		$this->current_mysql_db = $db_name;
 
 		$db_number++;
+
+		/**
+		 * Insert new db name into wp-config.php
+		 */
+		$command = 'sed -i -e "s/[\'\"]DB_NAME[\'\"],[ \t]*[\'\"].*[\'\"]/\'DB_NAME\', \'' . $db_name . '\'/g" /var/www/html/wp-config.php';
+
+		$exec_config = new ContainersIdExecPostBody();
+		$exec_config->setTty( true );
+		$exec_config->setAttachStdout( true );
+		$exec_config->setAttachStderr( true );
+		$exec_config->setCmd( [ '/bin/sh', '-c', $command ] );
+
+		$exec_command      = $this->docker->containerExec( 'wordpress-' . $this->network_id, $exec_config );
+		$exec_id           = $exec_command->getId();
+		$exec_start_config = new ExecIdStartPostBody();
+		$exec_start_config->setDetach( false );
+
+		$stream = $this->docker->execStart( $exec_id, $exec_start_config );
+
+		$stream->onStdout(
+			function( $stdout ) {
+				Log::instance()->write( $stdout, 2 );
+			}
+		);
+
+		$stream->onStderr(
+			function( $stderr ) {
+				Log::instance()->write( $stderr, 2 );
+			}
+		);
+
+		$stream->wait();
+
+		$exit_code = $this->docker->execInspect( $exec_id )->getExitCode();
+
+		if ( 0 !== $exit_code ) {
+			Log::instance()->write( 'Could not modify database in wp-config.php.', 0, 'error' );
+			return false;
+		}
 
 		$this->mysql_client = new MySQL( $this->getMySQLCredentials(), $this->mysql_port, $this->snapshot->meta['table_prefix'] );
 
@@ -201,42 +242,6 @@ class Environment {
 
 		if ( 0 !== $exit_code ) {
 			Log::instance()->write( 'Could not duplicate MySQL database.', 0, 'error' );
-			return false;
-		}
-
-		$command = 'sed -i -e "s/[\'\"]DB_NAME[\'\"],[ \t]*[\'\"].*[\'\"]/\'DB_NAME\', \'TEST\'/g" /var/www/html/wp-config.php';
-
-		$exec_config = new ContainersIdExecPostBody();
-		$exec_config->setTty( true );
-		$exec_config->setAttachStdout( true );
-		$exec_config->setAttachStderr( true );
-		$exec_config->setCmd( [ '/bin/sh', '-c', $command ] );
-
-		$exec_command      = $this->docker->containerExec( 'wordpress-' . $this->network_id, $exec_config );
-		$exec_id           = $exec_command->getId();
-		$exec_start_config = new ExecIdStartPostBody();
-		$exec_start_config->setDetach( false );
-
-		$stream = $this->docker->execStart( $exec_id, $exec_start_config );
-
-		$stream->onStdout(
-			function( $stdout ) {
-				Log::instance()->write( $stdout, 2 );
-			}
-		);
-
-		$stream->onStderr(
-			function( $stderr ) {
-				Log::instance()->write( $stderr, 2 );
-			}
-		);
-
-		$stream->wait();
-
-		$exit_code = $this->docker->execInspect( $exec_id )->getExitCode();
-
-		if ( 0 !== $exit_code ) {
-			Log::instance()->write( 'Could not database in wp-config.php.', 0, 'error' );
 			return false;
 		}
 	}
@@ -821,7 +826,11 @@ class Environment {
 	public function deleteNetwork() {
 		Log::instance()->write( 'Deleting network...', 1 );
 
-		$this->docker->networkDelete( $this->network_id );
+		try {
+			$this->docker->networkDelete( $this->network_id );
+		} catch ( \Exception $exception ) {
+			// Proceed no matter what
+		}
 
 		return true;
 	}
@@ -883,6 +892,15 @@ class Environment {
 	 */
 	public function getMySQLClient() {
 		return $this->mysql_client;
+	}
+
+	/**
+	 * Get suite config
+	 *
+	 * @return \WPAssure\Config
+	 */
+	public function getSuiteConfig() {
+		return $this->suite_config;
 	}
 
 }
