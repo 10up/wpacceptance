@@ -785,8 +785,12 @@ class Environment {
 
 		foreach ( $this->containers as $container ) {
 			try {
-				$this->docker->containerDelete( $container->getId() );
+				$this->docker->containerDelete( $container->getId(), [
+					'v'     => true,
+					'force' => true,
+				] );
 			} catch ( \Exception $exception ) {
+				var_dump($exception);
 				// Proceed no matter what
 			}
 		}

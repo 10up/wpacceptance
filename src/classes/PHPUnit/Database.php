@@ -15,6 +15,43 @@ use WPAssure\EnvironmentFactory;
 trait Database {
 
 	/**
+	 * Get the last INSERT, UPDATE, or DELETE that happened in the MySQL server
+	 *
+	 * @return array
+	 */
+	protected function getLastModifyingQuery() {
+		$mysql = EnvironmentFactory::get()->getMySQLClient();
+
+		$result = $mysql->query( "SELECT * FROM mysql.general_log WHERE command_type = 'Query' AND user_host LIKE '%wordpress-wpassure%' AND argument REGEXP '^(UPDATE|INSERT|DELETE).*' ORDER BY event_time DESC LIMIT 1" );
+
+		if ( ! $result ) {
+			Log::instance()->write( 'Query error: ' . $this->mysqli_instance->error, 2 );
+		}
+
+		return $result->fetch_assoc();
+	}
+
+	/**
+	 * Use new database if the current one is dirty
+	 *
+	 * @param  boolean $force Force new DB to be used
+	 */
+	protected function ensureCleanDatabase( $force = false ) {
+		$new_last_modifying_query = $this->getLastModifyingQuery();
+
+		if ( $force ) {
+			Log::instance()->write( 'Forcing clean database.', 1 );
+
+			EnvironmentFactory::get()->makeCleanDB();
+		} elseif ( ! empty( $new_last_modifying_query ) && $new_last_modifying_query['event_time'] !== $this->last_modifying_query['event_time'] ) {
+			Log::instance()->write( 'Database has been modified. Setting up clean database.' );
+			Log::instance()->write( 'Last query at ' . $new_last_modifying_query['event_time'] . ': ' . $new_last_modifying_query['argument'], 2 );
+
+			EnvironmentFactory::get()->makeCleanDB();
+		}
+	}
+
+	/**
 	 * Execute MySQL query and return results.
 	 *
 	 * @static
@@ -27,23 +64,6 @@ trait Database {
 
 		// @todo: log query
 		return $mysql->query( $query );
-	}
-
-	/**
-	 * Get the last INSERT, UPDATE, or DELETE that happened in the MySQL server
-	 *
-	 * @return array
-	 */
-	protected static function getLastModifyingQuery() {
-		$mysql = EnvironmentFactory::get()->getMySQLClient();
-
-		$result = $mysql->query( "SELECT * FROM mysql.general_log WHERE command_type = 'Query' AND user_host LIKE '%wordpress-wpassure%' AND argument REGEXP '^(UPDATE|INSERT|DELETE).*' ORDER BY event_time DESC LIMIT 1" );
-
-		if ( ! $result ) {
-			Log::instance()->write( 'Query error: ' . $this->mysqli_instance->error, 2 );
-		}
-
-		return $result->fetch_assoc();
 	}
 
 	/**

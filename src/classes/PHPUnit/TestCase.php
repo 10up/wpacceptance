@@ -8,6 +8,7 @@
 namespace WPAssure\PHPUnit;
 
 use WPAssure\Log;
+use WPAssure\EnvironmentFactory;
 
 /**
  * Class is abstract so PHPUnit doesn't flag it as empty
