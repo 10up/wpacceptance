@@ -1,9 +1,17 @@
 <?php
+/**
+ * Convert element to failure message.
+ *
+ * @package wpassure
+ */
 
 namespace WPAssure\PHPUnit\Constraints\Traits;
 
 use Facebook\WebDriver\Remote\RemoteWebElement;
 
+/**
+ * Trait to be mixed with constraint
+ */
 trait ElementToMessage {
 
 	/**

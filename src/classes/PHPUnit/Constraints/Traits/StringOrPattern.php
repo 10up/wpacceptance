@@ -1,7 +1,15 @@
 <?php
+/**
+ * Check if string is inside something
+ *
+ * @package wpassure
+ */
 
 namespace WPAssure\PHPUnit\Constraints\Traits;
 
+/**
+ * Trait to be mixed with constraint
+ */
 trait StringOrPattern {
 
 	/**
@@ -13,8 +21,8 @@ trait StringOrPattern {
 	 * @return boolean TRUE if the content contains a needle, otherwise FALSE.
 	 */
 	protected function findMatch( $content, $string_or_pattern ) {
-		return preg_match( '#^/[^/]+/(\w?)$#', $stringOrPattern )
-			? preg_match( $stringOrPattern, $content ) > 0
+		return preg_match( '#^/[^/]+/(\w?)$#', $string_or_pattern )
+			? preg_match( $string_or_pattern, $content ) > 0
 			: mb_stripos( $content, $string_or_pattern ) !== false;
 	}
 

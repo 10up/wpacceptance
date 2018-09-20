@@ -1,9 +1,17 @@
 <?php
+/**
+ * Evaluate action
+ *
+ * @package  wpassure
+ */
 
 namespace WPAssure\PHPUnit\Constraints\Traits;
 
 use WPAssure\PHPUnit\Constraint;
 
+/**
+ * Trait to be mixed with constraint
+ */
 trait SeeableAction {
 
 	/**
