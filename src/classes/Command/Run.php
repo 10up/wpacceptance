@@ -210,16 +210,10 @@ class Run extends Command {
 			$suite_args['filter'] = $filter_tests;
 		}
 
-		$runner = new \PHPUnit\TextUI\TestRunner();
-		if ( 0 !== $runner->doRun( $suite, $suite_args, false ) ) {
-			$error = true;
-		}
+		$runner      = new \PHPUnit\TextUI\TestRunner();
+		$test_result = $runner->doRun( $suite, $suite_args, false );
 
-		if ( $error ) {
-			Log::instance()->write( 'Test(s) have failed.', 0, 'error' );
-		} else {
-			Log::instance()->write( 'Test(s) passed!', 0, 'success' );
-		}
+		$error = ! $test_result->wasSuccessful();
 
 		if ( $local ) {
 			if ( ( ! $error && $input->getOption( 'save' ) ) || $input->getOption( 'force_save' ) ) {
