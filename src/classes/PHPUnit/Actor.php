@@ -26,6 +26,7 @@ use WPAssure\PHPUnit\Constraints\Cookie as CookieConstrain;
 use WPAssure\PHPUnit\Constraints\PageContains as PageContainsConstrain;
 use WPAssure\PHPUnit\Constraints\PageSourceContains as PageSourceContainsConstrain;
 use WPAssure\PHPUnit\Constraints\LinkOnPage as LinkOnPageConstrain;
+use WPAssure\PHPUnit\Constraints\ElementVisible as ElementVisibleConstrain;
 use WPAssure\PHPUnit\Constraints\UrlContains as UrlContainsConstrain;
 use WPAssure\PHPUnit\Constraints\CheckboxChecked as CheckboxCheckedConstrain;
 use WPAssure\PHPUnit\Constraints\FieldValueContains as FieldValueContainsConstrain;
@@ -620,6 +621,34 @@ class Actor {
 		$element  = $this->getElement( $element );
 		$element->setFileDetector( $detector );
 		$element->sendKeys( $file );
+	}
+
+	/**
+	 * Check if the actor sees an element on the current page. Element must be visible to human eye.
+	 *
+	 * @access public
+	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A CSS selector for the element.
+	 * @param string                                             $message Optional. The message to use on a failure.
+	 */
+	public function seeElement( $element, $message = '' ) {
+		$this->assertThat(
+			new ElementVisibleConstrain( Constraint::ACTION_SEE, $element ),
+			$message
+		);
+	}
+
+	/**
+	 * Check if the actor doesnt see an element on the current page. Element must not be visible to human eye.
+	 *
+	 * @access public
+	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A CSS selector for the element.
+	 * @param string                                             $message Optional. The message to use on a failure.
+	 */
+	public function dontSeeElement( $element, $message = '' ) {
+		$this->assertThat(
+			new ElementVisibleConstrain( Constraint::ACTION_DONTSEE, $element ),
+			$message
+		);
 	}
 
 	/**

@@ -14,14 +14,26 @@ class MainMenuTest extends \WPAssure\PHPUnit\TestCase {
 	 * On small screen, menu is hidden initially and opens on click
 	 */
 	public function testSmallScreenOpen() {
-		$this->markTestIncomplete( 'This test has not been implemented yet.' );
+		$I = $this->getAnonymousUser( [ 'screen_size' => 'small' ] );
+
+		$I->moveTo( '/' );
+
+		$I->dontSeeElement( '#top-menu' );
+
+		$I->click( '.menu-toggle' );
+
+		$I->seeElement( '#top-menu' );
 	}
 
 	/**
 	 * On large screen, menu items are visible
 	 */
 	public function testLargeScreenVisible() {
-		$this->markTestIncomplete( 'This test has not been implemented yet.' );
+		$I = $this->getAnonymousUser();
+
+		$I->moveTo( '/' );
+
+		$I->seeElement( '#top-menu' );
 	}
 
 }
