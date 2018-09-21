@@ -195,7 +195,28 @@ class Actor {
 	}
 
 	/**
-	 * Take a screenshot of the viewport.
+	 * Execute javascript
+	 *
+	 * @param  string $script JS code
+	 * @return  mixed Can be whatever JS returns
+	 */
+	public function executeJavaScript( $script ) {
+		return $this->getWebDriver()->executeScript( $script );
+	}
+
+	/**
+	 * Directly set element attribute via JS
+	 *
+	 * @param string $element_path    Element path
+	 * @param string $attribute_name  Attribute name
+	 * @param string $attribute_value Attribute value
+	 */
+	public function setElementAttribute( $element_path, $attribute_name, $attribute_value ) {
+		$this->executeJavaScript( 'window.document.querySelector("' . $element_path . '").setAttribute("' . $attribute_name . '", "' . $attribute_value . '")' );
+	}
+
+	/**
+	 * Take a screenshot of the viewport
 	 *
 	 * @access public
 	 * @param string $name A filename without extension.
@@ -304,6 +325,19 @@ class Actor {
 			new CookieConstrain( Constraint::ACTION_SEE, $name, $value ),
 			$message
 		);
+	}
+
+	/**
+	 * Wait until element contains text
+	 *
+	 * @param  string  $text     Title string
+	 * @param  string  $element_path Path to element to check
+	 * @param  integer $max_wait  Max wait time in seconds
+	 */
+	public function waitUntilElementContainsText( $text, $element_path, $max_wait = 10 ) {
+		$webdriver = $this->getWebDriver();
+
+		$webdriver->wait( $max_wait )->until( WebDriverExpectedCondition::textToByPresentInElement( WebDriverBy::cssSelector( $element_path ), $text ) );
 	}
 
 	/**
@@ -564,6 +598,24 @@ class Actor {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Login as a certain user
+	 *
+	 * @param  string $username Username
+	 */
+	public function loginAs( $username ) {
+		$this->moveTo( 'wp-login.php' );
+
+		$this->waitUntilElementVisible( '#user_login' );
+
+		$this->fillField( '#user_login', $username );
+		$this->fillField( '#user_pass', 'password' );
+
+		$this->click( '#wp-submit' );
+
+		$this->waitUntilElementVisible( '#wpadminbar' );
 	}
 
 	/**
