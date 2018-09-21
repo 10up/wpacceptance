@@ -442,7 +442,7 @@ class Environment {
 			}
 		}
 
-		$cp_command = 'rsync -a -I ' . $excludes . ' /root/repo/ ' . $snapshot_repo_path;
+		$cp_command = 'rsync -a -I --exclude=".git" ' . $excludes . ' /root/repo/ ' . $snapshot_repo_path;
 
 		Log::instance()->write( $cp_command, 2 );
 
