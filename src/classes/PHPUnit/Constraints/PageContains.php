@@ -1,7 +1,15 @@
 <?php
+/**
+ * Test page contents constraint
+ *
+ * @package  wpassure
+ */
 
 namespace WPAssure\PHPUnit\Constraints;
 
+/**
+ * Constraint class
+ */
 class PageContains extends \WPAssure\PHPUnit\Constraint {
 
 	use Traits\StringOrPattern,
@@ -54,12 +62,12 @@ class PageContains extends \WPAssure\PHPUnit\Constraint {
 			if ( empty( $content ) ) {
 				// if current action is "dontSee" then return "true" what means the constrain is met,
 				// otherwise it means that action is "see" and the constrain isn't met, thus return "false"
-				return $this->action === self::ACTION_DONTSEE;
+				return self::ACTION_DONTSEE === $this->action;
 			}
 
 			$found = $this->findMatch( $content, $this->text );
 
-			return ( $found && $this->action === self::ACTION_SEE ) || ( ! $found && $this->action === self::ACTION_DONTSEE );
+			return ( $found && self::ACTION_SEE === $this->action ) || ( ! $found && self::ACTION_DONTSEE === $this->action );
 		}
 
 		return false;

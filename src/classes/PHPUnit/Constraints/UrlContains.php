@@ -1,7 +1,15 @@
 <?php
+/**
+ * URL contains constraint
+ *
+ * @package wpassure
+ */
 
 namespace WPAssure\PHPUnit\Constraints;
 
+/**
+ * Constraint class
+ */
 class UrlContains extends \WPAssure\PHPUnit\Constraint {
 
 	use WPAssure\PHPUnit\Constraints\Traits\SeeableAction,
@@ -42,7 +50,7 @@ class UrlContains extends \WPAssure\PHPUnit\Constraint {
 		$url   = trim( $webdriver->getCurrentURL() );
 		$found = $this->findMatch( $url, $this->text );
 
-		return ( $found && $this->action === self::ACTION_SEE ) || ( ! $found && $this->action === self::ACTION_DONTSEE );
+		return ( $found && self::ACTION_SEE === $this->action ) || ( ! $found && self::ACTION_DONTSEE === $this->action );
 	}
 
 	/**

@@ -4,6 +4,9 @@ namespace WPAssure\PHPUnit\Constraints;
 
 use Facebook\WebDriver\WebDriverSelect;
 
+/**
+ * Constraint class
+ */
 class FieldValueContains extends \WPAssure\PHPUnit\Constraint {
 
 	use WPAssure\PHPUnit\Constraints\Traits\SeeableAction,
@@ -76,7 +79,7 @@ class FieldValueContains extends \WPAssure\PHPUnit\Constraint {
 			$found = $this->findMatch( $content, $this->value );
 		}
 
-		return ( $found && $this->action === self::ACTION_SEE ) || ( ! $found && $this->action === self::ACTION_DONTSEE );
+		return ( $found && self::ACTION_SEE === $this->action ) || ( ! $found && self::ACTION_DONTSEE === $this->action );
 	}
 
 	/**

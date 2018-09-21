@@ -1,7 +1,15 @@
 <?php
+/**
+ * Test cookies constraint
+ *
+ * @package  wpassure
+ */
 
 namespace WPAssure\PHPUnit\Constraints;
 
+/**
+ * Constraint class
+ */
 class Cookie extends \WPAssure\PHPUnit\Constraint {
 
 	use WPAssure\PHPUnit\Constraints\Traits\SeeableAction;
@@ -54,13 +62,13 @@ class Cookie extends \WPAssure\PHPUnit\Constraint {
 				if ( empty( $this->value ) ) {
 					// if current action is "see" then return "true" what means the constrain is met,
 					// otherwise it means that action is "dontSee" and the constrain isn't met, thus return "false"
-					return $this->action === self::ACTION_SEE;
+					return self::ACTION_SEE === $this->action;
 				}
 
 				// if current action is "see" and cookie's value equals to what we are looking for,
 				// then return "true" what means the constrain is met, otherwise it means that action is
 				// "dontSee" or value doesn't match, thus return "false"
-				return $cookie['value'] == $this->value && $this->action === self::ACTION_SEE;
+				return $cookie['value'] == $this->value && self::ACTION_SEE === $this->action;
 			}
 		}
 

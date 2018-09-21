@@ -1,7 +1,15 @@
 <?php
+/**
+ * Test if checkbox is checked constraint
+ *
+ * @package  wpassure
+ */
 
 namespace WPAssure\PHPUnit\Constraints;
 
+/**
+ * Constraint class
+ */
 class CheckboxChecked extends \WPAssure\PHPUnit\Constraint {
 
 	use WPAssure\PHPUnit\Constraints\Traits\SeeableAction,
@@ -40,7 +48,7 @@ class CheckboxChecked extends \WPAssure\PHPUnit\Constraint {
 		$element = $actor->getElement( $this->element );
 		$checked = $element->getAttribute( 'checked' ) === 'checked';
 
-		return ( $checked && $this->action === self::ACTION_SEE ) || ( ! $checked && $this->action === self::ACTION_DONTSEE );
+		return ( $checked && self::ACTION_SEE === $this->action ) || ( ! $checked && self::ACTION_DONTSEE === $this->action );
 	}
 
 	/**

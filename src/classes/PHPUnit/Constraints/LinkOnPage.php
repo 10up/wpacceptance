@@ -1,10 +1,18 @@
 <?php
+/**
+ * Test links on page constraint
+ *
+ * @package  wpassure
+ */
 
 namespace WPAssure\PHPUnit\Constraints;
 
 use Facebook\WebDriver\Exception\NoSuchElementException;
 use Facebook\WebDriver\WebDriverBy;
 
+/**
+ * Constraint class
+ */
 class LinkOnPage extends \WPAssure\PHPUnit\Constraint {
 
 	use WPAssure\PHPUnit\Constraints\Traits\StringOrPattern,
@@ -58,16 +66,16 @@ class LinkOnPage extends \WPAssure\PHPUnit\Constraint {
 				foreach ( $elements as $element ) {
 					$href = $element->getAttribute( 'href' );
 					if ( $this->findMatch( $href, $this->url ) ) {
-						return $this->action === self::ACTION_SEE;
+						return self::ACTION_SEE === $this->action;
 					}
 				}
 
-				return $this->action === self::ACTION_DONTSEE;
+				return self::ACTION_DONTSEE === $this->action;
 			} else {
-				return $this->action === self::ACTION_SEE;
+				return self::ACTION_SEE === $this->action;
 			}
 		} catch ( NoSuchElementException $e ) {
-			return $this->action === self::ACTION_DONTSEE;
+			return self::ACTION_DONTSEE === $this->action;
 		}
 
 		return false;

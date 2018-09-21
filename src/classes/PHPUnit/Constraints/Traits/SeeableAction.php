@@ -24,7 +24,7 @@ trait SeeableAction {
 	 * @return string Verified evaluation action or default action if it's invalid.
 	 */
 	protected function verifyAction( $action, $default = Constraint::ACTION_SEE ) {
-		return $action === Constraint::ACTION_SEE || $action === Constraint::ACTION_DONTSEE
+		return Constraint::ACTION_SEE === $action || Constraint::ACTION_DONTSEE === $action
 			? $action
 			: $default;
 	}

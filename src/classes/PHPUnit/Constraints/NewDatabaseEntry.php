@@ -1,9 +1,17 @@
 <?php
+/**
+ * Test DB entries
+ *
+ * @package  wpassure
+ */
 
 namespace WPAssure\PHPUnit\Constraints;
 
 use WPAssure\EnvironmentFactory;
 
+/**
+ * Constraint class
+ */
 class NewDatabaseEntry extends \WPAssure\PHPUnit\Constraint {
 
 	use Traits\SeeableAction,
