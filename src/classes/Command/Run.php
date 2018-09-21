@@ -146,7 +146,7 @@ class Run extends Command {
 					'project'         => 'wpassure-' . str_replace( ' ', '-', trim( strtolower( $suite_config['name'] ) ) ),
 					'description'     => 'WP Assure snapshot',
 					'no_scrub'        => false,
-					'exclude_uploads' => true,
+					'exclude_uploads' => false,
 				]
 			);
 
@@ -221,21 +221,23 @@ class Run extends Command {
 			Log::instance()->write( 'Test(s) passed!', 0, 'success' );
 		}
 
-		if ( ( ! $error && $input->getOption( 'save' ) ) || $input->getOption( 'force_save' ) ) {
-			Log::instance()->write( 'Pushing snapshot to repository...', 1 );
-			Log::instance()->write( 'Snapshot ID - ' . $snapshot_id, 1 );
-			Log::instance()->write( 'Snapshot Project Slug - ' . $snapshot->meta['project'], 1 );
+		if ( $local ) {
+			if ( ( ! $error && $input->getOption( 'save' ) ) || $input->getOption( 'force_save' ) ) {
+				Log::instance()->write( 'Pushing snapshot to repository...', 1 );
+				Log::instance()->write( 'Snapshot ID - ' . $snapshot_id, 1 );
+				Log::instance()->write( 'Snapshot Project Slug - ' . $snapshot->meta['project'], 1 );
 
-			if ( $snapshot->push() ) {
-				Log::instance()->write( 'Snapshot ID saved to wpassure.json', 0, 'success' );
+				if ( $snapshot->push() ) {
+					Log::instance()->write( 'Snapshot ID saved to wpassure.json', 0, 'success' );
 
-				$suite_config['snapshot_id'] = $snapshot_id;
-				$suite_config->write();
-			} else {
-				Log::instance()->write( 'Could not push snapshot to repository.', 0, 'error' );
-				$environment->destroy();
+					$suite_config['snapshot_id'] = $snapshot_id;
+					$suite_config->write();
+				} else {
+					Log::instance()->write( 'Could not push snapshot to repository.', 0, 'error' );
+					$environment->destroy();
 
-				return 1;
+					return 1;
+				}
 			}
 		}
 
