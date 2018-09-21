@@ -62,12 +62,7 @@ class ElementVisible extends \WPAssure\PHPUnit\Constraint {
 	 * @return string The description text.
 	 */
 	public function toString(): string {
-		$message = sprintf( ' "%s" text', $this->text );
-		if ( ! empty( $this->element ) ) {
-			$message .= ' in the scope of ' . $this->elementToMessage( $this->element );
-		}
-
-		return $message;
+		return $this->elementToMessage( $this->element );
 	}
 
 }

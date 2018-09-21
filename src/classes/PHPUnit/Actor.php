@@ -243,6 +243,15 @@ class Actor {
 	}
 
 	/**
+	 * Move mouse to element
+	 *
+	 * @param  string $element_path Path to element
+	 */
+	public function moveMouse( $element_path ) {
+		$this->getWebDriver()->getMouse()->mouseMove( $this->getElement( $element_path )->getCoordinates() );
+	}
+
+	/**
 	 * Navigate to a new URL.
 	 *
 	 * @access public
@@ -392,7 +401,7 @@ class Actor {
 	 *
 	 * @access public
 	 * @throws \PHPUnit\Framework\ExpectationFailedException when the element is not found on the page.
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|\Facebook\WebDriver\WebDriverBy|string $element A CSS selector for the element.
+	 * @param  \Facebook\WebDriver\Remote\RemoteWebElement|\Facebook\WebDriver\WebDriverBy|string $element A CSS selector for the element.
 	 * @return \Facebook\WebDriver\Remote\RemoteWebElement An element instance.
 	 */
 	public function getElement( $element ) {

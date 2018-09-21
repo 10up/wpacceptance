@@ -11,24 +11,75 @@
 class GalleryTest extends \WPAssure\PHPUnit\TestCase {
 
 	/**
+	 * Test gallery dots
+	 */
+	public function testGalleryNav() {
+		$I = $this->getAnonymousUser();
+
+		$I->moveTo( '/' );
+
+		$I->seeElement( '#metaslider_39 .slides li:nth-child(1)' );
+
+		$I->click( '#metaslider_39 .flex-control-nav li:nth-child(2) a' );
+
+		sleep( 1 ); // Best to just sleep when dealing with fading
+
+		$I->dontSeeElement( '#metaslider_39 .slides li:nth-child(1)' );
+	}
+
+	/**
 	 * Click next arrow, slide changes
 	 */
 	public function testNextArrow() {
-		$this->markTestIncomplete( 'This test has not been implemented yet.' );
+		$I = $this->getAnonymousUser();
+
+		$I->moveTo( '/' );
+
+		$I->seeElement( '#metaslider_39 .slides li:nth-child(1)' );
+
+		$I->click( '#metaslider_39 .flex-next' );
+
+		sleep( 1 ); // Best to just sleep when dealing with fading
+
+		$I->seeElement( '#metaslider_39 .slides li:nth-child(2)' );
+
+		$I->dontSeeElement( '#metaslider_39 .slides li:nth-child(1)' );
 	}
 
 	/**
 	 * Click previous arrow, slide changes
 	 */
 	public function testPreviousArrow() {
-		$this->markTestIncomplete( 'This test has not been implemented yet.' );
+		$I = $this->getAnonymousUser();
+
+		$I->moveTo( '/' );
+
+		$I->seeElement( '#metaslider_39 .slides li:nth-child(1)' );
+
+		$I->click( '#metaslider_39 .flex-prev' );
+
+		sleep( 1 ); // Best to just sleep when dealing with fading
+
+		$I->seeElement( '#metaslider_39 .slides li:nth-child(5)' );
+
+		$I->dontSeeElement( '#metaslider_39 .slides li:nth-child(1)' );
 	}
 
 	/**
-	 * Slide changes on small screen
+	 * Make sure next and prev arrows properly appear on hover
 	 */
-	public function testSmallScreenNext() {
-		$this->markTestIncomplete( 'This test has not been implemented yet.' );
+	public function testShowNextPrev() {
+		$I = $this->getAnonymousUser();
+
+		$I->moveTo( '/' );
+
+		$I->dontSeeElement( '#metaslider_39 .flex-prev' );
+		$I->dontSeeElement( '#metaslider_39 .flex-next' );
+
+		$I->moveMouse( '#metaslider_39' );
+
+		$I->seeElement( '#metaslider_39 .flex-prev' );
+		$I->seeElement( '#metaslider_39 .flex-next' );
 	}
 
 }
