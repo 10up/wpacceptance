@@ -12,7 +12,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/10up/wpsnapshots.git",
-                "reference": "3ad7da9c598c67bd0c854170681e7b3089f9124e"
+                "reference": "7a6df68df19b1421fcc89b65480b8226b7c3428d"
             },
             "require": {
                 "aws/aws-sdk-php": "^3.67",
@@ -58,20 +58,20 @@
                 "snapshots",
                 "wordpress"
             ],
-            "time": "2018-09-17T00:39:14+00:00"
+            "time": "2018-09-18T18:06:31+00:00"
         },
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.67.12",
+            "version": "3.67.16",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
-                "reference": "cdc7180ae87b23d8b34eb8eb8176002081b32c3d"
+                "reference": "881b968ca164b401c26f5e3f9894bad34309cf6a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/cdc7180ae87b23d8b34eb8eb8176002081b32c3d",
-                "reference": "cdc7180ae87b23d8b34eb8eb8176002081b32c3d",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/881b968ca164b401c26f5e3f9894bad34309cf6a",
+                "reference": "881b968ca164b401c26f5e3f9894bad34309cf6a",
                 "shasum": ""
             },
             "require": {
@@ -138,7 +138,7 @@
                 "s3",
                 "sdk"
             ],
-            "time": "2018-09-13T18:34:42+00:00"
+            "time": "2018-09-20T21:20:22+00:00"
         },
         {
             "name": "clue/stream-filter",
@@ -1027,16 +1027,16 @@
         },
         {
             "name": "php-http/client-common",
-            "version": "1.7.0",
+            "version": "1.8.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/php-http/client-common.git",
-                "reference": "9accb4a082eb06403747c0ffd444112eda41a0fd"
+                "reference": "949ee8a8cba5fa2abe839c87bf7b885ac3330589"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/php-http/client-common/zipball/9accb4a082eb06403747c0ffd444112eda41a0fd",
-                "reference": "9accb4a082eb06403747c0ffd444112eda41a0fd",
+                "url": "https://api.github.com/repos/php-http/client-common/zipball/949ee8a8cba5fa2abe839c87bf7b885ac3330589",
+                "reference": "949ee8a8cba5fa2abe839c87bf7b885ac3330589",
                 "shasum": ""
             },
             "require": {
@@ -1058,7 +1058,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "1.7-dev"
+                    "dev-master": "1.8-dev"
                 }
             },
             "autoload": {
@@ -1084,7 +1084,7 @@
                 "http",
                 "httplug"
             ],
-            "time": "2017-11-30T11:06:59+00:00"
+            "time": "2018-06-22T12:36:17+00:00"
         },
         {
             "name": "php-http/discovery",
