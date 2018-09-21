@@ -273,6 +273,12 @@ class Environment {
 				'site_url' => str_replace( '//' . $site_host, '//wpassure.test:' . $this->wordpress_port, $site['site_url'] ),
 			];
 
+			if ( ! empty( $site['blog_id'] ) ) {
+				$map['blog_id'] = (int) $site['blog_id'];
+
+				Log::instance()->write( 'Blog ID: ' . $map['blog_id'], 1 );
+			}
+
 			$site_mapping[] = $map;
 
 			Log::instance()->write( 'Home URL: ' . $map['home_url'], 1 );
@@ -409,7 +415,7 @@ class Environment {
 
 			$stream->wait();
 
-			if ( $suite_config_name === $this->suite_config['name'] ) {
+			if ( trim( $suite_config_name ) === trim( $this->suite_config['name'] ) ) {
 				$snapshot_repo_path = dirname( $suite_config_file );
 				break;
 			}
@@ -426,11 +432,25 @@ class Environment {
 
 		Log::instance()->write( 'Copying codebase into container...', 1 );
 
+		$excludes = '';
+
+		if ( ! empty( $this->suite_config['exclude'] ) ) {
+			foreach ( $this->suite_config['exclude'] as $exclude ) {
+				$exclude = preg_replace( '#^\.?/(.*)$#i', '$1', $exclude );
+
+				$excludes .= '--exclude="' . $exclude . '" ';
+			}
+		}
+
+		$cp_command = 'rsync -a -I ' . $excludes . ' /root/repo/ ' . $snapshot_repo_path;
+
+		Log::instance()->write( $cp_command, 2 );
+
 		$exec_config = new ContainersIdExecPostBody();
 		$exec_config->setTty( true );
 		$exec_config->setAttachStdout( true );
 		$exec_config->setAttachStderr( true );
-		$exec_config->setCmd( [ '/bin/sh', '-c', 'cp -rf /root/repo/* ' . $snapshot_repo_path ] );
+		$exec_config->setCmd( [ '/bin/sh', '-c', $cp_command ] );
 
 		$exec_id           = $this->docker->containerExec( 'wordpress-' . $this->network_id, $exec_config )->getId();
 		$exec_start_config = new ExecIdStartPostBody();
