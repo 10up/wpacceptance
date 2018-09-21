@@ -105,7 +105,7 @@ class Actor {
 	 * Return a web driver instance associated with the actor.
 	 *
 	 * @access public
-	 * @throws \WPAssure\Exception if a web driver is not assigned.
+	 * @throws Exception if a web driver is not assigned.
 	 * @return \Facebook\WebDriver\Remote\RemoteWebDriver An instance of a web driver.
 	 */
 	public function getWebDriver() {
@@ -130,7 +130,7 @@ class Actor {
 	 * Return an instance of a test case associated with the actor.
 	 *
 	 * @access public
-	 * @throws \WPAssure\Exception if a test case is not assigned.
+	 * @throws Exception if a test case is not assigned.
 	 * @return \PHPUnit\Framework\TestCase An instance of a test case.
 	 */
 	public function getTest() {
@@ -400,7 +400,7 @@ class Actor {
 	 * Return an element based on CSS selector.
 	 *
 	 * @access public
-	 * @throws \PHPUnit\Framework\ExpectationFailedException when the element is not found on the page.
+	 * @throws ExpectationFailedException When the element is not found on the page.
 	 * @param  \Facebook\WebDriver\Remote\RemoteWebElement|\Facebook\WebDriver\WebDriverBy|string $element A CSS selector for the element.
 	 * @return \Facebook\WebDriver\Remote\RemoteWebElement An element instance.
 	 */
@@ -424,7 +424,7 @@ class Actor {
 	 * Return elements based on CSS selector.
 	 *
 	 * @access public
-	 * @throws \PHPUnit\Framework\ExpectationFailedException when elements are not found on the page.
+	 * @throws ExpectationFailedException When elements are not found on the page.
 	 * @param \Facebook\WebDriver\WebDriverBy|array|string $elements A CSS selector for elements.
 	 * @return array Array of elements.
 	 */
@@ -486,6 +486,7 @@ class Actor {
 					$select->selectByValue( $option );
 					continue;
 				} catch ( NoSuchElementException $e ) {
+					// Do nothing
 				}
 
 				// try to select an option by visible text
@@ -493,6 +494,7 @@ class Actor {
 					$select->selectByVisibleText( $option );
 					continue;
 				} catch ( NoSuchElementException $e ) {
+					// Do nothing
 				}
 
 				// try to select an option by visible partial text
@@ -500,12 +502,14 @@ class Actor {
 					$select->selectByVisiblePartialText( $option );
 					continue;
 				} catch ( NoSuchElementException $e ) {
+					// Do nothing
 				}
 
 				// fallback to select by index
 				try {
 					$select->selectByIndex( $option );
 				} catch ( NoSuchElementException $e ) {
+					// Do nothing
 				}
 			}
 		}
@@ -533,6 +537,7 @@ class Actor {
 					$select->deselectByValue( $option );
 					continue;
 				} catch ( NoSuchElementException $e ) {
+					// Do nothing
 				}
 
 				// try to deselect an option by visible text
@@ -540,6 +545,7 @@ class Actor {
 					$select->deselectByVisibleText( $option );
 					continue;
 				} catch ( NoSuchElementException $e ) {
+					// Do nothing
 				}
 
 				// try to deselect an option by visible partial text
@@ -547,12 +553,14 @@ class Actor {
 					$select->deselectByVisiblePartialText( $option );
 					continue;
 				} catch ( NoSuchElementException $e ) {
+					// Do nothing
 				}
 
 				// fallback to deselect by index
 				try {
 					$select->deselectByIndex( $option );
 				} catch ( NoSuchElementException $e ) {
+					// Do nothing
 				}
 			}
 		}
@@ -568,7 +576,7 @@ class Actor {
 		$elements = $this->getElements( $elements );
 		foreach ( $elements as $element ) {
 			$type = $element->getAttribute( 'type' );
-			if ( in_array( $type, array( 'checkbox', 'radio' ) ) && ! $element->isSelected() ) {
+			if ( in_array( $type, array( 'checkbox', 'radio' ), true ) && ! $element->isSelected() ) {
 				$element->click();
 			}
 		}
@@ -584,7 +592,7 @@ class Actor {
 		$elements = $this->getElements( $elements );
 		foreach ( $elements as $element ) {
 			$type = $element->getAttribute( 'type' );
-			if ( $type === 'checkbox' && $element->isSelected() ) {
+			if ( 'checkbox' === $type && $element->isSelected() ) {
 				$element->click();
 			}
 		}

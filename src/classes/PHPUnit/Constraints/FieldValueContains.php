@@ -1,4 +1,9 @@
 <?php
+/**
+ * Check field values constraint
+ *
+ * @package  wpassure
+ */
 
 namespace WPAssure\PHPUnit\Constraints;
 

@@ -68,7 +68,7 @@ class Cookie extends \WPAssure\PHPUnit\Constraint {
 				// if current action is "see" and cookie's value equals to what we are looking for,
 				// then return "true" what means the constrain is met, otherwise it means that action is
 				// "dontSee" or value doesn't match, thus return "false"
-				return $cookie['value'] == $this->value && self::ACTION_SEE === $this->action;
+				return $cookie['value'] === $this->value && self::ACTION_SEE === $this->action;
 			}
 		}
 
