@@ -12,7 +12,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/10up/wpsnapshots.git",
-                "reference": "bc72cb6aecbfc83bbc057d9b9b6605af437437a2"
+                "reference": "091928dbc77f88f0e98b997657ad6c9de768db4f"
             },
             "require": {
                 "aws/aws-sdk-php": "^3.67",
@@ -58,20 +58,20 @@
                 "snapshots",
                 "wordpress"
             ],
-            "time": "2018-09-21T15:48:43+00:00"
+            "time": "2018-09-22T04:19:55+00:00"
         },
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.67.16",
+            "version": "3.67.17",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
-                "reference": "881b968ca164b401c26f5e3f9894bad34309cf6a"
+                "reference": "b937c2193a4f509de5cd5836fa2a37904fc8e465"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/881b968ca164b401c26f5e3f9894bad34309cf6a",
-                "reference": "881b968ca164b401c26f5e3f9894bad34309cf6a",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/b937c2193a4f509de5cd5836fa2a37904fc8e465",
+                "reference": "b937c2193a4f509de5cd5836fa2a37904fc8e465",
                 "shasum": ""
             },
             "require": {
@@ -138,7 +138,7 @@
                 "s3",
                 "sdk"
             ],
-            "time": "2018-09-20T21:20:22+00:00"
+            "time": "2018-09-21T20:29:41+00:00"
         },
         {
             "name": "clue/stream-filter",
