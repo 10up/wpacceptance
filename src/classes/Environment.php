@@ -643,6 +643,7 @@ class Environment {
 		$host_config = new HostConfig();
 
 		$host_config->setNetworkMode( $this->network_id );
+		$host_config->setExtraHosts( [ 'wpassure.test:' . $this->gateway_ip ] );
 		$host_config->setBinds(
 			[
 				\WPSnapshots\Utils\get_snapshot_directory() . $this->snapshot_id . ':/root/.wpsnapshots/' . $this->snapshot_id,
