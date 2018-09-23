@@ -8,4 +8,5 @@ pages:
   - WP Assure:
       - Installation: install.md
       - Project Setup: project-setup.md
+      - Workflow and Snapshots: workflow-snapshots.md
       - Command Line API: commands.md
