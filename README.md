@@ -4,7 +4,7 @@ WP Assure is a toolkit that empowers developers and CI pipelines to test codebas
 
 ## Requirements
 
-* PHP 5.6+
+* PHP 7.1+
 * mysqli PHP extension
 * Docker
 
@@ -58,41 +58,5 @@ You can only run WP Assure against snapshots that contain some version of the co
 
 ## Install
 
-WP Assure is easiest to use as a global Composer package. Assuming you have Composer/MySQL installed and SSH keys setup within GitHub/10up organiziation, do the following:
-
-1. Add the 10up/wpassure repository as a global Composer repository:
-  ```
-  composer global config repositories.wpsnapshots vcs https://github.com/10up/wpassure
-  ```
-2. Install WP Assure as a global Composer package:
-  ```
-  composer global require 10up/wpassure:dev-master -n
-  ```
-If global Composer scripts are not in your path, add them:
-
-```
-export PATH=~/.composer/vendor/bin:$PATH
-```
-
-If you are using VVV, add global Composer scripts to your path with this command:
-
-```
-export PATH=~/.config/composer/vendor/bin:$PATH
-```
-
-
-
-## Commands
-
-__wpassure run__ [<PATH TO wpassure.json DIRECTORY>] [--local] [--snapshot_id=<WPSNAPSHOT ID>] [--db_host=<DATABASE HOST>] [--verbose] [--wp_directory=<PATH TO WP DIRECTORY>] [--save]
-
-Run a WPAssure test suite. If you want to run on an existing WordPress installation, leave out `--snapshot_id`.
-
-Example `wpassure.json`:
-
-```
-{
-	"snapshot-id": "8sdoh2tsld223ttsd",
-	"tests": "tests/js/*"
-}
-```
+[Installation instructions are on the docs site.](https://wpassure.readthedocs.io/en/latest/install/)
+install/)
