@@ -292,6 +292,10 @@ class Actor {
 
 		$page = $this->test->getWordPressUrl() . $path;
 
+		if ( ! empty( $url_parts['query'] ) ) {
+			$page .= '?' . $url_parts['query'];
+		}
+
 		$webdriver = $this->getWebDriver();
 		$webdriver->get( $page );
 
@@ -464,10 +468,13 @@ class Actor {
 	 */
 	public function getElements( $elements ) {
 		if ( is_array( $elements ) ) {
-			$items = array();
+			$items = [];
+
 			foreach ( $elements as $element ) {
 				if ( $element instanceof RemoteWebElement ) {
 					$items[] = $element;
+				} else {
+					$items[] = $this->getElement( $lement );
 				}
 			}
 
@@ -475,7 +482,7 @@ class Actor {
 		}
 
 		$webdriver = $this->getWebDriver();
-		$by        = $element instanceof WebDriverBy ? $element : WebDriverBy::cssSelector( $element );
+		$by        = $elements instanceof WebDriverBy ? $elements : WebDriverBy::cssSelector( $elements );
 
 		try {
 			return $webdriver->findElements( $by );
