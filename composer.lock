@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "95b840411bc083edcae6d58965cd02db",
+    "content-hash": "761f1c790bdc3162ac9b6f4115ac37c7",
     "packages": [
         {
             "name": "10up/wpsnapshots",
@@ -12,7 +12,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/10up/wpsnapshots.git",
-                "reference": "5fb23ac08c6a26052c7c6dd454510a8f47fbbcf1"
+                "reference": "c9bfce6a8bcdd69956bd8b0276aa109a4e37ffa0"
             },
             "require": {
                 "aws/aws-sdk-php": "^3.67",
@@ -58,7 +58,7 @@
                 "snapshots",
                 "wordpress"
             ],
-            "time": "2018-09-23T02:11:52+00:00"
+            "time": "2018-09-23T18:35:51+00:00"
         },
         {
             "name": "aws/aws-sdk-php",
@@ -3622,7 +3622,7 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": ">=5.6"
+        "php": ">=7.1"
     },
     "platform-dev": []
 }
