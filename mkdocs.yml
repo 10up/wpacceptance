@@ -1,0 +1,11 @@
+site_name: WP Assure
+site_url:  http://wpassure.readthedocs.org/
+site_description: Test code using acceptance tests and sharable, defined file and database snapshots.
+repo_url: https://github.com/10up/wpassure
+
+pages:
+  - Home: index.md
+  - WP Assure:
+      - Installation: install.md
+      - Project Setup: project-setup.md
+      - Command Line API: commands.md
