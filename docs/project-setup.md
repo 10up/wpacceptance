@@ -13,12 +13,12 @@ Navigate to `wp-content` in the command line. Run the following command:
 
 You will be presented with some command prompts. Choose a project slug and select the defaults for the other options. When the command is finished, there will be a `wpassure.json` file in `wp-content` as well as a `tests` directory and an example test, `tests/ExampleTest.php`.
 
-WP Assure reads `wpassure.json` every time tests are run. The file must contain both `name` and `tests` properties in JSON format. `name` is the name of your test suite, and it must be unique. `snapshot_id` is optional and is explained in [Workflow and Snapshots](). `tests` points to your test files. WP Assure tests are written in PHP and PHPUnit based.
+WP Assure reads `wpassure.json` every time tests are run. The file must contain both `name` and `tests` properties in JSON format. `name` is the name of your test suite, and it must be unique. `snapshot_id` is optional and is explained in [Workflow and Snapshots](https://wpassure.readthedocs.io/en/latest/workflow-snapshots/). `tests` points to your test files. WP Assure tests are written in PHP and PHPUnit based.
 
 *There are a few important rules for wpassure.json:*
 
 * `wpassure.json` and the actual tests __must__ exist within the codebase you are testing.
-* `wpassure.json` __must__ be located in the root of your version controlled codebase. Typically this means `wpassure.json` is in the root of a theme, plugin, `wp-content` directory.
+* `wpassure.json` __must__ be located in the root of your version controlled codebase. Typically this means `wpassure.json` is in the root of a theme, plugin, or `wp-content` directory.
 
 Now let's run our tests to make sure everything works:
 ```
