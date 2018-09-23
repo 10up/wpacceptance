@@ -5,7 +5,7 @@ After [installing WP Assure](https://wpassure.readthedocs.io/en/latest/install/)
 1.
 
 
-1. Decide where you want to initialize WP Assure (create wpassure.json). This is usually in `wp-content/`, a theme, or a plugin. `wp-content/` might make most sense if you are developing an entire website. Let's assume we are initializing our WP Assure project in `wp-content/` and have installed WP Assure in the same directory.
+1. Decide where you want to initialize WP Assure (create wpassure.json) which must be the root of your version controlled repository. This is usually in `wp-content/`, a theme, or a plugin. `wp-content/` might make most sense if you are developing an entire website. Let's assume we are initializing our WP Assure project in `wp-content/` and have installed WP Assure in the same directory.
 
 2. Navigate to `wp-content` in the command line. Run the following command:
   ```
@@ -14,9 +14,7 @@ After [installing WP Assure](https://wpassure.readthedocs.io/en/latest/install/)
 
   You will be presented with some command prompts. Choose a project slug and select the defaults for the other options. When the command is finished, there will be a `wpassure.json` file in `wp-content` as well as a `tests` directory and an example test, `tests/ExampleTest.php`.
 
-  WP Assure reads `wpassure.json` every time tests are run.
-
-  `wpassure.json` must contain both `name` and `tests` properties in JSON format. `name` is the name of your test suite, and it must be unique. `snapshot_id` is optional and is explained in [Workflow and Snapshots](). `tests` points to your test files. WP Assure tests are written in PHP and PHPUnit based.
+  WP Assure reads `wpassure.json` every time tests are run. The file must contain both `name` and `tests` properties in JSON format. `name` is the name of your test suite, and it must be unique. `snapshot_id` is optional and is explained in [Workflow and Snapshots](). `tests` points to your test files. WP Assure tests are written in PHP and PHPUnit based.
 
   *There are a few important rules for wpassure.json:*
 
