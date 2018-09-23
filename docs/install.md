@@ -1,19 +1,18 @@
 # Install
 
-WP Assure is easiest to use as a global Composer package. Assuming you have Composer/MySQL installed and SSH keys setup within GitHub/10up organiziation, do the following:
+WP Assure is easiest to use as a project-level Composer package:
 
-Install WP Assure as a dependency on your project
-  ```
-  composer require 10up/wpassure:dev-master --dev
-  ```
-If global Composer scripts are not in your path, add them:
-
+Since WP Assure is in beta, you will need to set your project minimum stability to `dev`:
 ```
-export PATH=~/.composer/vendor/bin:$PATH
+composer config minimum-stability dev
 ```
 
-If you are using VVV, add global Composer scripts to your path with this command:
-
+Next, require the WP Assure package:
 ```
-export PATH=~/.config/composer/vendor/bin:$PATH
+composer require 10up/wpassure:dev-master --dev
+```
+
+Finally, verify and run WP Assure by calling the script in the Composer bin directory:
+```
+./vendor/bin/wpassure
 ```
