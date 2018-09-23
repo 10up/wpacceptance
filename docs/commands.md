@@ -2,13 +2,7 @@
 
 __wpassure run__ [<PATH TO wpassure.json DIRECTORY>] [--local] [--snapshot_id=<WPSNAPSHOT ID>] [--db_host=<DATABASE HOST>] [--verbose] [--wp_directory=<PATH TO WP DIRECTORY>] [--save]
 
-Run a WPAssure test suite. If you want to run on an existing WordPress installation, leave out `--snapshot_id`.
+__wpassure init__ [--path] [--local]
 
-Example `wpassure.json`:
 
-```
-{
-	"snapshot-id": "8sdoh2tsld223ttsd",
-	"tests": "tests/js/*"
-}
-```
+
