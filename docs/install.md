@@ -2,13 +2,9 @@
 
 WP Assure is easiest to use as a global Composer package. Assuming you have Composer/MySQL installed and SSH keys setup within GitHub/10up organiziation, do the following:
 
-1. Add the 10up/wpassure repository as a global Composer repository:
+Install WP Assure as a dependency on your project
   ```
-  composer global config repositories.wpsnapshots vcs https://github.com/10up/wpassure
-  ```
-2. Install WP Assure as a global Composer package:
-  ```
-  composer global require 10up/wpassure:dev-master -n
+  composer require 10up/wpassure:dev-master --dev
   ```
 If global Composer scripts are not in your path, add them:
 

@@ -4,19 +4,19 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "761f1c790bdc3162ac9b6f4115ac37c7",
+    "content-hash": "7227861930f41f727662af6419dfda47",
     "packages": [
         {
             "name": "10up/wpsnapshots",
-            "version": "dev-master",
+            "version": "1.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/10up/wpsnapshots.git",
-                "reference": "c9bfce6a8bcdd69956bd8b0276aa109a4e37ffa0"
+                "reference": "75725d3d096b0b42d8b3f54e7ef7cf57fe85db26"
             },
             "require": {
                 "aws/aws-sdk-php": "^3.67",
-                "php": ">=7.0",
+                "php": ">=5.6",
                 "rmccue/requests": "^1.7",
                 "symfony/console": "^3.3 || ^4.1"
             },
@@ -58,7 +58,7 @@
                 "snapshots",
                 "wordpress"
             ],
-            "time": "2018-09-23T18:35:51+00:00"
+            "time": "2018-09-23T20:27:40+00:00"
         },
         {
             "name": "aws/aws-sdk-php",
@@ -3616,7 +3616,6 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "10up/wpsnapshots": 20,
         "10up/phpcs-composer": 20
     },
     "prefer-stable": false,
