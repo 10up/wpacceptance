@@ -19,7 +19,7 @@ WP Assure reads `wpassure.json` every time tests are run. The file must contain 
   
 * `wpassure.json` and the actual tests __must__ exist within the codebase you are testing.
 * `wpassure.json` __must__ be located in the root of your version controlled codebase. Typically this means `wpassure.json` is in the root of a theme, plugin, `wp-content` directory.
-  
+
 4. Now let's run our tests to make sure everything works:
   ```
   ./vendor/bin/wpassure run --local
