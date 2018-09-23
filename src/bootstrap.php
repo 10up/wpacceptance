@@ -21,6 +21,7 @@ ini_set( 'memory_limit', '-1' );
 /**
  * Register commands
  */
+$app->add( new Command\Init() );
 $app->add( new Command\Run() );
 
 $app->run();

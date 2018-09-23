@@ -28,7 +28,7 @@ class Config implements ArrayAccess {
 	 *
 	 * @param  array $config Configuration array
 	 */
-	protected function __construct( array $config ) {
+	public function __construct( array $config ) {
 		$this->config = $config;
 	}
 
@@ -78,7 +78,7 @@ class Config implements ArrayAccess {
 		$file_config = $this->config;
 		unset( $file_config['path'] );
 
-		file_put_contents( $this->config['path'] . '/wpassure.json', json_encode( $file_config, JSON_PRETTY_PRINT ) );
+		file_put_contents( Utils\trailingslash( $this->config['path'] ) . 'wpassure.json', json_encode( $file_config, JSON_PRETTY_PRINT ) );
 	}
 
 	/**

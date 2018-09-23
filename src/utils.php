@@ -27,6 +27,22 @@ function get_wordpress_path() {
 }
 
 /**
+ * Validator for slugs
+ *
+ * @param  string $answer Answer to validate
+ * @throws \RuntimeException Exception to throw if answer isn't valid.
+ * @return string
+ */
+function slug_validator( $answer ) {
+	if ( ! preg_match( '#^[a-z0-9\-_]+$#i', $answer ) ) {
+		throw new \RuntimeException(
+			'A valid non-empty slug is required (letters, numbers, -, and _).'
+		);
+	}
+	return strtolower( $answer );
+}
+
+/**
  * Normalizes paths. Note that we DO always add a trailing slash here
  *
  * /

@@ -16,3 +16,5 @@ Finally, verify and run WP Assure by calling the script in the Composer bin dire
 ```
 ./vendor/bin/wpassure
 ```
+
+After installation, you will want to [setup WP Assure on a project](https://wpassure.readthedocs.io/en/latest/project-setup/).

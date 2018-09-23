@@ -7,5 +7,5 @@ WP Assure is a toolkit that empowers developers and CI pipelines to test codebas
 ## Table of Contents
 
 * [Installation](https://wpassure.readthedocs.io/en/latest/install/)
-* [Adding WP Assure to a Project](https://wpassure.readthedocs.io/en/latest/project-setup/)install/)
+* [Project Setup](https://wpassure.readthedocs.io/en/latest/project-setup/install/)
 * [Command Line](https://wpassure.readthedocs.io/en/latest/commands/)
