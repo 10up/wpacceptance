@@ -192,6 +192,16 @@ class Run extends Command {
 			$filter_test_files = explode( ',', trim( $filter_test_files ) );
 		}
 
+		if ( ! empty( $suite_config['bootstrap'] ) ) {
+			$bootstrap_path = Utils\normalize_path( dirname( $suite_config['bootstrap'] ), $suite_config['path'] ) . basename( $suite_config['bootstrap'] );
+
+			if ( file_exists( $bootstrap_path ) ) {
+				include_once( $bootstrap_path );
+			} else {
+				Log::instance()->write( 'Could not find bootstrap file at: ' . $bootstrap_path, 0, 'warning' );
+			}
+		}
+
 		$suite = new PHPUnitTestSuite();
 
 		foreach ( $test_files as $test_file ) {
@@ -208,14 +218,6 @@ class Run extends Command {
 
 		if ( ! empty( $filter_tests ) ) {
 			$suite_args['filter'] = $filter_tests;
-		}
-
-		if ( ! empty( $suite_config['bootstrap'] ) ) {
-			$bootstrap_path = Utils\normalize_path( dirname( $suite_config['bootstrap'] ), $suite_config['path'] ) . basename( $suite_config['bootstrap'] );
-
-			if ( file_exists( $bootstrap_path ) ) {
-				include_once( $bootstrap_path );
-			}
 		}
 
 		$runner      = new \PHPUnit\TextUI\TestRunner();
