@@ -11,3 +11,4 @@ pages:
       - Workflow and Snapshots: workflow-snapshots.md
       - Command Line API: commands.md
       - wpassure.json File: wpassure-file.md
+      - Writing Tests: writing-tests.md
