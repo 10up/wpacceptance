@@ -7,6 +7,8 @@
 
 namespace WPAssure\PHPUnit\Constraints;
 
+use PHPUnit\Framework\ExpectationFailedException;
+
 /**
  * Constraint class
  */
@@ -55,8 +57,14 @@ class PageContains extends \WPAssure\PHPUnit\Constraint {
 	 * @return boolean TRUE if the constrain is met, otherwise FALSE.
 	 */
 	protected function matches( $other ): bool {
-		$actor   = $this->getActor( $other );
-		$element = $actor->getElement( ! empty( $this->element ) ? $this->element : 'body' );
+		$actor = $this->getActor( $other );
+
+		try {
+			$element = $actor->getElement( ! empty( $this->element ) ? $this->element : 'body' );
+		} catch ( ExpectationFailedException $e ) {
+			return self::ACTION_DONTSEE === $this->action;
+		}
+
 		if ( $element ) {
 			$content = trim( $element->getText() );
 			if ( empty( $content ) ) {
