@@ -2,6 +2,8 @@
 
 WP Assure is a toolkit that empowers developers and CI pipelines to test codebases using version controlled acceptance tests and sharable, defined file and database snapshots.
 
+[☞ Read the docs](https://wpassure.readthedocs.io/)
+
 ## Requirements
 
 * PHP 7.1+
