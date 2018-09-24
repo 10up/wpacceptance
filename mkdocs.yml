@@ -10,3 +10,4 @@ pages:
       - Project Setup: project-setup.md
       - Workflow and Snapshots: workflow-snapshots.md
       - Command Line API: commands.md
+      - wpassure.json File: wpassure-file.md
