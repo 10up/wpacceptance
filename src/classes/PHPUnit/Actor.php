@@ -626,8 +626,6 @@ class Actor {
 
 		usleep( 100 );
 
-		$this->takeScreenshot();
-
 		$this->click( '#wp-submit' );
 
 		$this->waitUntilElementVisible( '#wpadminbar' );
