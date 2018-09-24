@@ -53,10 +53,17 @@ function slug_validator( $answer ) {
  * test
  *
  * @param  string $path Path to normalize
+ * @param  string $cwd Override current working directory. Must be absolute.
  * @return string
  */
-function normalize_path( $path ) {
+function normalize_path( $path, $cwd = null ) {
 	$path = trim( $path );
+
+	if ( empty( $cwd ) ) {
+		$cwd = getcwd();
+	}
+
+	$cwd = trim( trailingslash( $cwd ) );
 
 	if ( '/' === $path ) {
 		return $path;
@@ -73,7 +80,7 @@ function normalize_path( $path ) {
 	 * Make non-absolute path absolute
 	 */
 	if ( './' === substr( $path, 0, 2 ) ) {
-		$path = rtrim( getcwd(), '/' ) . '/' . substr( $path, 2 );
+		$path = rtrim( $cwd, '/' ) . '/' . substr( $path, 2 );
 	}
 
 	/**

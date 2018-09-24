@@ -59,7 +59,7 @@ class Init extends Command {
 		$name_question->setValidator( '\WPAssure\Utils\slug_validator' );
 		$config_array['name'] = $helper->ask( $input, $output, $name_question );
 
-		$tests = $helper->ask( $input, $output, new Question( 'Tests location (defaults to ./tests/*): ', './tests/*' ) );
+		$tests = $helper->ask( $input, $output, new Question( 'Tests location (defaults to ./tests/*.php): ', './tests/*.php' ) );
 
 		$config['tests'] = $tests;
 

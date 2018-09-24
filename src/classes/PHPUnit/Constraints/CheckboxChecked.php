@@ -45,7 +45,8 @@ class CheckboxChecked extends \WPAssure\PHPUnit\Constraint {
 	protected function matches( $other ): bool {
 		$actor   = $this->getActor( $other );
 		$element = $actor->getElement( $this->element );
-		$checked = $element->getAttribute( 'checked' ) === 'checked';
+
+		$checked = $element->isSelected();
 
 		return ( $checked && self::ACTION_SEE === $this->action ) || ( ! $checked && self::ACTION_DONTSEE === $this->action );
 	}

@@ -210,6 +210,14 @@ class Run extends Command {
 			$suite_args['filter'] = $filter_tests;
 		}
 
+		if ( ! empty( $suite_config['bootstrap'] ) ) {
+			$bootstrap_path = Utils\normalize_path( dirname( $suite_config['bootstrap'] ), $suite_config['path'] ) . basename( $suite_config['bootstrap'] );
+
+			if ( file_exists( $bootstrap_path ) ) {
+				include_once( $bootstrap_path );
+			}
+		}
+
 		$runner      = new \PHPUnit\TextUI\TestRunner();
 		$test_result = $runner->doRun( $suite, $suite_args, false );
 

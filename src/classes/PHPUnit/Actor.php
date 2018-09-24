@@ -651,12 +651,14 @@ class Actor {
 	 * Uncheck a checkbox.
 	 *
 	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|array $element A remote elemente or CSS selector.
+	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|array $elements A remote element or CSS selector.
 	 */
-	public function uncheckOptions( $element ) {
+	public function uncheckOptions( $elements ) {
 		$elements = $this->getElements( $elements );
+
 		foreach ( $elements as $element ) {
 			$type = $element->getAttribute( 'type' );
+
 			if ( 'checkbox' === $type && $element->isSelected() ) {
 				$element->click();
 			}
