@@ -630,12 +630,7 @@ class Actor {
 
 		$this->click( '#wp-submit' );
 
-		try {
-			$this->waitUntilElementVisible( '#wpadminbar' );
-		} catch ( \Exception $e ) {
-			echo "COULD NOT LOG IN";
-			$this->takeScreenshot();
-		}
+		$this->waitUntilElementVisible( '#wpadminbar' );
 	}
 
 	/**
