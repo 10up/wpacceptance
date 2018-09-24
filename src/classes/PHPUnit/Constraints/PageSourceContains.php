@@ -12,8 +12,8 @@ namespace WPAssure\PHPUnit\Constraints;
  */
 class PageSourceContains extends \WPAssure\PHPUnit\Constraint {
 
-	use WPAssure\PHPUnit\Constraints\Traits\StringOrPattern,
-		WPAssure\PHPUnit\Constraints\Traits\SeeableAction;
+	use Traits\StringOrPattern,
+		Traits\SeeableAction;
 
 	/**
 	 * The text to look for.
@@ -42,7 +42,7 @@ class PageSourceContains extends \WPAssure\PHPUnit\Constraint {
 	 * @param \WPAssure\PHPUnit\Actor $other The actor instance.
 	 * @return boolean TRUE if the constrain is met, otherwise FALSE.
 	 */
-	protected function matches( $other ) {
+	protected function matches( $other ): bool {
 		$actor = $this->getActor( $other );
 
 		$content = trim( $actor->getPageSource() );
@@ -63,7 +63,7 @@ class PageSourceContains extends \WPAssure\PHPUnit\Constraint {
 	 * @access public
 	 * @return string The description text.
 	 */
-	public function toString() {
+	public function toString(): string {
 		return sprintf( ' "%s" text in the page source', $this->text );
 	}
 

@@ -665,6 +665,17 @@ class Actor {
 	}
 
 	/**
+	 * Check if element is clickable
+	 *
+	 * @access public
+	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
+	 */
+	public function canClickElement( $element ) {
+		$element = $this->getElement( $element );
+		return ( $element->isEnabled() && $element->isDisplayed() );
+	}
+
+	/**
 	 * Set a value for a field.
 	 *
 	 * @access public

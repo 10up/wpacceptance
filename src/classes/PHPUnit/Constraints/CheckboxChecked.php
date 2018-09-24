@@ -12,8 +12,8 @@ namespace WPAssure\PHPUnit\Constraints;
  */
 class CheckboxChecked extends \WPAssure\PHPUnit\Constraint {
 
-	use WPAssure\PHPUnit\Constraints\Traits\SeeableAction,
-		WPAssure\PHPUnit\Constraints\Traits\ElementToMessage;
+	use Traits\SeeableAction,
+		Traits\ElementToMessage;
 
 	/**
 	 * The checkbox element to look for.
@@ -43,7 +43,7 @@ class CheckboxChecked extends \WPAssure\PHPUnit\Constraint {
 	 * @param \WPAssure\PHPUnit\Actor $other The actor instance.
 	 * @return boolean TRUE if the constrain is met, otherwise FALSE.
 	 */
-	protected function matches( $other ) {
+	protected function matches( $other ): bool {
 		$actor   = $this->getActor( $other );
 		$element = $actor->getElement( $this->element );
 		$checked = $element->getAttribute( 'checked' ) === 'checked';
@@ -57,7 +57,7 @@ class CheckboxChecked extends \WPAssure\PHPUnit\Constraint {
 	 * @access public
 	 * @return string The description text.
 	 */
-	public function toString() {
+	public function toString(): string {
 		return sprintf( ' %s is checked', $this->elementToMessage( $this->element ) );
 	}
 

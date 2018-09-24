@@ -14,9 +14,9 @@ use Facebook\WebDriver\WebDriverSelect;
  */
 class FieldValueContains extends \WPAssure\PHPUnit\Constraint {
 
-	use WPAssure\PHPUnit\Constraints\Traits\SeeableAction,
-		WPAssure\PHPUnit\Constraints\Traits\StringOrPattern,
-		WPAssure\PHPUnit\Constraints\Traits\ElementToMessage;
+	use Traits\SeeableAction,
+		Traits\StringOrPattern,
+		Traits\ElementToMessage;
 
 	/**
 	 * The element to look for.
@@ -56,7 +56,7 @@ class FieldValueContains extends \WPAssure\PHPUnit\Constraint {
 	 * @param \WPAssure\PHPUnit\Actor $other The actor instance.
 	 * @return boolean TRUE if the constrain is met, otherwise FALSE.
 	 */
-	protected function matches( $other ) {
+	protected function matches( $other ): bool {
 		$actor   = $this->getActor( $other );
 		$element = $actor->getElement( $this->element );
 
@@ -93,7 +93,7 @@ class FieldValueContains extends \WPAssure\PHPUnit\Constraint {
 	 * @access public
 	 * @return string The description text.
 	 */
-	public function toString() {
+	public function toString(): string {
 		return sprintf( ' %s contains "%s" value', $this->elementToMessage( $this->element ), $this->value );
 	}
 

@@ -12,8 +12,8 @@ namespace WPAssure\PHPUnit\Constraints;
  */
 class UrlContains extends \WPAssure\PHPUnit\Constraint {
 
-	use WPAssure\PHPUnit\Constraints\Traits\SeeableAction,
-		WPAssure\PHPUnit\Constraints\Traits\StringOrPattern;
+	use Traits\SeeableAction,
+		Traits\StringOrPattern;
 
 	/**
 	 * The text to look for.
@@ -43,7 +43,7 @@ class UrlContains extends \WPAssure\PHPUnit\Constraint {
 	 * @param \WPAssure\PHPUnit\Actor $other The actor instance.
 	 * @return boolean TRUE if the constrain is met, otherwise FALSE.
 	 */
-	protected function matches( $other ) {
+	protected function matches( $other ): bool {
 		$actor     = $this->getActor( $other );
 		$webdriver = $actor->getWebDriver();
 
@@ -59,7 +59,7 @@ class UrlContains extends \WPAssure\PHPUnit\Constraint {
 	 * @access public
 	 * @return string The description text.
 	 */
-	public function toString() {
+	public function toString(): string {
 		return sprintf( ' "%s" text in the current URL', $this->text );
 	}
 

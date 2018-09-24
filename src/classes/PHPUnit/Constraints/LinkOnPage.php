@@ -15,8 +15,8 @@ use Facebook\WebDriver\WebDriverBy;
  */
 class LinkOnPage extends \WPAssure\PHPUnit\Constraint {
 
-	use WPAssure\PHPUnit\Constraints\Traits\StringOrPattern,
-		WPAssure\PHPUnit\Constraints\Traits\SeeableAction;
+	use Traits\StringOrPattern,
+		Traits\SeeableAction;
 
 	/**
 	 * A text of a link to look for.
@@ -56,7 +56,7 @@ class LinkOnPage extends \WPAssure\PHPUnit\Constraint {
 	 * @param \WPAssure\PHPUnit\Actor $other The actor instance.
 	 * @return boolean TRUE if the constrain is met, otherwise FALSE.
 	 */
-	protected function matches( $other ) {
+	protected function matches( $other ): bool {
 		$actor = $this->getActor( $other );
 		$by    = WebDriverBy::partialLinkText( $this->text );
 
@@ -87,7 +87,7 @@ class LinkOnPage extends \WPAssure\PHPUnit\Constraint {
 	 * @access public
 	 * @return string The description text.
 	 */
-	public function toString() {
+	public function toString(): string {
 		$message = sprintf( ' a link with "%s" text', $this->text );
 		if ( ! empty( $this->url ) ) {
 			$message .= sprintf( ' that contains "%s" url in the href attribute', $this->url );
