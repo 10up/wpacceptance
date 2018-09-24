@@ -617,8 +617,15 @@ class Actor {
 
 		$this->waitUntilElementVisible( '#user_login' );
 
-		$this->fillField( '#user_login', $username );
-		$this->fillField( '#user_pass', 'password' );
+		$this->setElementAttribute( '#user_login', 'value', $username );
+
+		usleep( 100 );
+
+		$this->setElementAttribute( '#user_pass', 'value', 'password' );
+
+		usleep( 100 );
+
+		$this->takeScreenshot();
 
 		$this->click( '#wp-submit' );
 
