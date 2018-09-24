@@ -29,4 +29,7 @@ To use WP Assure, you run the command `wpassure run`. The `wpassure run` command
 ## Install
 
 [Installation instructions are on the docs site.](https://wpassure.readthedocs.io/en/latest/install/)
-install/)
+
+## Usage
+
+[Learn how to use WP Assure on the docs site]([Installation instructions are on the docs site.](https://wpassure.readthedocs.io/en/latest/)
