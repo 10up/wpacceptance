@@ -15,7 +15,6 @@ use PHPUnit\Framework\ExpectationFailedException;
 class PageContains extends \WPAssure\PHPUnit\Constraint {
 
 	use Traits\StringOrPattern,
-		Traits\SeeableAction,
 		Traits\ElementToMessage;
 
 	/**
@@ -43,7 +42,7 @@ class PageContains extends \WPAssure\PHPUnit\Constraint {
 	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element Optional. An element to look for a text inside.
 	 */
 	public function __construct( $action, $text, $element ) {
-		parent::__construct( $this->verifyAction( $action ) );
+		parent::__construct( $action );
 
 		$this->text    = $text;
 		$this->element = $element;

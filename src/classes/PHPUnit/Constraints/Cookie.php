@@ -39,7 +39,7 @@ class Cookie extends \WPAssure\PHPUnit\Constraint {
 	 * @param mixed  $value Optional. Cookie vale.
 	 */
 	public function __construct( $action, $name, $value ) {
-		parent::__construct( $this->verifyAction( $action ) );
+		parent::__construct( $action );
 
 		$this->name  = $name;
 		$this->value = $value;

@@ -12,8 +12,7 @@ namespace WPAssure\PHPUnit\Constraints;
  */
 class CheckboxChecked extends \WPAssure\PHPUnit\Constraint {
 
-	use Traits\SeeableAction,
-		Traits\ElementToMessage;
+	use Traits\ElementToMessage;
 
 	/**
 	 * The checkbox element to look for.
@@ -31,7 +30,7 @@ class CheckboxChecked extends \WPAssure\PHPUnit\Constraint {
 	 * @param string $element A text to look for.
 	 */
 	public function __construct( $action, $element ) {
-		parent::__construct( $this->verifyAction( $action ) );
+		parent::__construct( $action );
 
 		$this->element = $element;
 	}

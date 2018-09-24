@@ -14,8 +14,7 @@ use WPAssure\EnvironmentFactory;
  */
 class NewDatabaseEntry extends \WPAssure\PHPUnit\Constraint {
 
-	use Traits\SeeableAction,
-		Traits\StringOrPattern;
+	use Traits\StringOrPattern;
 
 	/**
 	 * Old newest DB entry ID
@@ -42,7 +41,7 @@ class NewDatabaseEntry extends \WPAssure\PHPUnit\Constraint {
 	 * @param int    $old_id Old newest DB entry ID
 	 */
 	public function __construct( $action, $table, $old_id ) {
-		parent::__construct( $this->verifyAction( $action ) );
+		parent::__construct( $action );
 
 		$this->old_id = $old_id;
 		$this->table  = $table;

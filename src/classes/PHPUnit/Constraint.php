@@ -12,8 +12,10 @@ namespace WPAssure\PHPUnit;
  */
 abstract class Constraint extends \PHPUnit\Framework\Constraint\Constraint {
 
-	const ACTION_SEE     = 'see';
-	const ACTION_DONTSEE = 'dontSee';
+	const ACTION_SEE          = 'see';
+	const ACTION_DONTSEE      = 'dontSee';
+	const ACTION_INTERACT     = 'interact';
+	const ACTION_CANTINTERACT = 'cantInteract';
 
 	/**
 	 * The evaluation action.
@@ -62,6 +64,10 @@ abstract class Constraint extends \PHPUnit\Framework\Constraint\Constraint {
 				return ' sees';
 			case self::ACTION_DONTSEE:
 				return " doesn't see";
+			case self::ACTION_INTERACT:
+				return ' can interact';
+			case self::ACTION_CANTINTERACT:
+				return " can't interact";
 		}
 
 		return '';

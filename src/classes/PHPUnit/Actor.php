@@ -30,6 +30,7 @@ use WPAssure\PHPUnit\Constraints\ElementVisible as ElementVisibleConstrain;
 use WPAssure\PHPUnit\Constraints\UrlContains as UrlContainsConstrain;
 use WPAssure\PHPUnit\Constraints\CheckboxChecked as CheckboxCheckedConstrain;
 use WPAssure\PHPUnit\Constraints\FieldValueContains as FieldValueContainsConstrain;
+use WPAssure\PHPUnit\Constraints\FieldInteractable as FieldInteractableConstrain;
 use WPAssure\PHPUnit\Constraints\NewDatabaseEntry as NewDatabaseEntry;
 
 /**
@@ -629,7 +630,12 @@ class Actor {
 
 		$this->click( '#wp-submit' );
 
-		$this->waitUntilElementVisible( '#wpadminbar' );
+		try {
+			$this->waitUntilElementVisible( '#wpadminbar' );
+		} catch ( \Exception $e ) {
+			echo "COULD NOT LOG IN";
+			$this->takeScreenshot();
+		}
 	}
 
 	/**
@@ -665,14 +671,31 @@ class Actor {
 	}
 
 	/**
-	 * Check if element is clickable
+	 * Check if element is interactable
 	 *
 	 * @access public
 	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
+	 * @param string                                             $message Optional. The message to use on a failure.
 	 */
-	public function canClickElement( $element ) {
-		$element = $this->getElement( $element );
-		return ( $element->isEnabled() && $element->isDisplayed() );
+	public function canInteractWithField( $element, $message = '' ) {
+		$this->assertThat(
+			new FieldInteractableConstrain( Constraint::ACTION_INTERACT, $element ),
+			$message
+		);
+	}
+
+	/**
+	 * Check if element is not interactable
+	 *
+	 * @access public
+	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
+	 * @param string                                             $message Optional. The message to use on a failure.
+	 */
+	public function cannotInteractWithField( $element, $message = '' ) {
+		$this->assertThat(
+			new FieldInteractableConstrain( Constraint::ACTION_CANTINTERACT, $element ),
+			$message
+		);
 	}
 
 	/**

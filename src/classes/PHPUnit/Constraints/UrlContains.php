@@ -12,8 +12,7 @@ namespace WPAssure\PHPUnit\Constraints;
  */
 class UrlContains extends \WPAssure\PHPUnit\Constraint {
 
-	use Traits\SeeableAction,
-		Traits\StringOrPattern;
+	use Traits\StringOrPattern;
 
 	/**
 	 * The text to look for.
@@ -31,7 +30,7 @@ class UrlContains extends \WPAssure\PHPUnit\Constraint {
 	 * @param string $text A text to look for.
 	 */
 	public function __construct( $action, $text ) {
-		parent::__construct( $this->verifyAction( $action ) );
+		parent::__construct( $action );
 
 		$this->text = $text;
 	}

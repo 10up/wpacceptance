@@ -14,8 +14,7 @@ use Facebook\WebDriver\WebDriverSelect;
  */
 class FieldValueContains extends \WPAssure\PHPUnit\Constraint {
 
-	use Traits\SeeableAction,
-		Traits\StringOrPattern,
+	use Traits\StringOrPattern,
 		Traits\ElementToMessage;
 
 	/**
@@ -43,7 +42,7 @@ class FieldValueContains extends \WPAssure\PHPUnit\Constraint {
 	 * @param string $value A value to check.
 	 */
 	public function __construct( $action, $element, $value ) {
-		parent::__construct( $this->verifyAction( $action ) );
+		parent::__construct( $action );
 
 		$this->element = $element;
 		$this->value   = $value;

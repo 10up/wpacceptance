@@ -1,18 +1,18 @@
 <?php
 /**
- * Check if element is visible
+ * Check if field can be interacted with
  *
  * @package  wpassure
  */
 
 namespace WPAssure\PHPUnit\Constraints;
 
-use PHPUnit\Framework\ExpectationFailedException;
+use Facebook\WebDriver\Exception\InvalidElementStateException;
 
 /**
  * Constraint class
  */
-class ElementVisible extends \WPAssure\PHPUnit\Constraint {
+class FieldInteractable extends \WPAssure\PHPUnit\Constraint {
 
 	use Traits\ElementToMessage;
 
@@ -47,19 +47,17 @@ class ElementVisible extends \WPAssure\PHPUnit\Constraint {
 	protected function matches( $other ): bool {
 		$actor = $this->getActor( $other );
 
+		$element = $actor->getElement( $this->element );
+
 		try {
-			$element = $actor->getElement( ! empty( $this->element ) ? $this->element : 'body' );
-		} catch ( ExpectationFailedException $e ) {
-			return self::ACTION_DONTSEE === $this->action;
+			$element->clear();
+		} catch ( InvalidElementStateException $e ) {
+			return self::ACTION_CANTINTERACT === $this->action;
 		}
 
-		if ( $element ) {
-			$found = $element->isDisplayed();
+		$interactable = ( $element->isEnabled() && $element->isDisplayed() );
 
-			return ( $found && self::ACTION_SEE === $this->action ) || ( ! $found && self::ACTION_DONTSEE === $this->action );
-		}
-
-		return false;
+		return ( $interactable && self::ACTION_INTERACT === $this->action ) || ( ! $interactable && self::ACTION_CANTINTERACT === $this->action );
 	}
 
 	/**

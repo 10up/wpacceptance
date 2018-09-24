@@ -15,8 +15,7 @@ use Facebook\WebDriver\WebDriverBy;
  */
 class LinkOnPage extends \WPAssure\PHPUnit\Constraint {
 
-	use Traits\StringOrPattern,
-		Traits\SeeableAction;
+	use Traits\StringOrPattern;
 
 	/**
 	 * A text of a link to look for.
@@ -43,7 +42,7 @@ class LinkOnPage extends \WPAssure\PHPUnit\Constraint {
 	 * @param string $url A url of a link to look for.
 	 */
 	public function __construct( $action, $text, $url ) {
-		parent::__construct( $this->verifyAction( $action ) );
+		parent::__construct( $action );
 
 		$this->text = $text;
 		$this->url  = $url;
