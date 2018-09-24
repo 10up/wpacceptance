@@ -1,6 +1,4 @@
-# Install
-
-## Requirements
+# Requirements
 
 * PHP 7.1+
 * mysqli PHP extension
@@ -8,7 +6,7 @@
 
 [WP Local Docker](https://github.com/10up/wp-local-docker) is highly recommended as the local development environment but not required.
 
-## Steps
+# Steps
 
 WP Assure is easiest to use as a project-level Composer package:
 

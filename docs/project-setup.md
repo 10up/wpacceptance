@@ -1,8 +1,6 @@
-# Project Setup
-
 After [installing WP Assure](https://wpassure.readthedocs.io/en/latest/install/), you need to setup your project and development workflow.
 
-Spin up your local environment. WP Assure will use your local if run in `--local` mode. We highly recommend [WP Local Docker](https://github.com/10up/wp-local-docker).
+Spin up your local environment. WP Assure will use your local if run with the  `--local` flag. We highly recommend [WP Local Docker](https://github.com/10up/wp-local-docker).
 
 Decide where you want to initialize WP Assure (create wpassure.json) which must be the root of your version controlled repository. This is usually in `wp-content/`, a theme, or a plugin. `wp-content/` might make most sense if you are developing an entire website. Let's assume we are initializing our WP Assure project in `wp-content/` and have installed WP Assure in the same directory.
 
@@ -24,4 +22,6 @@ Now let's run our tests to make sure everything works:
 ```
 ./vendor/bin/wpassure run --local
 ```
+
+You should see 
 
