@@ -612,8 +612,9 @@ class Actor {
 	 * Login as a certain user
 	 *
 	 * @param  string $username Username
+	 * @param  string $password Password
 	 */
-	public function loginAs( $username ) {
+	public function loginAs( $username, $password = 'password' ) {
 		$this->moveTo( 'wp-login.php' );
 
 		$this->waitUntilElementVisible( '#user_login' );
@@ -622,7 +623,7 @@ class Actor {
 
 		usleep( 100 );
 
-		$this->setElementAttribute( '#user_pass', 'value', 'password' );
+		$this->setElementAttribute( '#user_pass', 'value', $password );
 
 		usleep( 100 );
 
