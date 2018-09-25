@@ -342,7 +342,7 @@ class Actor {
 	public function waitUntilElementContainsText( $text, $element_path, $max_wait = 10 ) {
 		$webdriver = $this->getWebDriver();
 
-		$webdriver->wait( $max_wait )->until( WebDriverExpectedCondition::textToByPresentInElement( WebDriverBy::cssSelector( $element_path ), $text ) );
+		$webdriver->wait( $max_wait )->until( WebDriverExpectedCondition::textToBePresentInElement( WebDriverBy::cssSelector( $element_path ), $text ) );
 	}
 
 	/**
