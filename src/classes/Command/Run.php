@@ -150,6 +150,11 @@ class Run extends Command {
 				]
 			);
 
+			if ( ! is_a( $snapshot, '\WPSnapshots\Snapshot' ) ) {
+				Log::instance()->write( 'Could not create snapshot.', 0, 'error' );
+				return 1;
+			}
+
 			$snapshot_id = $snapshot->id;
 
 			Log::instance()->write( 'Snapshot ID is ' . $snapshot_id, 1 );

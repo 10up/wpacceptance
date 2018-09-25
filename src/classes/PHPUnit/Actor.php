@@ -196,6 +196,16 @@ class Actor {
 	}
 
 	/**
+	 * Scroll in the browser
+	 *
+	 * @param  int $x X browser coordinate
+	 * @param  int $y Y browser coordinate
+	 */
+	public function scrollTo( $x, $y ) {
+		$this->executeJavaScript( 'window.scrollTo(' . (int) $x . ', ' . (int) $y . ')' );
+	}
+
+	/**
 	 * Execute javascript
 	 *
 	 * @param  string $script JS code
