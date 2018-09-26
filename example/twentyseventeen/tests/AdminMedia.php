@@ -24,10 +24,6 @@ class AdminMediaTest extends \WPAssure\PHPUnit\TestCase {
 
 		$I->fillField( '#title', 'Test Post' );
 
-		$I->scrollTo( 1000, 0 );
-
-		$I->takeScreenshot();
-
 		// Set featured image
 		$I->click( '#set-post-thumbnail' );
 		$I->attachFile( '.media-modal-content input[type="file"]', __DIR__ . '/img/10up-logo.jpg' );
@@ -37,8 +33,6 @@ class AdminMediaTest extends \WPAssure\PHPUnit\TestCase {
 		$I->click( '.media-modal-content .media-button-select' );
 
 		$I->waitUntilElementVisible( '#remove-post-thumbnail' );
-
-		$I->scrollTo( 0, 0 );
 
 		$I->click( '#publish' );
 

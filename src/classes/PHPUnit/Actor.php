@@ -14,6 +14,7 @@ use Facebook\WebDriver\WebDriverSelect;
 use Facebook\WebDriver\WebDriverKeys;
 use Facebook\WebDriver\WebDriverExpectedCondition;
 use Facebook\WebDriver\Exception\InvalidElementStateException;
+use Facebook\WebDriver\Exception\UnknownServerException;
 
 use PHPUnit\Framework\ExpectationFailedException;
 use PHPUnit\Framework\TestCase;
@@ -542,7 +543,15 @@ class Actor {
 	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
 	 */
 	public function click( $element ) {
-		$this->getElement( $element )->click();
+		try {
+			$this->getElement( $element )->click();
+		} catch( UnknownServerException $e ) {
+			// Weird hack to get around inconsistent click behavior
+			$this->executeJavaScript( 'window.scrollTo(0, (window.document.documentElement.scrollTop + 100))' );
+
+			$this->getElement( $element )->click();
+		}
+
 	}
 
 	/**
