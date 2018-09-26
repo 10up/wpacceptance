@@ -13,6 +13,7 @@ use Facebook\WebDriver\WebDriverBy;
 use Facebook\WebDriver\WebDriverSelect;
 use Facebook\WebDriver\WebDriverKeys;
 use Facebook\WebDriver\WebDriverExpectedCondition;
+use Facebook\WebDriver\Exception\InvalidElementStateException;
 
 use PHPUnit\Framework\ExpectationFailedException;
 use PHPUnit\Framework\TestCase;
@@ -377,6 +378,25 @@ class Actor {
 		$webdriver = $this->getWebDriver();
 
 		$webdriver->wait( $max_wait )->until( WebDriverExpectedCondition::visibilityOfElementLocated( WebDriverBy::cssSelector( $element_path ) ) );
+	}
+
+	/**
+	 * Wait until element is not disabled
+	 *
+	 * @param  string  $element_path Path to element to check
+	 * @param  integer $max_wait  Max wait time in seconds
+	 */
+	public function waitUntilElementEnabled( $element_path, $max_wait = 10 ) {
+		$webdriver = $this->getWebDriver();
+
+		$webdriver->wait( $max_wait )->until(
+			function() use ( $element_path ) {
+				$element = $this->getElement( $element_path );
+
+				return $element->isEnabled();
+			},
+			'Error waiting for element to be enabled.'
+		);
 	}
 
 	/**

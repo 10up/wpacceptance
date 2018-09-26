@@ -342,6 +342,7 @@ class Environment {
 		 * Create duplicate WP DB to dirty
 		 */
 		$this->makeCleanDB();
+
 		/**
 		 * Determine where codebase is located in snapshot
 		 */
@@ -477,6 +478,46 @@ class Environment {
 		if ( 0 !== $exit_code ) {
 			Log::instance()->write( 'Failed to copy codebase into WordPress container.', 0, 'error' );
 			return false;
+		}
+
+		/**
+		 * Chmod uploads dir
+		 */
+
+		Log::instance()->write( 'Chmoding uploads directory...', 1 );
+
+		$exec_config = new ContainersIdExecPostBody();
+		$exec_config->setTty( true );
+		$exec_config->setAttachStdout( true );
+		$exec_config->setAttachStderr( true );
+		$exec_config->setCmd( [ '/bin/sh', '-c', 'chmod -R 0777 /var/www/html/wp-content/uploads' ] );
+
+		$exec_id           = $this->docker->containerExec( 'wordpress-' . $this->network_id, $exec_config )->getId();
+		$exec_start_config = new ExecIdStartPostBody();
+		$exec_start_config->setDetach( false );
+
+		$stream = $this->docker->execStart( $exec_id, $exec_start_config );
+
+		$suite_config_files = [];
+
+		$stream->onStdout(
+			function( $stdout ) {
+				Log::instance()->write( $stdout, 1 );
+			}
+		);
+
+		$stream->onStderr(
+			function( $stderr ) {
+				Log::instance()->write( $stderr, 1 );
+			}
+		);
+
+		$stream->wait();
+
+		$exit_code = $this->docker->execInspect( $exec_id )->getExitCode();
+
+		if ( 0 !== $exit_code ) {
+			Log::instance()->write( 'Failed to chmod uploads directory.', 0, 'error' );
 		}
 
 		return true;
