@@ -76,6 +76,25 @@ $I->seeTextInUrl( 'Title Text' );
 $I->dontSeeTextInUrl( 'Title Text' );
 ```
 
+# Database
+
+WP Assure not only let's you test UI elements but how your web application interacts with the database as well.
+
+We can assert that new posts (or other custom post types) were created:
+```php
+$last_id = self::getLastPostId( [ 'post_type' => 'post' ] );
+
+// Interact with website....
+
+self::assertNewPostsExist( $last_id, [ 'post_type' => 'post' ], 'No new post.' );
+```
+
+`self::assertNewPostsExist` checks for new database items after `$last_id`.
+
+# Full API Documentation
+
+To read about all WP Assure testing related methods, look at the [source code Actor class](https://github.com/10up/wpassure/blob/master/src/classes/PHPUnit/Actor.php).
+
 # Examples
 
 For detailed test examples, look at the [example test suite](https://github.com/10up/wpassure/tree/master/example/twentyseventeen).
