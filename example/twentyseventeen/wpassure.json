@@ -1,7 +1,7 @@
 {
     "name": "twentyseventeen-example",
     "tests": [
-        "tests\/*"
+        "tests\/*.php"
     ],
     "snapshot_id": "d75bb560e9a94ba3a99ac7da7caec17d"
 }
