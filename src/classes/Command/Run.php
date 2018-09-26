@@ -201,7 +201,7 @@ class Run extends Command {
 			$bootstrap_path = Utils\normalize_path( dirname( $suite_config['bootstrap'] ), $suite_config['path'] ) . basename( $suite_config['bootstrap'] );
 
 			if ( file_exists( $bootstrap_path ) ) {
-				include_once( $bootstrap_path );
+				include_once $bootstrap_path;
 			} else {
 				Log::instance()->write( 'Could not find bootstrap file at: ' . $bootstrap_path, 0, 'warning' );
 			}

@@ -64,7 +64,7 @@ class AttributeContains extends \WPAssure\PHPUnit\Constraint {
 	 * @return boolean TRUE if the constrain is met, otherwise FALSE.
 	 */
 	protected function matches( $other ): bool {
-		$actor   = $this->getActor( $other );
+		$actor = $this->getActor( $other );
 
 		$element = $actor->getElement( $this->element );
 
