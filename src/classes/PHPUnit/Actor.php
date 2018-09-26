@@ -32,6 +32,7 @@ use WPAssure\PHPUnit\Constraints\UrlContains as UrlContainsConstrain;
 use WPAssure\PHPUnit\Constraints\CheckboxChecked as CheckboxCheckedConstrain;
 use WPAssure\PHPUnit\Constraints\FieldValueContains as FieldValueContainsConstrain;
 use WPAssure\PHPUnit\Constraints\FieldInteractable as FieldInteractableConstrain;
+use WPAssure\PHPUnit\Constraints\AttributeContains as AttributeContainsConstrain;
 use WPAssure\PHPUnit\Constraints\NewDatabaseEntry as NewDatabaseEntry;
 
 /**
@@ -463,6 +464,17 @@ class Actor {
 	public function resetCookie( $name ) {
 		$webdriver = $this->getWebDriver();
 		$webdriver->manage()->deleteCookieNamed( $name );
+	}
+
+	/**
+	 * Get element containing text
+	 *
+	 * @param  string $text Text to search for
+	 * @return \Facebook\WebDriver\Remote\RemoteWebElement An element instance.
+	 */
+	public function getElementContaining( $text ) {
+		$webdriver = $this->getWebDriver();
+		return $webdriver->findElement( WebDriverBy::xpath( "//*[contains(text(), '" . $text . "')]" ) );
 	}
 
 	/**
@@ -987,6 +999,38 @@ class Actor {
 	public function dontSeeCheckboxIsChecked( $element, $message = '' ) {
 		$this->assertThat(
 			new CheckboxCheckedConstrain( Constraint::ACTION_DONTSEE, $element ),
+			$message
+		);
+	}
+
+	/**
+	 * Check if the user can see text inside of an attribute
+	 *
+	 * @access public
+	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A CSS selector for the element.
+	 * @param string                                             $attribute Attribute name
+	 * @param string                                             $value A value to check.
+	 * @param string                                             $message Optional. The message to use on a failure.
+	 */
+	public function seeValueInAttribute( $element, $attribute, $value, $message = '' ) {
+		$this->assertThat(
+			new AttributeContainsConstrain( Constraint::ACTION_SEE, $element, $attribute, $value ),
+			$message
+		);
+	}
+
+	/**
+	 * Check if the user can not see text inside of an attribute
+	 *
+	 * @access public
+	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A CSS selector for the element.
+	 * @param string                                             $attribute Attribute name
+	 * @param string                                             $value A value to check.
+	 * @param string                                             $message Optional. The message to use on a failure.
+	 */
+	public function dontSeeValueInAttribute( $element, $attribute, $value, $message = '' ) {
+		$this->assertThat(
+			new AttributeContainsConstrain( Constraint::ACTION_DONTSEE, $element, $attribute, $value ),
 			$message
 		);
 	}
