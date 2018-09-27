@@ -4,12 +4,12 @@ site_description: Test code using acceptance tests and sharable, defined file an
 repo_url: https://github.com/10up/wpassure
 
 nav:
-  - Introduction: index.md
-  - Installation: install.md
-  - Project Setup: project-setup.md
-  - Workflow and Snapshots: workflow-snapshots.md
-  - Command Line API: commands.md
-  - Config File: wpassure-file.md
-  - Writing Tests: writing-tests.md
+  - "Introduction": "index.md"
+  - "Installation": "install.md"
+  - "Project Setup": "project-setup.md"
+  - "Workflow and Snapshots": "workflow-snapshots.md"
+  - "Command Line API": "commands.md"
+  - "Config File": "wpassure-file.md"
+  - "Writing Tests": "writing-tests.md"
 
 theme: readthedocs
