@@ -1,3 +1,5 @@
+# wpassure.json File
+
 `wpassure.json` is the "configuration" file read by WP Assure. This file is required for each project. Whenever a test suite is run via the `run` command, `wpassure.json` is processed.
 
 Here's what `wpassure.json` looks like

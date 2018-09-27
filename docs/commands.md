@@ -1,3 +1,5 @@
+# Commands
+
 * __wpassure run__ [&lt;PATH TO wpassure.json DIRECTORY&gt;] [--local] [--snapshot_id=&lt;WPSNAPSHOT ID&gt;] [--test_clean_db] [--preserve_containers] [--db_host=&lt;DATABASE HOST&gt;] [--verbose] [--wp_directory=&lt;PATH TO WP DIRECTORY&gt;] [--save] [--force_save] [--filter_tests=&lt;TEST FILTER&gt;] [--filter_test_files=<TEST FILE FILTER>] - Runs a test suite.
 	* `<PATH TO wpassure.json DIRECTORY>` - Path to `wpassure.json`, defaults to current working directory.
 	* `--local` - Runs your test suite against your local environment.

@@ -1,3 +1,5 @@
+# Writing Tests
+
 WP Assure tests are based on [PHPUnit](https://phpunit.de/). Here is a simple example of a test:
 
 ```php

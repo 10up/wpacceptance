@@ -1,3 +1,5 @@
+# Workflow and Snapshots
+
 There are two scenarios or workflows for running WP Assure:
 
 1. Testing a codebase using your local environment (files and database).

@@ -1,3 +1,5 @@
+# Project Setup
+
 After [installing WP Assure](https://wpassure.readthedocs.io/en/latest/install/), you need to setup your project and development workflow.
 
 1\. Spin up your local environment. WP Assure will use your local if run with the  `--local` flag. We highly recommend [WP Local Docker](https://github.com/10up/wp-local-docker).
