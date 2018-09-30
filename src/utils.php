@@ -30,6 +30,32 @@ function get_wordpress_path( $path = '' ) {
 }
 
 /**
+ * Resolve path in wpassure.json replacing variables %WP_ROOT%
+ *
+ * @param  string $path Path to dir or file
+ * @param  string $wpassure_dir WP Assure directory or file
+ * @return string
+ */
+function resolve_wpassure_path( $path, $wpassure_dir ) {
+	if ( preg_match( '#\.json$#i', $wpassure_dir_or_file ) ) {
+		$wpassure_dir = dirname( $wpassure_dir_or_file );
+	}
+
+	// Add trailing slash if not a file
+	if ( ! preg_match( '#\..+$#', $path ) ) {
+		$path = trailingslash( $path );
+	}
+
+	if ( false === stripos( $path, '%WP_ROOT%' ) ) {
+		$path = trailingslash( $wpassure_dir ) . $path;
+	} else {
+		$path = preg_replace( '#^/?%WP_ROOT%/?(.*)$#i', '/var/www/html/$1', $path );
+	}
+
+	return $path;
+}
+
+/**
  * Validator for slugs
  *
  * @param  string $answer Answer to validate

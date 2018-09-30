@@ -78,6 +78,10 @@ class EnvironmentFactory {
 			return false;
 		}
 
+		if ( ! $environment->runBeforeScripts() ) {
+			return false;
+		}
+
 		return $environment;
 	}
 }

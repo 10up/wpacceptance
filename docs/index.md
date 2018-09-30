@@ -128,17 +128,21 @@ Here's what `wpassure.json` looks like
 	],
 	"test_clean_db": true,
 	"bootstrap": "./bootstrap.php",
-	"repo_path": "%WP_ROOT%/wp-content"
+	"repo_path": "%WP_ROOT%/wp-content",
+	"before_scripts": [
+		...
+	]
 }
 ```
 
 * `name` (required) - Name of test suite.
-* `tests` (required) - This is an array of path(s) to tests. Each path in the array is processed via PHP `glob`. `*.php` will include every PHP file in the directory.
+* `tests` (required) - This is an array of path(s) to tests. Each path in the array is processed via PHP `glob`. `*.php` will include every PHP file in the directory. Sholud be relative to `wpassure.json`.
 * `snapshot_id` - "Primary" snapshot to test again. If the `run` command is executed without the `--local` flag, this snapshot ID will be used.
-* `exclude` - WP Assure copys all the files in your repository into the snapshot for testing. There may be directories you want to include to speed things up e.g. `node_modules` and `vendor`.
+* `exclude` - WP Assure copys all the files in your repository into the snapshot for testing. There may be directories you want to include to speed things up e.g. `node_modules` and `vendor`. Should be relative `wp_assure.json`.
 * `test_clean_db` - If set to `true`, a "clean" DB will be used for each test in the suite. "clean" means the untampered DB from the snapshot.
-* `bootstrap` - Path to bootstrap file. This file will be executed before test execution begins.
-* `repo_path` - WP Assure needs to know where to insert your codebase into the snapshot. If `repo_path` is not provided, it assumes `wpassure.json` is in the root of your repo. `repo_path` can be relative (from your `wpassure.json` file) or you can use the `%WP_ROOT%` variable to set the path.
+* `bootstrap` - Path to bootstrap file. This file will be executed before test execution begins. Should be relative to `wpassure.json`.
+* `repo_path` - The path to the root of your repository. WP Assure needs to know where to insert your codebase into the snapshot. If `repo_path` is not provided, it assumes `wpassure.json` is in the root of your repo. `repo_path` can be relative (from your `wpassure.json` file) or you can use the `%WP_ROOT%` variable to set the path.
+* `before_scripts` - An array of scripts to run in the same directory as `wpassure.json` before running tests.
 
 ## Writing Tests
 

@@ -120,6 +120,20 @@ class Environment {
 	protected $current_mysql_db = 'wordpress_clean';
 
 	/**
+	 * Path to wpassure.json in snapshot
+	 *
+	 * @var string
+	 */
+	protected $snapshot_wpassure_path;
+
+	/**
+	 * Path to repo in snapshot
+	 *
+	 * @var string
+	 */
+	protected $snapshot_repo_path;
+
+	/**
 	 * Environment constructor
 	 *
 	 * @param  string  $snapshot_id WPSnapshot ID to load into environment
@@ -247,6 +261,58 @@ class Environment {
 	}
 
 	/**
+	 * Run before scripts
+	 *
+	 * @return bool
+	 */
+	public function runBeforeScripts() {
+		if ( empty( $this->suite_config['before_scripts'] ) ) {
+			return true;
+		}
+
+		foreach ( $this->suite_config['before_scripts'] as $script ) {
+			Log::instance()->write( 'Running script: ' . $script, 1 );
+
+			$command = 'cd ' . $this->snapshot_wpassure_path . ' && ' . $script;
+
+			$exec_config = new ContainersIdExecPostBody();
+			$exec_config->setTty( true );
+			$exec_config->setAttachStdout( true );
+			$exec_config->setAttachStderr( true );
+			$exec_config->setCmd( [ '/bin/sh', '-c', $command ] );
+
+			$exec_command      = $this->docker->containerExec( 'wordpress-' . $this->network_id, $exec_config );
+			$exec_id           = $exec_command->getId();
+			$exec_start_config = new ExecIdStartPostBody();
+			$exec_start_config->setDetach( false );
+
+			$stream = $this->docker->execStart( $exec_id, $exec_start_config );
+
+			$stream->onStdout(
+				function( $stdout ) {
+					Log::instance()->write( $stdout, 2 );
+				}
+			);
+
+			$stream->onStderr(
+				function( $stderr ) {
+					Log::instance()->write( $stderr, 2 );
+				}
+			);
+
+			$stream->wait();
+
+			$exit_code = $this->docker->execInspect( $exec_id )->getExitCode();
+
+			if ( 0 !== $exit_code ) {
+				Log::instance()->write( 'Before script returned a non-zero exit code: ' . $script, 0, 'warning' );
+			}
+		}
+
+		return true;
+	}
+
+	/**
 	 * Pull WP Snapshot into container
 	 *
 	 * @return  bool
@@ -346,16 +412,49 @@ class Environment {
 		/**
 		 * Determine where codebase is located in snapshot
 		 */
+		Log::instance()->write( 'Finding codebase in snapshot was not provided...', 1 );
 
-		// If no repo_path or repo_path is relative
-		if ( empty( $this->suite_config['repo_path'] ) || false === stripos( $this->suite_config['repo_path'], '%WP_ROOT%' ) ) {
-			Log::instance()->write( 'Finding codebase in snapshot was not provided...', 1 );
+		$exec_config = new ContainersIdExecPostBody();
+		$exec_config->setTty( true );
+		$exec_config->setAttachStdout( true );
+		$exec_config->setAttachStderr( true );
+		$exec_config->setCmd( [ '/bin/sh', '-c', 'find /var/www/html -name "wpassure.json" -not -path "/var/www/html/wp-includes/*" -not -path "/var/www/html/wp-admin/*"' ] );
 
+		$exec_id           = $this->docker->containerExec( 'wordpress-' . $this->network_id, $exec_config )->getId();
+		$exec_start_config = new ExecIdStartPostBody();
+		$exec_start_config->setDetach( false );
+
+		$stream = $this->docker->execStart( $exec_id, $exec_start_config );
+
+		$suite_config_files = [];
+
+		$stream->onStdout(
+			function( $stdout ) use ( &$suite_config_files ) {
+				$suite_config_files[] = trim( $stdout );
+			}
+		);
+
+		$stream->onStderr(
+			function( $stderr ) {
+				Log::instance()->write( $stderr, 1 );
+			}
+		);
+
+		$stream->wait();
+
+		$exit_code = $this->docker->execInspect( $exec_id )->getExitCode();
+
+		if ( 0 !== $exit_code ) {
+			Log::instance()->write( 'Failed to find codebase in snapshot.', 0, 'error' );
+			return false;
+		}
+
+		foreach ( $suite_config_files as $suite_config_file ) {
 			$exec_config = new ContainersIdExecPostBody();
 			$exec_config->setTty( true );
 			$exec_config->setAttachStdout( true );
 			$exec_config->setAttachStderr( true );
-			$exec_config->setCmd( [ '/bin/sh', '-c', 'find /var/www/html -name "wpassure.json" -not -path "/var/www/html/wp-includes/*" -not -path "/var/www/html/wp-admin/*"' ] );
+			$exec_config->setCmd( [ '/bin/sh', '-c', 'php -r "\$config = json_decode(file_get_contents(\"' . $suite_config_file . '\"), true); echo \$config[\"name\"];"' ] );
 
 			$exec_id           = $this->docker->containerExec( 'wordpress-' . $this->network_id, $exec_config )->getId();
 			$exec_start_config = new ExecIdStartPostBody();
@@ -364,10 +463,11 @@ class Environment {
 			$stream = $this->docker->execStart( $exec_id, $exec_start_config );
 
 			$suite_config_files = [];
+			$suite_config_name  = '';
 
 			$stream->onStdout(
-				function( $stdout ) use ( &$suite_config_files ) {
-					$suite_config_files[] = trim( $stdout );
+				function( $name ) use ( &$suite_config_name ) {
+					$suite_config_name = $name;
 				}
 			);
 
@@ -379,66 +479,22 @@ class Environment {
 
 			$stream->wait();
 
-			$exit_code = $this->docker->execInspect( $exec_id )->getExitCode();
-
-			if ( 0 !== $exit_code ) {
-				Log::instance()->write( 'Failed to find codebase in snapshot.', 0, 'error' );
-				return false;
+			if ( trim( $suite_config_name ) === trim( $this->suite_config['name'] ) ) {
+				$this->snapshot_wpassure_path = Utils\trailingslash( dirname( $suite_config_file ) );
+				break;
 			}
+		}
 
-			$snapshot_repo_path = false;
+		if ( empty( $this->snapshot_wpassure_path ) ) {
+			Log::instance()->write( 'Could not copy codebase files into snapshot. The snapshot must contain a codebase with a wpassure.json file.', 0, 'error' );
+			return false;
+		}
 
-			foreach ( $suite_config_files as $suite_config_file ) {
-				$exec_config = new ContainersIdExecPostBody();
-				$exec_config->setTty( true );
-				$exec_config->setAttachStdout( true );
-				$exec_config->setAttachStderr( true );
-				$exec_config->setCmd( [ '/bin/sh', '-c', 'php -r "\$config = json_decode(file_get_contents(\"' . $suite_config_file . '\"), true); echo \$config[\"name\"];"' ] );
-
-				$exec_id           = $this->docker->containerExec( 'wordpress-' . $this->network_id, $exec_config )->getId();
-				$exec_start_config = new ExecIdStartPostBody();
-				$exec_start_config->setDetach( false );
-
-				$stream = $this->docker->execStart( $exec_id, $exec_start_config );
-
-				$suite_config_files = [];
-				$suite_config_name  = '';
-
-				$stream->onStdout(
-					function( $name ) use ( &$suite_config_name ) {
-						$suite_config_name = $name;
-					}
-				);
-
-				$stream->onStderr(
-					function( $stderr ) {
-						Log::instance()->write( $stderr, 1 );
-					}
-				);
-
-				$stream->wait();
-
-				if ( trim( $suite_config_name ) === trim( $this->suite_config['name'] ) ) {
-					$snapshot_repo_path = dirname( $suite_config_file );
-					break;
-				}
-			}
-
-			if ( empty( $snapshot_repo_path ) ) {
-				Log::instance()->write( 'Could not copy codebase files into snapshot. The snapshot must contain a codebase with a wpassure.json file.', 0, 'error' );
-				return false;
-			}
-
-			// At this point, repo_path must be relative
-			// Resolve repo_path if we have it
-			if ( ! empty( $this->suite_config['repo_path'] ) ) {
-				// Remove ./ from the front
-				$relative_repo_path = preg_replace( '#^\.?/(.*)$#', '$1', $this->suite_config['repo_path'] );
-
-				$snapshot_repo_path = Utils\trailingslash( $snapshot_repo_path ) . $relative_repo_path;
-			}
-		} elseif ( ! empty( $this->suite_config['repo_path'] ) ) {
-			$snapshot_repo_path = preg_replace( '#^/?%WP_ROOT%/?(.*)$#i', '/var/www/html/$1', $this->suite_config['repo_path'] );
+		// If no repo_path or repo_path is relative
+		if ( empty( $this->suite_config['repo_path'] ) ) {
+			$this->snapshot_repo_path = $this->snapshot_wpassure_path;
+		} else {
+			$this->snapshot_repo_path = Utils\resolve_wpassure_path( $this->suite_config['repo_path'], $this->snapshot_wpassure_path );
 		}
 
 		/**
@@ -446,7 +502,7 @@ class Environment {
 		 */
 
 		Log::instance()->write( 'Copying codebase into container...', 1 );
-		Log::instance()->write( 'Repo path in snapshot: ' . $snapshot_repo_path, 2 );
+		Log::instance()->write( 'Repo path in snapshot: ' . $this->snapshot_repo_path, 2 );
 
 		$excludes = '';
 
@@ -454,11 +510,11 @@ class Environment {
 			foreach ( $this->suite_config['exclude'] as $exclude ) {
 				$exclude = preg_replace( '#^\.?/(.*)$#i', '$1', $exclude );
 
-				$excludes .= '--exclude="' . $exclude . '" ';
+				$excludes .= '--exclude="' . Utils\resolve_wpassure_path( $exclude, $this->snapshot_wpassure_path ) . '" ';
 			}
 		}
 
-		$cp_command = 'rsync -a -I --exclude=".git" ' . $excludes . ' /root/repo/ ' . $snapshot_repo_path;
+		$cp_command = 'rsync -a -I --exclude=".git" ' . $excludes . ' /root/repo/ ' . $this->snapshot_repo_path;
 
 		Log::instance()->write( $cp_command, 2 );
 
