@@ -64,6 +64,7 @@ class Config implements ArrayAccess {
 			return false;
 		}
 
+		// $config['path'] === path to wpassure.json direcfory in host machine
 		$config['path'] = Utils\trailingslash( dirname( $file_path ) );
 
 		if ( empty( $config['repo_path'] ) ) {
