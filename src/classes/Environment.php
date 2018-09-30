@@ -279,7 +279,7 @@ class Environment {
 			$exec_config->setTty( true );
 			$exec_config->setAttachStdout( true );
 			$exec_config->setAttachStderr( true );
-			$exec_config->setCmd( [ '/bin/sh', '-c', $command ] );
+			$exec_config->setCmd( [ '/bin/bash', '-c', $command ] );
 
 			$exec_command      = $this->docker->containerExec( 'wordpress-' . $this->network_id, $exec_config );
 			$exec_id           = $exec_command->getId();
@@ -494,7 +494,11 @@ class Environment {
 		if ( empty( $this->suite_config['repo_path'] ) ) {
 			$this->snapshot_repo_path = $this->snapshot_wpassure_path;
 		} else {
-			$this->snapshot_repo_path = Utils\resolve_wpassure_path( $this->suite_config['repo_path'], $this->snapshot_wpassure_path );
+			if ( false === stripos( $this->suite_config['repo_path'], '%WP_ROOT%' ) ) {
+				$this->snapshot_repo_path = $this->snapshot_wpassure_path . $this->suite_config['repo_path'];
+			} else {
+				$this->snapshot_repo_path = preg_replace( '#^/?%WP_ROOT%/?(.*)$#i', '/var/www/html/$1', $this->suite_config['repo_path'] );
+			}
 		}
 
 		/**
@@ -510,7 +514,7 @@ class Environment {
 			foreach ( $this->suite_config['exclude'] as $exclude ) {
 				$exclude = preg_replace( '#^\.?/(.*)$#i', '$1', $exclude );
 
-				$excludes .= '--exclude="' . Utils\resolve_wpassure_path( $exclude, $this->snapshot_wpassure_path ) . '" ';
+				$excludes .= '--exclude="' . $exclude . '" ';
 			}
 		}
 

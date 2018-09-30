@@ -15,12 +15,12 @@ RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
 COPY config/default.conf /etc/nginx/sites-available/default
 
-RUN wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
+ENV NVM_DIR /usr/local/nvm
+RUN curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.1/install.sh | bash
+ENV NODE_VERSION v8.12.0
+RUN /bin/bash -c "source $NVM_DIR/nvm.sh && nvm install $NODE_VERSION && nvm use --delete-prefix $NODE_VERSION"
 
-RUN source ~/.nvm/nvm.sh \
-	&& nvm install node \
-	&& nvm install 7 \
-	&& nvm install 8 \
-	&& nvm install-latest-npm
+ENV NODE_PATH $NVM_DIR/versions/node/$NODE_VERSION/lib/node_modules
+ENV PATH      $NVM_DIR/versions/node/$NODE_VERSION/bin:$PATH
 
 CMD nginx && php-fpm
