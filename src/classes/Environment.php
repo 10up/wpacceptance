@@ -347,51 +347,15 @@ class Environment {
 		 * Determine where codebase is located in snapshot
 		 */
 
-		Log::instance()->write( 'Finding codebase in snapshot...', 1 );
+		// If no repo_path or repo_path is relative
+		if ( empty( $this->suite_config['repo_path'] ) || false === stripos( $this->suite_config['repo_path'], '%WP_ROOT%' ) ) {
+			Log::instance()->write( 'Finding codebase in snapshot was not provided...', 1 );
 
-		$exec_config = new ContainersIdExecPostBody();
-		$exec_config->setTty( true );
-		$exec_config->setAttachStdout( true );
-		$exec_config->setAttachStderr( true );
-		$exec_config->setCmd( [ '/bin/sh', '-c', 'find /var/www/html -name "wpassure.json" -not -path "/var/www/html/wp-includes/*" -not -path "/var/www/html/wp-admin/*"' ] );
-
-		$exec_id           = $this->docker->containerExec( 'wordpress-' . $this->network_id, $exec_config )->getId();
-		$exec_start_config = new ExecIdStartPostBody();
-		$exec_start_config->setDetach( false );
-
-		$stream = $this->docker->execStart( $exec_id, $exec_start_config );
-
-		$suite_config_files = [];
-
-		$stream->onStdout(
-			function( $stdout ) use ( &$suite_config_files ) {
-				$suite_config_files[] = trim( $stdout );
-			}
-		);
-
-		$stream->onStderr(
-			function( $stderr ) {
-				Log::instance()->write( $stderr, 1 );
-			}
-		);
-
-		$stream->wait();
-
-		$exit_code = $this->docker->execInspect( $exec_id )->getExitCode();
-
-		if ( 0 !== $exit_code ) {
-			Log::instance()->write( 'Failed to find codebase in snapshot.', 0, 'error' );
-			return false;
-		}
-
-		$snapshot_repo_path = false;
-
-		foreach ( $suite_config_files as $suite_config_file ) {
 			$exec_config = new ContainersIdExecPostBody();
 			$exec_config->setTty( true );
 			$exec_config->setAttachStdout( true );
 			$exec_config->setAttachStderr( true );
-			$exec_config->setCmd( [ '/bin/sh', '-c', 'php -r "\$config = json_decode(file_get_contents(\"' . $suite_config_file . '\"), true); echo \$config[\"name\"];"' ] );
+			$exec_config->setCmd( [ '/bin/sh', '-c', 'find /var/www/html -name "wpassure.json" -not -path "/var/www/html/wp-includes/*" -not -path "/var/www/html/wp-admin/*"' ] );
 
 			$exec_id           = $this->docker->containerExec( 'wordpress-' . $this->network_id, $exec_config )->getId();
 			$exec_start_config = new ExecIdStartPostBody();
@@ -400,11 +364,10 @@ class Environment {
 			$stream = $this->docker->execStart( $exec_id, $exec_start_config );
 
 			$suite_config_files = [];
-			$suite_config_name  = '';
 
 			$stream->onStdout(
-				function( $name ) use ( &$suite_config_name ) {
-					$suite_config_name = $name;
+				function( $stdout ) use ( &$suite_config_files ) {
+					$suite_config_files[] = trim( $stdout );
 				}
 			);
 
@@ -416,15 +379,66 @@ class Environment {
 
 			$stream->wait();
 
-			if ( trim( $suite_config_name ) === trim( $this->suite_config['name'] ) ) {
-				$snapshot_repo_path = dirname( $suite_config_file );
-				break;
-			}
-		}
+			$exit_code = $this->docker->execInspect( $exec_id )->getExitCode();
 
-		if ( empty( $snapshot_repo_path ) ) {
-			Log::instance()->write( 'Could not copy codebase files into snapshot. The snapshot must contain a codebase with a wpassure.json file.', 0, 'error' );
-			return false;
+			if ( 0 !== $exit_code ) {
+				Log::instance()->write( 'Failed to find codebase in snapshot.', 0, 'error' );
+				return false;
+			}
+
+			$snapshot_repo_path = false;
+
+			foreach ( $suite_config_files as $suite_config_file ) {
+				$exec_config = new ContainersIdExecPostBody();
+				$exec_config->setTty( true );
+				$exec_config->setAttachStdout( true );
+				$exec_config->setAttachStderr( true );
+				$exec_config->setCmd( [ '/bin/sh', '-c', 'php -r "\$config = json_decode(file_get_contents(\"' . $suite_config_file . '\"), true); echo \$config[\"name\"];"' ] );
+
+				$exec_id           = $this->docker->containerExec( 'wordpress-' . $this->network_id, $exec_config )->getId();
+				$exec_start_config = new ExecIdStartPostBody();
+				$exec_start_config->setDetach( false );
+
+				$stream = $this->docker->execStart( $exec_id, $exec_start_config );
+
+				$suite_config_files = [];
+				$suite_config_name  = '';
+
+				$stream->onStdout(
+					function( $name ) use ( &$suite_config_name ) {
+						$suite_config_name = $name;
+					}
+				);
+
+				$stream->onStderr(
+					function( $stderr ) {
+						Log::instance()->write( $stderr, 1 );
+					}
+				);
+
+				$stream->wait();
+
+				if ( trim( $suite_config_name ) === trim( $this->suite_config['name'] ) ) {
+					$snapshot_repo_path = dirname( $suite_config_file );
+					break;
+				}
+			}
+
+			if ( empty( $snapshot_repo_path ) ) {
+				Log::instance()->write( 'Could not copy codebase files into snapshot. The snapshot must contain a codebase with a wpassure.json file.', 0, 'error' );
+				return false;
+			}
+
+			// At this point, repo_path must be relative
+			// Resolve repo_path if we have it
+			if ( ! empty( $this->suite_config['repo_path'] ) ) {
+				// Remove ./ from the front
+				$relative_repo_path = preg_replace( '#^\.?/(.*)$#', '$1', $this->suite_config['repo_path'] );
+
+				$snapshot_repo_path = Utils\trailingslash( $snapshot_repo_path ) . $relative_repo_path;
+			}
+		} elseif ( ! empty( $this->suite_config['repo_path'] ) ) {
+			$snapshot_repo_path = preg_replace( '#^/?%WP_ROOT%/?(.*)$#i', '/var/www/html/$1', $this->suite_config['repo_path'] );
 		}
 
 		/**
@@ -432,6 +446,7 @@ class Environment {
 		 */
 
 		Log::instance()->write( 'Copying codebase into container...', 1 );
+		Log::instance()->write( 'Repo path in snapshot: ' . $snapshot_repo_path, 2 );
 
 		$excludes = '';
 
@@ -689,9 +704,11 @@ class Environment {
 			[
 				\WPSnapshots\Utils\get_snapshot_directory() . $this->snapshot_id . ':/root/.wpsnapshots/' . $this->snapshot_id,
 				\WPSnapshots\Utils\get_snapshot_directory() . 'config.json:/root/.wpsnapshots/config.json',
-				$this->suite_config['path'] . ':/root/repo',
+				$this->suite_config['host_repo_path'] . ':/root/repo',
 			]
 		);
+
+		Log::instance()->write( 'Mapping ' . $this->suite_config['host_repo_path'] . ' to /root/repo', 2 );
 
 		$container_port_map           = new \ArrayObject();
 		$container_port_map['80/tcp'] = new \stdClass();

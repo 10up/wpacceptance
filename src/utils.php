@@ -10,17 +10,20 @@ namespace WPAssure\Utils;
 /**
  * Find root of WP install (where wp-config.php resides)
  *
+ * @param  string $path Directory to start searching from. Defaults to cwd
  * @return string|bool
  */
-function get_wordpress_path() {
-	$current_dir = getcwd() . '/';
+function get_wordpress_path( $path = '' ) {
+	if ( ! empty( $path ) ) {
+		$path = trailingslash( getcwd() );
+	}
 
 	for ( $i = 0; $i < 15; $i++ ) {
-		if ( file_exists( $current_dir . '/wp-config.php' ) ) {
-			return $current_dir;
+		if ( file_exists( $path . '/wp-config.php' ) ) {
+			return $path;
 		}
 
-		$current_dir .= '../';
+		$path .= '../';
 	}
 
 	return false;

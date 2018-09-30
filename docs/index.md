@@ -55,7 +55,7 @@ WP Assure reads `wpassure.json` every time tests are run. The file must contain 
 *There are a few important rules for wpassure.json:*
 
 * `wpassure.json` and the actual tests __must__ exist within the codebase you are testing.
-* `wpassure.json` __must__ be located in the root of your version controlled codebase. Typically this means `wpassure.json` is in the root of a theme, plugin, or `wp-content` directory.
+* `wpassure.json` __must__ be located in the root of your version controlled codebase (unless you set `repo_path`, see below). Typically this means `wpassure.json` is in the root of a theme, plugin, or `wp-content` directory.
 
 4\. Now let's run our tests to make sure everything works:
 ```
@@ -127,7 +127,8 @@ Here's what `wpassure.json` looks like
 		...
 	],
 	"test_clean_db": true,
-	"bootstrap": "./bootstrap.php"
+	"bootstrap": "./bootstrap.php",
+	"repo_path": "%WP_ROOT%/wp-content"
 }
 ```
 
@@ -137,6 +138,7 @@ Here's what `wpassure.json` looks like
 * `exclude` - WP Assure copys all the files in your repository into the snapshot for testing. There may be directories you want to include to speed things up e.g. `node_modules` and `vendor`.
 * `test_clean_db` - If set to `true`, a "clean" DB will be used for each test in the suite. "clean" means the untampered DB from the snapshot.
 * `bootstrap` - Path to bootstrap file. This file will be executed before test execution begins.
+* `repo_path` - WP Assure needs to know where to insert your codebase into the snapshot. If `repo_path` is not provided, it assumes `wpassure.json` is in the root of your repo. `repo_path` can be relative (from your `wpassure.json` file) or you can use the `%WP_ROOT%` variable to set the path.
 
 ## Writing Tests
 
