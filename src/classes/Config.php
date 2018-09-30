@@ -64,15 +64,15 @@ class Config implements ArrayAccess {
 			return false;
 		}
 
-		$wpassure_file_dir = Utils\trailingslash( dirname( $file_path ) );
+		$config['path'] = Utils\trailingslash( dirname( $file_path ) );
 
 		if ( empty( $config['repo_path'] ) ) {
-			$config['host_repo_path'] = $wpassure_file_dir;
+			$config['host_repo_path'] = $config['path'];
 		} else {
 			if ( false === stripos( $config['repo_path'], '%WP_ROOT%' ) ) {
-				$config['host_repo_path'] = Utils\trailingslash( realpath( $wpassure_file_dir . $repo_path ) );
+				$config['host_repo_path'] = Utils\trailingslash( realpath( $config['path'] . $config['repo_path'] ) );
 			} else {
-				$wp_dir = Utils\trailingslash( realpath( Utils\get_wordpress_path( $wpassure_file_dir ) ) );
+				$wp_dir = Utils\trailingslash( realpath( Utils\get_wordpress_path( $config['path'] ) ) );
 
 				$config['host_repo_path'] = Utils\trailingslash( $wp_dir . preg_replace( '#^/?%WP_ROOT%/?(.*)$#i', '$1', $config['repo_path'] ) );
 			}

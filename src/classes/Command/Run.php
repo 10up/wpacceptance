@@ -178,11 +178,12 @@ class Run extends Command {
 		foreach ( $test_dirs as $test_path ) {
 			$test_path = trim( $test_path );
 
-			if ( 0 === strpos( $test_path, './' ) ) {
-				$test_path = substr( $test_path, 2 );
+			// Not absolute
+			if ( ! preg_match( '#^/#', $test_path ) ) {
+				$test_path = $suite_config['path'] . $test_path;
 			}
 
-			foreach ( glob( $suite_config['path'] . $test_path ) as $test_file ) {
+			foreach ( glob( $test_path ) as $test_file ) {
 				$test_files[] = $test_file;
 			}
 		}
@@ -198,7 +199,12 @@ class Run extends Command {
 		}
 
 		if ( ! empty( $suite_config['bootstrap'] ) ) {
-			$bootstrap_path = Utils\normalize_path( dirname( $suite_config['bootstrap'] ), $suite_config['path'] ) . basename( $suite_config['bootstrap'] );
+			$bootstrap_path = $suite_config['bootstrap'];
+
+			// Not absolute
+			if ( ! preg_match( '#^/#', $bootstrap_path ) ) {
+				$bootstrap_path = $suite_config['path'] . $bootstrap_path;
+			}
 
 			if ( file_exists( $bootstrap_path ) ) {
 				include_once $bootstrap_path;

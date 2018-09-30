@@ -514,15 +514,15 @@ class Environment {
 			}
 		}
 
-		$cp_command = 'rsync -a -I --exclude=".git" ' . $excludes . ' /root/repo/ ' . $this->snapshot_repo_path;
+		$rsync_command = 'rsync -a -I --exclude=".git" ' . $excludes . ' /root/repo/ ' . $this->snapshot_repo_path;
 
-		Log::instance()->write( $cp_command, 2 );
+		Log::instance()->write( $rsync_command, 2 );
 
 		$exec_config = new ContainersIdExecPostBody();
 		$exec_config->setTty( true );
 		$exec_config->setAttachStdout( true );
 		$exec_config->setAttachStderr( true );
-		$exec_config->setCmd( [ '/bin/sh', '-c', $cp_command ] );
+		$exec_config->setCmd( [ '/bin/sh', '-c', $rsync_command ] );
 
 		$exec_id           = $this->docker->containerExec( 'wordpress-' . $this->network_id, $exec_config )->getId();
 		$exec_start_config = new ExecIdStartPostBody();

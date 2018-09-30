@@ -37,8 +37,8 @@ function get_wordpress_path( $path = '' ) {
  * @return string
  */
 function resolve_wpassure_path( $path, $wpassure_dir ) {
-	if ( preg_match( '#\.json$#i', $wpassure_dir_or_file ) ) {
-		$wpassure_dir = dirname( $wpassure_dir_or_file );
+	if ( preg_match( '#\.json$#i', $wpassure_dir ) ) {
+		$wpassure_dir = dirname( $wpassure_dir );
 	}
 
 	// Add trailing slash if not a file
