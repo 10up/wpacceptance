@@ -514,7 +514,13 @@ class Environment {
 			foreach ( $this->suite_config['exclude'] as $exclude ) {
 				$exclude = preg_replace( '#^\.?/(.*)$#i', '$1', $exclude );
 
-				$excludes .= '--exclude="' . $exclude . '" ';
+				if ( $this->snapshot_repo_path !== $this->snapshot_wpassure_path ) {
+					$excludes .= '--exclude="' . $exclude . '" ';
+				} else {
+					$abs_exclude = Utils\resolve_absolute_path( $this->snapshot_wpassure_path . $exclude );
+
+					$excludes .= '--exclude="' . str_replace( $this->snapshot_repo_path, '', $exclude ) . '" ';
+				}
 			}
 		}
 

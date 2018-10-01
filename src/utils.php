@@ -30,29 +30,41 @@ function get_wordpress_path( $path = '' ) {
 }
 
 /**
- * Resolve path in wpassure.json replacing variables %WP_ROOT%
+ * Resolve absolute path that contains ../ or ./
  *
- * @param  string $path Path to dir or file
- * @param  string $wpassure_dir WP Assure directory or file
+ * @param string $path Path string
  * @return string
  */
-function resolve_wpassure_path( $path, $wpassure_dir ) {
-	if ( preg_match( '#\.json$#i', $wpassure_dir ) ) {
-		$wpassure_dir = dirname( $wpassure_dir );
+function resolve_absolute_path( $path ) {
+	// Remove spaces
+	$path = str_replace( ' ', '', $path );
+
+	// Remove trailing .
+	$path = preg_replace( '#(.*)/.$#', '$1', $path );
+
+	// Remove /./
+	$path = str_replace( '/./', '/', $path );
+
+	// Remove //
+	$path = preg_replace( '#[/]+#', '/', $path );
+
+	$path_parts = explode( '/', $path );
+
+	$final_path_parts = [];
+
+	foreach ( $path_parts as $path_part ) {
+		if ( '..' === $path_part ) {
+			array_pop( $final_path_parts );
+		} elseif ( ! empty( $path_part ) ) {
+			$final_path_parts[] = $path_part;
+		}
 	}
 
-	// Add trailing slash if not a file
-	if ( ! preg_match( '#\..+$#', $path ) ) {
-		$path = trailingslash( $path );
+	if ( empty( $final_path_parts ) ) {
+		return '/';
 	}
 
-	if ( false === stripos( $path, '%WP_ROOT%' ) ) {
-		$path = trailingslash( $wpassure_dir ) . $path;
-	} else {
-		$path = preg_replace( '#^/?%WP_ROOT%/?(.*)$#i', '/var/www/html/$1', $path );
-	}
-
-	return $path;
+	return '/' . implode( '/', $final_path_parts ) . '/';
 }
 
 /**
