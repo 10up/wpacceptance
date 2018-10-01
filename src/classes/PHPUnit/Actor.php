@@ -545,7 +545,7 @@ class Actor {
 	public function click( $element ) {
 		try {
 			$this->getElement( $element )->click();
-		} catch( UnknownServerException $e ) {
+		} catch ( UnknownServerException $e ) {
 			// Weird hack to get around inconsistent click behavior
 			$this->executeJavaScript( 'window.scrollTo(0, (window.document.documentElement.scrollTop + 100))' );
 
