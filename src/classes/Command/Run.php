@@ -99,14 +99,14 @@ class Run extends Command {
 
 		$suite_config = Config::create( $suite_config_directory );
 
+		if ( false === $suite_config ) {
+			return 1;
+		}
+
 		$test_clean_db = $input->getOption( 'test_clean_db' );
 
 		if ( ! empty( $test_clean_db ) ) {
 			$suite_config['test_clean_db'] = true;
-		}
-
-		if ( false === $suite_config ) {
-			return 1;
 		}
 
 		$snapshot_id = false;
