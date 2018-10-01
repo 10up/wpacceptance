@@ -55,7 +55,7 @@ class Actor {
 	 * @access private
 	 * @var \Facebook\WebDriver\Remote\RemoteWebDriver
 	 */
-	private $webdriver = null;
+	private $web_driver = null;
 
 	/**
 	 * Test case instance.
@@ -99,10 +99,10 @@ class Actor {
 	 * Set a new instance of a web driver.
 	 *
 	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebDriver $webdriver A web driver instance.
+	 * @param \Facebook\WebDriver\Remote\RemoteWebDriver $web_driver A web driver instance.
 	 */
-	public function setWebDriver( $webdriver ) {
-		$this->webdriver = $webdriver;
+	public function setWebDriver( $web_driver ) {
+		$this->web_driver = $web_driver;
 	}
 
 	/**
@@ -113,11 +113,11 @@ class Actor {
 	 * @return \Facebook\WebDriver\Remote\RemoteWebDriver An instance of a web driver.
 	 */
 	public function getWebDriver() {
-		if ( ! $this->webdriver ) {
+		if ( ! $this->web_driver ) {
 			throw new Exception( 'WebDriver is not provided.' );
 		}
 
-		return $this->webdriver;
+		return $this->web_driver;
 	}
 
 	/**
@@ -251,9 +251,9 @@ class Actor {
 	 * @access public
 	 */
 	public function moveBack() {
-		$webdriver = $this->getWebDriver();
-		$webdriver->navigate()->back();
-		Log::instance()->write( 'Back to ' . $webdriver->getCurrentURL(), 1 );
+		$web_driver = $this->getWebDriver();
+		$web_driver->navigate()->back();
+		Log::instance()->write( 'Back to ' . $web_driver->getCurrentURL(), 1 );
 	}
 
 	/**
@@ -262,9 +262,9 @@ class Actor {
 	 * @access public
 	 */
 	public function moveForward() {
-		$webdriver = $this->getWebDriver();
-		$webdriver->navigate()->forward();
-		Log::instance()->write( 'Forward to ' . $webdriver->getCurrentURL(), 1 );
+		$web_driver = $this->getWebDriver();
+		$web_driver->navigate()->forward();
+		Log::instance()->write( 'Forward to ' . $web_driver->getCurrentURL(), 1 );
 	}
 
 	/**
@@ -310,8 +310,8 @@ class Actor {
 			$page .= '?' . $url_parts['query'];
 		}
 
-		$webdriver = $this->getWebDriver();
-		$webdriver->get( $page );
+		$web_driver = $this->getWebDriver();
+		$web_driver->get( $page );
 
 		Log::instance()->write( 'Navigating to URL: ' . $page, 1 );
 	}
@@ -326,8 +326,8 @@ class Actor {
 	public function resizeWindow( $width, $height ) {
 		$dimension = new \Facebook\WebDriver\WebDriverDimension( $width, $height );
 
-		$webdriver = $this->getWebDriver();
-		$webdriver->manage()->window()->setSize( $dimension );
+		$web_driver = $this->getWebDriver();
+		$web_driver->manage()->window()->setSize( $dimension );
 	}
 
 	/**
@@ -353,9 +353,9 @@ class Actor {
 	 * @param  integer $max_wait  Max wait time in seconds
 	 */
 	public function waitUntilElementContainsText( $text, $element_path, $max_wait = 10 ) {
-		$webdriver = $this->getWebDriver();
+		$web_driver = $this->getWebDriver();
 
-		$webdriver->wait( $max_wait )->until( WebDriverExpectedCondition::textToBePresentInElement( WebDriverBy::cssSelector( $element_path ), $text ) );
+		$web_driver->wait( $max_wait )->until( WebDriverExpectedCondition::textToBePresentInElement( WebDriverBy::cssSelector( $element_path ), $text ) );
 	}
 
 	/**
@@ -365,9 +365,9 @@ class Actor {
 	 * @param  integer $max_wait  Max wait time in seconds
 	 */
 	public function waitUntilTitleContains( $title, $max_wait = 10 ) {
-		$webdriver = $this->getWebDriver();
+		$web_driver = $this->getWebDriver();
 
-		$webdriver->wait( $max_wait )->until( WebDriverExpectedCondition::titleContains( $title ) );
+		$web_driver->wait( $max_wait )->until( WebDriverExpectedCondition::titleContains( $title ) );
 	}
 
 	/**
@@ -377,9 +377,9 @@ class Actor {
 	 * @param  integer $max_wait  Max wait time in seconds
 	 */
 	public function waitUntilElementVisible( $element_path, $max_wait = 10 ) {
-		$webdriver = $this->getWebDriver();
+		$web_driver = $this->getWebDriver();
 
-		$webdriver->wait( $max_wait )->until( WebDriverExpectedCondition::visibilityOfElementLocated( WebDriverBy::cssSelector( $element_path ) ) );
+		$web_driver->wait( $max_wait )->until( WebDriverExpectedCondition::visibilityOfElementLocated( WebDriverBy::cssSelector( $element_path ) ) );
 	}
 
 	/**
@@ -389,9 +389,9 @@ class Actor {
 	 * @param  integer $max_wait  Max wait time in seconds
 	 */
 	public function waitUntilElementEnabled( $element_path, $max_wait = 10 ) {
-		$webdriver = $this->getWebDriver();
+		$web_driver = $this->getWebDriver();
 
-		$webdriver->wait( $max_wait )->until(
+		$web_driver->wait( $max_wait )->until(
 			function() use ( $element_path ) {
 				$element = $this->getElement( $element_path );
 
@@ -425,16 +425,16 @@ class Actor {
 	 * @param array  $params Additional parameters for a cookie.
 	 */
 	public function setCookie( $name, $value, array $params = array() ) {
-		$webdriver = $this->getWebDriver();
+		$web_driver = $this->getWebDriver();
 
 		$params['name']  = $name;
 		$params['value'] = $value;
 
 		if ( ! isset( $params['domain'] ) ) {
-			$params['domain'] = parse_url( $webdriver->getCurrentURL(), PHP_URL_HOST );
+			$params['domain'] = parse_url( $web_driver->getCurrentURL(), PHP_URL_HOST );
 		}
 
-		$webdriver->manage()->addCookie( $params );
+		$web_driver->manage()->addCookie( $params );
 	}
 
 	/**
@@ -445,8 +445,8 @@ class Actor {
 	 * @return mixed A cookie value.
 	 */
 	public function getCookie( $name ) {
-		$webdriver = $this->getWebDriver();
-		$cookies   = $webdriver->manage()->getCookies();
+		$web_driver = $this->getWebDriver();
+		$cookies   = $web_driver->manage()->getCookies();
 		foreach ( $cookies as $cookie ) {
 			if ( $cookie['name'] === $name ) {
 				return $cookie['value'];
@@ -463,8 +463,8 @@ class Actor {
 	 * @param string $name A cookie name to reset.
 	 */
 	public function resetCookie( $name ) {
-		$webdriver = $this->getWebDriver();
-		$webdriver->manage()->deleteCookieNamed( $name );
+		$web_driver = $this->getWebDriver();
+		$web_driver->manage()->deleteCookieNamed( $name );
 	}
 
 	/**
@@ -474,8 +474,8 @@ class Actor {
 	 * @return \Facebook\WebDriver\Remote\RemoteWebElement An element instance.
 	 */
 	public function getElementContaining( $text ) {
-		$webdriver = $this->getWebDriver();
-		return $webdriver->findElement( WebDriverBy::xpath( "//*[contains(text(), '" . $text . "')]" ) );
+		$web_driver = $this->getWebDriver();
+		return $web_driver->findElement( WebDriverBy::xpath( "//*[contains(text(), '" . $text . "')]" ) );
 	}
 
 	/**
@@ -491,11 +491,11 @@ class Actor {
 			return $element;
 		}
 
-		$webdriver = $this->getWebDriver();
+		$web_driver = $this->getWebDriver();
 		$by        = $element instanceof WebDriverBy ? $element : WebDriverBy::cssSelector( $element );
 
 		try {
-			return $webdriver->findElement( $by );
+			return $web_driver->findElement( $by );
 		} catch ( NoSuchElementException $e ) {
 			$message = sprintf( 'No element found using %s "%s"', $by->getMechanism(), $by->getValue() );
 			throw new ExpectationFailedException( $message );
@@ -525,11 +525,11 @@ class Actor {
 			return $items;
 		}
 
-		$webdriver = $this->getWebDriver();
+		$web_driver = $this->getWebDriver();
 		$by        = $elements instanceof WebDriverBy ? $elements : WebDriverBy::cssSelector( $elements );
 
 		try {
-			return $webdriver->findElements( $by );
+			return $web_driver->findElements( $by );
 		} catch ( NoSuchElementException $e ) {
 			$message = sprintf( 'No elements found using %s "%s"', $by->getMechanism(), $by->getValue() );
 			throw new ExpectationFailedException( $message );
