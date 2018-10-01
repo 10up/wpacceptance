@@ -67,9 +67,17 @@ class Config implements ArrayAccess {
 		// $config['path'] === path to wpassure.json direcfory in host machine
 		$config['path'] = Utils\trailingslash( dirname( $file_path ) );
 
+		if ( '.' === trim( $config['repo_path'] ) || './' === trim( $config['repo_path'] ) ) {
+			unset( $config['repo_path'] );
+		}
+
 		if ( empty( $config['repo_path'] ) ) {
 			$config['host_repo_path'] = $config['path'];
 		} else {
+			if ( preg_match( '#.*/.$#', $config['repo_path'] ) ) {
+				$config['repo_path'] = preg_replace( '#(.*)/.$#', '$1', $config['repo_path'] );
+			}
+
 			if ( false === stripos( $config['repo_path'], '%WP_ROOT%' ) ) {
 				$config['host_repo_path'] = Utils\trailingslash( realpath( $config['path'] . $config['repo_path'] ) );
 			} else {
