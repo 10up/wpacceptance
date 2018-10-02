@@ -430,7 +430,15 @@ class Environment {
 
 		$stream->onStdout(
 			function( $stdout ) use ( &$suite_config_files ) {
-				$suite_config_files[] = trim( $stdout );
+				$files = preg_split( '/\R/', $stdout );
+
+				foreach ( $files as $file ) {
+					$file = trim( $file );
+
+					if ( ! empty( $file ) ) {
+						$suite_config_files[] = $file;
+					}
+				}
 			}
 		);
 
