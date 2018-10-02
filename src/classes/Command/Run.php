@@ -60,6 +60,14 @@ class Run extends Command {
 	/**
 	 * Execute command
 	 *
+	 * Exit codes:
+	 * 0 -> All tests passed
+	 * 1 -> Tests failed
+	 * 2 -> Environment/snapshot issues
+	 * 3 -> Config issues
+	 * 4 -> Success but could not push snapshot to repo
+	 *
+	 *
 	 * @param  InputInterface  $input Console input
 	 * @param  OutputInterface $output Console output
 	 */
@@ -70,14 +78,14 @@ class Run extends Command {
 
 		if ( ! function_exists( 'mysqli_init' ) ) {
 			Log::instance()->write( 'WP Assure requires the mysqli PHP extension is installed.', 0, 'error' );
-			return 1;
+			return 3;
 		}
 
 		$connection = Connection::instance()->connect();
 
 		if ( \WPSnapshots\Utils\is_error( $connection ) ) {
 			Log::instance()->write( 'Could not connect to WP Snapshots repository.', 0, 'error' );
-			return 1;
+			return 2;
 		}
 
 		$local = $input->getOption( 'local' );
@@ -91,7 +99,7 @@ class Run extends Command {
 
 			if ( empty( $wp_directory ) ) {
 				Log::instance()->write( 'This does not seem to be a WordPress installation. No wp-config.php found in directory tree.', 0, 'error' );
-				return 1;
+				return 3;
 			}
 		}
 
@@ -100,7 +108,7 @@ class Run extends Command {
 		$suite_config = Config::create( $suite_config_directory );
 
 		if ( false === $suite_config ) {
-			return 1;
+			return 3;
 		}
 
 		$test_clean_db = $input->getOption( 'test_clean_db' );
@@ -125,13 +133,13 @@ class Run extends Command {
 
 				if ( ! is_a( $snapshot, '\WPSnapshots\Snapshot' ) ) {
 					Log::instance()->write( 'Could not download snapshot. Does it exist?', 0, 'error' );
-					return 1;
+					return 2;
 				}
 			}
 		} else {
 			if ( empty( $local ) ) {
 				Log::instance()->write( 'You must either provide --snapshot_id, have a snapshot ID in wpassure.json, or provide the --local parameter.', 0, 'error' );
-				return 1;
+				return 3;
 			}
 
 			Log::instance()->write( 'Creating snapshot...' );
@@ -152,7 +160,7 @@ class Run extends Command {
 
 			if ( ! is_a( $snapshot, '\WPSnapshots\Snapshot' ) ) {
 				Log::instance()->write( 'Could not create snapshot.', 0, 'error' );
-				return 1;
+				return 2;
 			}
 
 			$snapshot_id = $snapshot->id;
@@ -165,7 +173,7 @@ class Run extends Command {
 		$environment = EnvironmentFactory::create( $snapshot_id, $suite_config, $input->getOption( 'preserve_containers' ) );
 
 		if ( ! $environment ) {
-			return 1;
+			return 2;
 		}
 
 		Log::instance()->write( 'Running tests...' );
@@ -251,7 +259,7 @@ class Run extends Command {
 					Log::instance()->write( 'Could not push snapshot to repository.', 0, 'error' );
 					$environment->destroy();
 
-					return 1;
+					return 4;
 				}
 			}
 		}
