@@ -313,8 +313,6 @@ class Actor {
 		$web_driver = $this->getWebDriver();
 		$web_driver->get( $page );
 
-		$this->waitUntilPageSourceContains( '<body' );
-
 		Log::instance()->write( 'Navigating to URL: ' . $page, 1 );
 	}
 

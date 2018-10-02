@@ -256,7 +256,13 @@ class Run extends Command {
 			}
 		}
 
-		$output->writeln( 'Done.', 0, 'success' );
+		if ( $error ) {
+			$output->writeln( 'Done with errors.', 0, 'error' );
+			return 1;
+		} else {
+			$output->writeln( 'Done.', 0, 'success' );
+			return 0;
+		}
 	}
 
 }
