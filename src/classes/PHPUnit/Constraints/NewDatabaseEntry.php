@@ -14,8 +14,6 @@ use WPAssure\EnvironmentFactory;
  */
 class NewDatabaseEntry extends \WPAssure\PHPUnit\Constraint {
 
-	use Traits\StringOrPattern;
-
 	/**
 	 * Old newest DB entry ID
 	 *

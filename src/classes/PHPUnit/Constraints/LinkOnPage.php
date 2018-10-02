@@ -9,13 +9,12 @@ namespace WPAssure\PHPUnit\Constraints;
 
 use Facebook\WebDriver\Exception\NoSuchElementException;
 use Facebook\WebDriver\WebDriverBy;
+use WPAssure\Utils;
 
 /**
  * Constraint class
  */
 class LinkOnPage extends \WPAssure\PHPUnit\Constraint {
-
-	use Traits\StringOrPattern;
 
 	/**
 	 * A text of a link to look for.
@@ -64,7 +63,7 @@ class LinkOnPage extends \WPAssure\PHPUnit\Constraint {
 			if ( ! empty( $this->url ) ) {
 				foreach ( $elements as $element ) {
 					$href = $element->getAttribute( 'href' );
-					if ( $this->findMatch( $href, $this->url ) ) {
+					if ( Utils\find_match( $href, $this->url ) ) {
 						return self::ACTION_SEE === $this->action;
 					}
 				}

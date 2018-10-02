@@ -7,12 +7,12 @@
 
 namespace WPAssure\PHPUnit\Constraints;
 
+use WPAssure\Utils;
+
 /**
  * Constraint class
  */
 class PageSourceContains extends \WPAssure\PHPUnit\Constraint {
-
-	use Traits\StringOrPattern;
 
 	/**
 	 * The text to look for.
@@ -51,7 +51,7 @@ class PageSourceContains extends \WPAssure\PHPUnit\Constraint {
 			return self::ACTION_DONTSEE === $this->action;
 		}
 
-		$found = $this->findMatch( $content, $this->text );
+		$found = Utils\find_match( $content, $this->text );
 
 		return ( $found && self::ACTION_SEE === $this->action ) || ( ! $found && self::ACTION_DONTSEE === $this->action );
 	}

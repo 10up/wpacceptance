@@ -11,7 +11,7 @@
 class AdminPostTest extends \WPAssure\PHPUnit\TestCase {
 
 	/**
-	 * On small screen, menu is hidden initially and opens on click
+	 * Test that post publishes
 	 */
 	public function testPostPublish() {
 		$I = $this->getAnonymousUser();
@@ -19,8 +19,6 @@ class AdminPostTest extends \WPAssure\PHPUnit\TestCase {
 		$I->loginAs( 'wpsnapshots' );
 
 		$I->moveTo( 'wp-admin/post-new.php' );
-
-		$I->waitUntilElementVisible( '#title' );
 
 		$I->fillField( '#title', 'Test Post' );
 

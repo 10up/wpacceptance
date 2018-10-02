@@ -12,8 +12,7 @@ namespace WPAssure\PHPUnit\Constraints;
  */
 class AttributeContains extends \WPAssure\PHPUnit\Constraint {
 
-	use Traits\StringOrPattern,
-		Traits\ElementToMessage;
+	use Traits\ElementToMessage;
 
 	/**
 	 * The element to look for.

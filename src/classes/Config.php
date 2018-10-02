@@ -71,6 +71,8 @@ class Config implements ArrayAccess {
 			$config['host_repo_path'] = $config['path'];
 		} else {
 			if ( '.' === trim( $config['repo_path'] ) || './' === trim( $config['repo_path'] ) ) {
+				$config['host_repo_path'] = $config['path'];
+
 				unset( $config['repo_path'] );
 			} else {
 				if ( preg_match( '#.*/.$#', $config['repo_path'] ) ) {

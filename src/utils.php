@@ -8,6 +8,19 @@
 namespace WPAssure\Utils;
 
 /**
+ * Check if content contains a substring or matches a pattern.
+ *
+ * @param string $content The content to search in.
+ * @param string $string_or_pattern The string to search or pattern to match.
+ * @return boolean TRUE if the content contains a needle, otherwise FALSE.
+ */
+function find_match( $content, $string_or_pattern ) {
+	return preg_match( '#^/.*/$#', $string_or_pattern )
+		? preg_match( $string_or_pattern, $content ) > 0
+		: mb_stripos( $content, $string_or_pattern ) !== false;
+}
+
+/**
  * Find root of WP install (where wp-config.php resides)
  *
  * @param  string $path Directory to start searching from. Defaults to cwd

@@ -8,14 +8,14 @@
 namespace WPAssure\PHPUnit\Constraints;
 
 use PHPUnit\Framework\ExpectationFailedException;
+use WPAssure\Utils;
 
 /**
  * Constraint class
  */
 class PageContains extends \WPAssure\PHPUnit\Constraint {
 
-	use Traits\StringOrPattern,
-		Traits\ElementToMessage;
+	use Traits\ElementToMessage;
 
 	/**
 	 * The text to look for.
@@ -72,7 +72,7 @@ class PageContains extends \WPAssure\PHPUnit\Constraint {
 				return self::ACTION_DONTSEE === $this->action;
 			}
 
-			$found = $this->findMatch( $content, $this->text );
+			$found = Utils\find_match( $content, $this->text );
 
 			return ( $found && self::ACTION_SEE === $this->action ) || ( ! $found && self::ACTION_DONTSEE === $this->action );
 		}

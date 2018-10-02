@@ -20,8 +20,6 @@ class AdminMediaTest extends \WPAssure\PHPUnit\TestCase {
 
 		$I->moveTo( 'wp-admin/post-new.php' );
 
-		$I->waitUntilElementVisible( '#title' );
-
 		$I->fillField( '#title', 'Test Post' );
 
 		// Set featured image

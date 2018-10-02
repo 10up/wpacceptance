@@ -313,6 +313,8 @@ class Actor {
 		$web_driver = $this->getWebDriver();
 		$web_driver->get( $page );
 
+		$this->waitUntilPageSourceContains( '<body' );
+
 		Log::instance()->write( 'Navigating to URL: ' . $page, 1 );
 	}
 
@@ -380,6 +382,25 @@ class Actor {
 		$web_driver = $this->getWebDriver();
 
 		$web_driver->wait( $max_wait )->until( WebDriverExpectedCondition::visibilityOfElementLocated( WebDriverBy::cssSelector( $element_path ) ) );
+	}
+
+	/**
+	 * Wait until page source contains text/regex
+	 *
+	 * @param  string  $text Text or regex to look for
+	 * @param  integer $max_wait  Max wait time in seconds
+	 */
+	public function waitUntilPageSourceContains( $text, $max_wait = 10 ) {
+		$web_driver = $this->getWebDriver();
+
+		$web_driver->wait( $max_wait )->until(
+			function() use ( $text ) {
+				$source = $this->getPageSource();
+
+				return Utils\find_match( $source, $text );
+			},
+			'Error waiting for page source to contain text.'
+		);
 	}
 
 	/**
@@ -667,8 +688,6 @@ class Actor {
 	 */
 	public function loginAs( $username, $password = 'password' ) {
 		$this->moveTo( 'wp-login.php' );
-
-		$this->waitUntilElementVisible( '#user_login' );
 
 		$this->setElementAttribute( '#user_login', 'value', $username );
 

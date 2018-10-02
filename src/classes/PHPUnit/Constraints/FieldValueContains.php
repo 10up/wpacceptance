@@ -8,14 +8,14 @@
 namespace WPAssure\PHPUnit\Constraints;
 
 use Facebook\WebDriver\WebDriverSelect;
+use WPAssure\Utils;
 
 /**
  * Constraint class
  */
 class FieldValueContains extends \WPAssure\PHPUnit\Constraint {
 
-	use Traits\StringOrPattern,
-		Traits\ElementToMessage;
+	use Traits\ElementToMessage;
 
 	/**
 	 * The element to look for.
@@ -77,10 +77,10 @@ class FieldValueContains extends \WPAssure\PHPUnit\Constraint {
 		$found = false;
 		if ( is_array( $content ) ) {
 			foreach ( $content as $option ) {
-				$found |= $this->findMatch( $option, $this->value );
+				$found |= Utils\find_match( $option, $this->value );
 			}
 		} else {
-			$found = $this->findMatch( $content, $this->value );
+			$found = Utils\find_match( $content, $this->value );
 		}
 
 		return ( $found && self::ACTION_SEE === $this->action ) || ( ! $found && self::ACTION_DONTSEE === $this->action );

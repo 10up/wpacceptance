@@ -7,12 +7,12 @@
 
 namespace WPAssure\PHPUnit\Constraints;
 
+use WPAssure\Utils;
+
 /**
  * Constraint class
  */
 class UrlContains extends \WPAssure\PHPUnit\Constraint {
-
-	use Traits\StringOrPattern;
 
 	/**
 	 * The text to look for.
@@ -47,7 +47,7 @@ class UrlContains extends \WPAssure\PHPUnit\Constraint {
 		$webdriver = $actor->getWebDriver();
 
 		$url   = trim( $webdriver->getCurrentURL() );
-		$found = $this->findMatch( $url, $this->text );
+		$found = Utils\find_match( $url, $this->text );
 
 		return ( $found && self::ACTION_SEE === $this->action ) || ( ! $found && self::ACTION_DONTSEE === $this->action );
 	}
