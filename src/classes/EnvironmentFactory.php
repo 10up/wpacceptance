@@ -56,8 +56,6 @@ class EnvironmentFactory {
 			register_shutdown_function( [ '\WPAssure\EnvironmentFactory', 'handleShutdown' ] );
 		}
 
-		return false;
-
 		self::$environments[] = $environment;
 
 		if ( ! $environment->createNetwork() ) {
