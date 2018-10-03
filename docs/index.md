@@ -289,7 +289,7 @@ sudo: required
 services: docker
 ```
 
-Make sure you replace `REPO_NAME` with your WP Snapshots repository name.
+Make sure you replace `REPO_NAME` with your WP Snapshots repository name. You will also need to define `AWS_ACCESS_KEY` and `SECRET_ACCESS_KEY` as hidden Travis environmental variables in your Travis project settings.
 
 Here is `run-wpassure.sh` which will retry WP Assure up to 3 times if environment errors occur:
 ```bash
