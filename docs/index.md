@@ -265,5 +265,46 @@ For detailed test examples, look at the [example test suite](https://github.com/
 * __wpassure init__ [--path] - Initialize a new test suite.
 	* `--path` - Optional path to init direftory.
 
+## Continuous Integration
 
+WP Assure is a great addition to your CI process.
 
+### Travis CI
+
+Here is an example `.travis.yml` that includes WP Assure:
+```yaml
+language: php
+php:
+- 7.2
+env:
+  global:
+  - WP_VERSION=master
+  - WP_VERSION=4.7
+before_script:
+- composer install
+script:
+- ./vendor/bin/wpsnapshots configure REPO_NAME --aws_key=$AWS_ACCESS_KEY --aws_secret=$SECRET_ACCESS_KEY --user_name=Travis --user_email=travis@10up.com
+- bash run-wpassure.sh
+sudo: required
+services: docker
+```
+
+Make sure you replace `REPO_NAME` with your WP Snapshots repository name.
+
+Here is `run-wpassure.sh` which will retry WP Assure up to 3 times if environment errors occur:
+```bash
+for i in 1 2 3; do
+	./vendor/bin/wpassure run
+
+	EXIT_CODE=$?
+
+	if [ $EXIT_CODE -gt 1 ]; then
+		echo "Retrying..."
+		sleep 3
+	else
+		break
+	fi
+done
+
+exit $EXIT_CODE
+```
