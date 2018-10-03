@@ -70,7 +70,11 @@ class Init extends Command {
 
 		Log::instance()->write( $config['path'] . 'wpassure.json created.', 0, 'success' );
 
-		$tests = Utils\normalize_path( rtrim( $tests, '*' ) );
+		$tests = Utils\normalize_path( $tests );
+
+		if ( preg_match( '#^.*?\.[^\./]+$#', $tests ) || preg_match( '#\*$#', $tests ) ) {
+			$tests = dirname( $tests );
+		}
 
 		if ( ! file_exists( $tests ) && mkdir( $tests ) ) {
 			Log::instance()->write( $tests . ' directory created.', 0, 'success' );
