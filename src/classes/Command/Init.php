@@ -61,7 +61,7 @@ class Init extends Command {
 
 		$tests = $helper->ask( $input, $output, new Question( 'Tests location (defaults to ./tests/*.php): ', './tests/*.php' ) );
 
-		$config['tests'] = $tests;
+		$config_array['tests'] = [ $tests ];
 
 		$config_array['test_clean_db'] = $helper->ask( $input, $output, new ConfirmationQuestion( 'Do you want to require a fresh database for each test? This will make tests slower but is needed if you intend on modifying the database during tests. (yes or no) ', true ) );
 
@@ -70,20 +70,22 @@ class Init extends Command {
 
 		Log::instance()->write( $config['path'] . 'wpassure.json created.', 0, 'success' );
 
-		$tests = Utils\normalize_path( $tests );
+		$test_dir = rtrim( Utils\normalize_path( $tests ), '/' );
 
-		if ( preg_match( '#^.*?\.[^\./]+$#', $tests ) || preg_match( '#\*$#', $tests ) ) {
-			$tests = dirname( $tests );
+		if ( preg_match( '#^.*?\.[^\./]+$#', $test_dir ) || preg_match( '#\*$#', $test_dir ) ) {
+			$test_dir = dirname( $test_dir );
 		}
 
-		if ( ! file_exists( $tests ) && mkdir( $tests ) ) {
+		$test_dir = $test_dir . '/';
+
+		if ( ! file_exists( $test_dir ) && @mkdir( $test_dir, 0775, true ) ) {
 			Log::instance()->write( $tests . ' directory created.', 0, 'success' );
 		}
 
-		if ( ! file_exists( $tests . 'ExampleTest.php' ) ) {
-			copy( WPASSURE_DIR . '/example/ExampleTest.php', $tests . 'ExampleTest.php' );
-
-			Log::instance()->write( $tests . 'ExampleTest.php created.', 0, 'success' );
+		if ( file_exists( $test_dir ) && ! file_exists( $test_dir . 'ExampleTest.php' ) ) {
+			if ( @copy( WPASSURE_DIR . '/example/ExampleTest.php', $test_dir . 'ExampleTest.php' ) ) {
+				Log::instance()->write( $test_dir . 'ExampleTest.php created.', 0, 'success' );
+			}
 		}
 
 		Log::instance()->write( 'Done.', 0, 'success' );
