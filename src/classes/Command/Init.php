@@ -65,6 +65,10 @@ class Init extends Command {
 
 		$config_array['test_clean_db'] = $helper->ask( $input, $output, new ConfirmationQuestion( 'Do you want to require a fresh database for each test? This will make tests slower but is needed if you intend on modifying the database during tests. (yes or no) ', true ) );
 
+		$config_array['repo_path'] = $helper->ask( $input, $output, new Question( 'What is the path to the repository root? This can be relative to the current directory or absolute using the special variable %WP_ROOT% like /%WP_ROOT%/wp-content. Default is the current directory: ', '.' ) );
+
+		$config_array['snapshot_id'] = $helper->ask( $input, $output, new Question( 'Do you have an existing snapshot ID you would like to test against? Default is none: ', false ) );
+
 		$config = new Config( $config_array );
 		$config->write();
 

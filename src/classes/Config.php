@@ -101,6 +101,10 @@ class Config implements ArrayAccess {
 		$file_config = $this->config;
 		unset( $file_config['path'] );
 
+		if ( isset( $file_config['snapshot_id'] ) && empty( $file_config['snapshot_id'] ) ) {
+			unset( $file_config['snapshot_id'] );
+		}
+
 		file_put_contents( Utils\trailingslash( $this->config['path'] ) . 'wpassure.json', json_encode( $file_config, JSON_PRETTY_PRINT ) );
 	}
 
