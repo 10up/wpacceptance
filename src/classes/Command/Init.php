@@ -83,7 +83,7 @@ class Init extends Command {
 		$test_dir = $test_dir . '/';
 
 		if ( ! file_exists( $test_dir ) && @mkdir( $test_dir, 0775, true ) ) {
-			Log::instance()->write( $tests . ' directory created.', 0, 'success' );
+			Log::instance()->write( $test_dir . ' directory created.', 0, 'success' );
 		}
 
 		if ( file_exists( $test_dir ) && ! file_exists( $test_dir . 'ExampleTest.php' ) ) {
