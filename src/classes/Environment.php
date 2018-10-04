@@ -407,7 +407,9 @@ class Environment {
 		/**
 		 * Create duplicate WP DB to dirty
 		 */
-		$this->makeCleanDB();
+		if ( empty( $this->suite_config['disable_clean_db'] ) ) {
+			$this->makeCleanDB();
+		}
 
 		/**
 		 * Determine where codebase is located in snapshot
@@ -522,12 +524,18 @@ class Environment {
 			foreach ( $this->suite_config['exclude'] as $exclude ) {
 				$exclude = preg_replace( '#^\.?/(.*)$#i', '$1', $exclude );
 
-				if ( $this->snapshot_repo_path === $this->snapshot_wpassure_path ) {
-					$excludes .= '--exclude="' . $exclude . '" ';
+				if ( false !== stripos( $exclude, '%REPO_ROOT%' ) ) {
+					// Exclude contains %REPO_ROOT%
+					$excludes .= '--exclude="' . preg_replace( '#^/?%REPO_ROOT%/?(.*)$#i', '$1', $exclude ) . '" ';
 				} else {
-					$abs_exclude = Utils\resolve_absolute_path( $this->snapshot_wpassure_path . $exclude );
+					// Exclude is relative
+					if ( $this->snapshot_repo_path === $this->snapshot_wpassure_path ) {
+						$excludes .= '--exclude="' . $exclude . '" ';
+					} else {
+						$abs_exclude = Utils\resolve_absolute_path( $this->snapshot_wpassure_path . $exclude );
 
-					$excludes .= '--exclude="' . str_replace( Utils\trailingslash( $this->snapshot_repo_path ), '', $abs_exclude ) . '" ';
+						$excludes .= '--exclude="' . str_replace( Utils\trailingslash( $this->snapshot_repo_path ), '', $abs_exclude ) . '" ';
+					}
 				}
 			}
 		}

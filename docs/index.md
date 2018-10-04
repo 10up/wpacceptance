@@ -124,13 +124,17 @@ Here's what `wpassure.json` looks like
  	],
 	"snapshot_id": "...",
 	"exclude": [
-		...
+		"images",
+		"%REPO_ROOT%/node_modules",
+		"%REPO_ROOT%/vendor"
 	],
-	"test_clean_db": true,
+	"enforce_clean_db": true,
+	"disable_clean_db": false,
 	"bootstrap": "./bootstrap.php",
 	"repo_path": "%WP_ROOT%/wp-content",
 	"before_scripts": [
-		...
+		"composer install",
+		"npm run build"
 	]
 }
 ```
@@ -138,8 +142,9 @@ Here's what `wpassure.json` looks like
 * `name` (required) - Name of test suite.
 * `tests` (required) - This is an array of path(s) to tests. Each path in the array is processed via PHP `glob`. `*.php` will include every PHP file in the directory. Sholud be relative to `wpassure.json`.
 * `snapshot_id` - "Primary" snapshot to test again. If the `run` command is executed without the `--local` flag, this snapshot ID will be used.
-* `exclude` - WP Assure copys all the files in your repository into the snapshot for testing. There may be directories you want to include to speed things up e.g. `node_modules` and `vendor`. Should be relative `wp_assure.json`.
-* `test_clean_db` - If set to `true`, a "clean" DB will be used for each test in the suite. "clean" means the untampered DB from the snapshot.
+* `exclude` - WP Assure copys all the files in your repository into the snapshot for testing. There may be directories you want to include to speed things up e.g. `node_modules` and `vendor`. Should be relative `wp_assure.json` or use variable `%REPO_ROOT%` to make absolute.
+* `enforce_clean_db` - If set to `true`, a "clean" DB will be used for each test in the suite. "clean" means the untampered DB from the snapshot.
+* `disable_clean_db` - Will force WP Snapshots to disable "clean" DB functionality. By default, a clean DB is created even if `enforce_clean_db` is false since there is a test method for refreshing the DB.
 * `bootstrap` - Path to bootstrap file. This file will be executed before test execution begins. Should be relative to `wpassure.json`.
 * `repo_path` - The path to the root of your repository. WP Assure needs to know where to insert your codebase into the snapshot. If `repo_path` is not provided, it assumes `wpassure.json` is in the root of your repo. `repo_path` can be relative (from your `wpassure.json` file) or you can use the `%WP_ROOT%` variable to set the path.
 * `before_scripts` - An array of scripts to run in the same directory as `wpassure.json` before running tests.
@@ -249,7 +254,7 @@ For detailed test examples, look at the [example test suite](https://github.com/
 
 ## Commands
 
-* __wpassure run__ [&lt;PATH TO wpassure.json DIRECTORY&gt;] [--local] [--snapshot_id=&lt;WPSNAPSHOT ID&gt;] [--test_clean_db] [--preserve_containers] [--db_host=&lt;DATABASE HOST&gt;] [--verbose] [--wp_directory=&lt;PATH TO WP DIRECTORY&gt;] [--save] [--force_save] [--filter_tests=&lt;TEST FILTER&gt;] [--filter_test_files=<TEST FILE FILTER>] - Runs a test suite.
+* __wpassure run__ [&lt;PATH TO wpassure.json DIRECTORY&gt;] [--local] [--snapshot_id=&lt;WPSNAPSHOT ID&gt;] [--enforce_clean_db] [--preserve_containers] [--db_host=&lt;DATABASE HOST&gt;] [--verbose] [--wp_directory=&lt;PATH TO WP DIRECTORY&gt;] [--save] [--force_save] [--filter_tests=&lt;TEST FILTER&gt;] [--filter_test_files=<TEST FILE FILTER>] - Runs a test suite.
 	* `<PATH TO wpassure.json DIRECTORY>` - Path to `wpassure.json`, defaults to current working directory.
 	* `--local` - Runs your test suite against your local environment.
 	 * `--verbose`, `-v`, `-vv`, `-vvv` - Run with various degrees of verbosity.
@@ -257,7 +262,7 @@ For detailed test examples, look at the [example test suite](https://github.com/
 	* `--force_save` - Save snapshot ID to `wpassure.json` and push snapshot upstream no matter what.
 	* `--wp_directory` - Path to WordPress. If unset, will search up the directory tree until wp-config.php is found
 	* `--snapshot_id` - Optionally run tests against a snapshot ID.
-	* `--test_clean_db` - Use clean database for each test.
+	* `--enforce_clean_db` - Use clean database for each test.
 	* `--preserve_containers` - Don't stop/remove containers on run completion.
 	* `--filter_tests` - Filter tests to run. Is analagous to PHPUnit --filter.
 	* `--filter_test_files` - Comma separate test files to execute. If used all other test files will be ignored.

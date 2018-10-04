@@ -53,7 +53,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase {
 
 			$config = EnvironmentFactory::get()->getSuiteConfig();
 
-			if ( ! empty( $config['test_clean_db'] ) ) {
+			if ( ! empty( $config['enforce_clean_db'] ) && empty( $config['disable_clean_db'] ) ) {
 				Log::instance()->write( 'Setting up clean database.', 1 );
 				EnvironmentFactory::get()->makeCleanDB();
 			}

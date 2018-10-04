@@ -41,7 +41,7 @@ class Run extends Command {
 		$this->addOption( 'preserve_containers', false, InputOption::VALUE_NONE, "Don't destroy containers after completion." );
 
 		$this->addOption( 'local', false, InputOption::VALUE_NONE, 'Run tests against local WordPress install.' );
-		$this->addOption( 'test_clean_db', false, InputOption::VALUE_NONE, 'Ensure each test has a clean version of the snapshot database.' );
+		$this->addOption( 'enforce_clean_db', false, InputOption::VALUE_NONE, 'Ensure each test has a clean version of the snapshot database.' );
 		$this->addOption( 'save', false, InputOption::VALUE_NONE, 'If tests are successful, save snapshot ID to wpassure.json and push it to the remote repository.' );
 		$this->addOption( 'force_save', false, InputOption::VALUE_NONE, 'No matter the outcome of the tests, save snapshot ID to wpassure.json and push it to the remote repository.' );
 
@@ -111,10 +111,10 @@ class Run extends Command {
 			return 3;
 		}
 
-		$test_clean_db = $input->getOption( 'test_clean_db' );
+		$enforce_clean_db = $input->getOption( 'enforce_clean_db' );
 
-		if ( ! empty( $test_clean_db ) ) {
-			$suite_config['test_clean_db'] = true;
+		if ( ! empty( $enforce_clean_db ) ) {
+			$suite_config['enforce_clean_db'] = true;
 		}
 
 		$snapshot_id = false;
@@ -146,15 +146,19 @@ class Run extends Command {
 
 			$snapshot = Snapshot::create(
 				[
-					'path'            => $wp_directory,
-					'db_host'         => $input->getOption( 'db_host' ),
-					'db_name'         => $input->getOption( 'db_name' ),
-					'db_user'         => $input->getOption( 'db_user' ),
-					'db_password'     => $input->getOption( 'db_password' ),
-					'project'         => 'wpassure-' . str_replace( ' ', '-', trim( strtolower( $suite_config['name'] ) ) ),
-					'description'     => 'WP Assure snapshot',
-					'no_scrub'        => false,
-					'exclude_uploads' => false,
+					'path'        => $wp_directory,
+					'db_host'     => $input->getOption( 'db_host' ),
+					'db_name'     => $input->getOption( 'db_name' ),
+					'db_user'     => $input->getOption( 'db_user' ),
+					'db_password' => $input->getOption( 'db_password' ),
+					'project'     => 'wpassure-' . str_replace( ' ', '-', trim( strtolower( $suite_config['name'] ) ) ),
+					'description' => 'WP Assure snapshot',
+					'no_scrub'    => false,
+					'exclude'     => [
+						'vendor',
+						'node_modules',
+						'bower_components',
+					],
 				]
 			);
 

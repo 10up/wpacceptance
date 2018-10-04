@@ -37,6 +37,12 @@ trait Database {
 	 * @param  boolean $force Force new DB to be used
 	 */
 	protected function ensureCleanDatabase( $force = false ) {
+		$config = EnvironmentFactory::get()->getSuiteConfig();
+
+		if ( ! empty( $config['disable_clean_db'] ) ) {
+			return;
+		}
+
 		$new_last_modifying_query = $this->getLastModifyingQuery();
 
 		if ( $force ) {
