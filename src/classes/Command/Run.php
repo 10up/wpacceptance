@@ -184,6 +184,8 @@ class Run extends Command {
 				return 2;
 			}
 		} else {
+			Log::instance()->write( 'Setting up environment...' );
+
 			$environment = EnvironmentFactory::createFromId( $environment_id, $input->getOption( 'preserve_containers' ) );
 
 			if ( ! $environment ) {
