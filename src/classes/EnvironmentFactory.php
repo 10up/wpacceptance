@@ -111,7 +111,7 @@ class EnvironmentFactory {
 			return false;
 		}
 
-		if ( ! $environment->mountRepository() ) {
+		if ( ! $environment->insertRepo() ) {
 			return false;
 		}
 
