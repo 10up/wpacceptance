@@ -42,6 +42,37 @@ class EnvironmentFactory {
 	}
 
 	/**
+	 * Build a environment object around an existing environment
+	 *
+	 * @param  string $environment_id Environment ID
+	 */
+	public static function createFromId( $environment_id, $preserve_containers = false ) {
+		$environment = new Environment( null, null, $preserve_containers );
+
+		if ( empty( self::$environments ) ) {
+			register_shutdown_function( [ '\WPAssure\EnvironmentFactory', 'handleShutdown' ] );
+		}
+
+		$environment->initiateExistingEnvironment( $environment_id );
+
+		if ( ! $environment->insertRepo() ) {
+			return false;
+		}
+
+		if ( ! $environment->setupMySQL() ) {
+			return false;
+		}
+
+		if ( ! $environment->runBeforeScripts() ) {
+			return false;
+		}
+
+		self::$environments[] = $environment;
+
+		return $environment;
+	}
+
+	/**
 	 * Create environment
 	 *
 	 * @param  string  $snapshot_id WPSnapshot ID to load into environment
@@ -55,8 +86,6 @@ class EnvironmentFactory {
 		if ( empty( self::$environments ) ) {
 			register_shutdown_function( [ '\WPAssure\EnvironmentFactory', 'handleShutdown' ] );
 		}
-
-		self::$environments[] = $environment;
 
 		if ( ! $environment->createNetwork() ) {
 			return false;
@@ -78,9 +107,23 @@ class EnvironmentFactory {
 			return false;
 		}
 
+		if ( ! $environment->setupMySQL() ) {
+			return false;
+		}
+
+		if ( ! $environment->mountRepository() ) {
+			return false;
+		}
+
+		if ( ! $environment->writeMetaToWPContainer() ) {
+			return false;
+		}
+
 		if ( ! $environment->runBeforeScripts() ) {
 			return false;
 		}
+
+		self::$environments[] = $environment;
 
 		return $environment;
 	}

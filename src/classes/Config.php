@@ -142,6 +142,15 @@ class Config implements ArrayAccess {
 	}
 
 	/**
+	 * Get config array
+	 *
+	 * @return array
+	 */
+	public function toArray() {
+		return $this->config;
+	}
+
+	/**
 	 * Get array value by key
 	 *
 	 * @param  int|string $offset Array key

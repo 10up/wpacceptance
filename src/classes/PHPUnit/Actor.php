@@ -446,8 +446,8 @@ class Actor {
 	public function setCookie( $name, $value, array $params = array() ) {
 		$web_driver = $this->getWebDriver();
 
-		$params['name']  = $name;
-		$params['value'] = $value;
+		$params['name']  = (string) $name;
+		$params['value'] = (string) $value;
 
 		if ( ! isset( $params['domain'] ) ) {
 			$params['domain'] = parse_url( $web_driver->getCurrentURL(), PHP_URL_HOST );
