@@ -199,6 +199,7 @@ class Run extends Command {
 				$environment_suite_config['name'] !== $suite_config['name']
 				|| $environment_suite_config['repo_path'] !== $suite_config['repo_path']
 				|| $environment_suite_config['host_repo_path'] !== $suite_config['host_repo_path']
+				|| ( ! empty( $environment_suite_config['snapshot_id'] ) && $environment_suite_config['snapshot_id'] !== $suite_config['snapshot_id'] )
 			) {
 				Log::instance()->write( 'New suite configuration does not match old one.', 0, 'error' );
 				return 3;
