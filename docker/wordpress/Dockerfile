@@ -13,8 +13,6 @@ RUN composer global require 10up/wpsnapshots:dev-master
 
 RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
-COPY config/default.conf /etc/nginx/sites-available/default
-
 ENV NVM_DIR /usr/local/nvm
 RUN curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.1/install.sh | bash
 ENV NODE_VERSION v8.12.0

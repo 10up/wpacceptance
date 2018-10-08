@@ -687,6 +687,8 @@ class Actor {
 	public function loginAs( $username, $password = 'password' ) {
 		$this->moveTo( 'wp-login.php' );
 
+		$this->takeScreenshot();
+
 		$this->setElementAttribute( '#user_login', 'value', $username );
 
 		usleep( 100 );
