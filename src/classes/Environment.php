@@ -380,8 +380,8 @@ class Environment {
 			$site_host = parse_url( $site['site_url'], PHP_URL_HOST );
 
 			$map = [
-				'home_url' => str_replace( '//' . $home_host, '//wpassure.test:' . $this->wordpress_port, $site['home_url'] ),
-				'site_url' => str_replace( '//' . $site_host, '//wpassure.test:' . $this->wordpress_port, $site['site_url'] ),
+				'home_url' => preg_replace( '#^https?://' . $home_host . '(.*)$#i', 'http://wpassure.test:' . $this->wordpress_port . '$1', $site['home_url'] ),
+				'site_url' => preg_replace( '#^https?://' . $site_host . '(.*)$#i', 'http://wpassure.test:' . $this->wordpress_port . '$1', $site['site_url'] ),
 			];
 
 			if ( ! empty( $site['blog_id'] ) ) {
@@ -851,7 +851,6 @@ class Environment {
 				\WPSnapshots\Utils\get_snapshot_directory() . 'config.json:/root/.wpsnapshots/config.json',
 				$this->suite_config['host_repo_path'] . ':/root/repo',
 				WPASSURE_DIR . '/docker/mysql:/etc/mysql/conf.d',
-				WPASSURE_DIR . '/docker/wordpress/certs:/etc/nginx/certs',
 				WPASSURE_DIR . '/docker/wordpress/config/default.conf:/etc/nginx/sites-available/default',
 			]
 		);
