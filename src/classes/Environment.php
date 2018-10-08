@@ -852,7 +852,7 @@ class Environment {
 				$this->suite_config['host_repo_path'] . ':/root/repo',
 				WPASSURE_DIR . '/docker/mysql:/etc/mysql/conf.d',
 				WPASSURE_DIR . '/docker/wordpress/certs:/etc/nginx/certs',
-				WPASSURE_DIR . '/docker/wordpress/config/default.conf:/etc/nginx/sites-available/default.conf',
+				WPASSURE_DIR . '/docker/wordpress/config/default.conf:/etc/nginx/sites-available/default',
 			]
 		);
 
