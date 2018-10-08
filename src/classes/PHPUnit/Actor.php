@@ -450,7 +450,9 @@ class Actor {
 		$params['value'] = (string) $value;
 
 		if ( ! isset( $params['domain'] ) ) {
-			$params['domain'] = parse_url( $web_driver->getCurrentURL(), PHP_URL_HOST );
+			$url = EnvironmentFactory::get()->getWpHomepageUrl();
+
+			$params['domain'] = '.' . parse_url( $url, PHP_URL_HOST );
 		}
 
 		$web_driver->manage()->addCookie( $params );
@@ -473,6 +475,27 @@ class Actor {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Hide an element in the dom
+	 *
+	 * @throws ExpectationFailedException When the element is not found on the page.
+	 * @param  strin $element_path A CSS selector for the element.
+	 */
+	public function hideElement( $element_path ) {
+		$this->executeJavaScript( 'window.document.querySelector("' . $element_path . '").style.display = "none";' );
+	}
+
+	/**
+	 * Get all cookies
+	 *
+	 * @access public
+	 * @return  array
+	 */
+	public function getCookies() {
+		$web_driver = $this->getWebDriver();
+		return $web_driver->manage()->getCookies();
 	}
 
 	/**
