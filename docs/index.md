@@ -277,6 +277,17 @@ Unfortunately, good test suites can take awhile to run. WP Assure has to do a lo
 * Utilize environment caching on your local machine. When you run WP Assure, use the `--cache_environment` flag. This will force WP Assure to reuse the same environment as long as the suite configuration hasn't changed.
 * In your suite configuration, exclude unnecessary files and directories such as `node_modules` and `vendor`.
 * Don't require a clean database for each test. Set `disable_clean_db` to false in your suite configuration.
+* Remember, using `--local` will create a new snapshot on each run which is slow.
+
+## Local Test Development
+
+Here are some tips for writing tests locally:
+
+* Optimize your test suite for speed as much as possible. See [Speed of Testing](#speed-of-testing).
+* Always use `--cache_environment`. Similarly, `--local` should be used sparingly as a new snapshot will need to be created each time.
+* If Docker starts running slowly or you get weird errors. stop and remove all containers: `docker stop $(docker ps -a -q) && docker rm $(docker ps -a -q)`. Then run a system prune: `docker system prune`. If this doesn't fix things, restart Docker. Worst case scenario you made need to prune volumes. Beware pruning volumes will delete all WP Local Docker environment databases you have.
+* If you run into browser/Selenium interaction errors, take a screenshot before the error to see what is happening.
+* Most Selenium errors happen because an element is covered by another element making it unclickable or the page is still loading. If you are dealing with fading elements, a simple PHP sleep, `usleep( 500 );`, works great.
 
 ## Continuous Integration
 
