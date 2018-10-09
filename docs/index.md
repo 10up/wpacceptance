@@ -253,7 +253,7 @@ For detailed test examples, look at the [example test suite](https://github.com/
 
 ## Commands
 
-* __wpassure run__ [&lt;PATH TO wpassure.json DIRECTORY&gt;] [--local] [--snapshot_id=&lt;WPSNAPSHOT ID&gt;] [--enforce_clean_db] [--cache_environment] [--db_host=&lt;DATABASE HOST&gt;] [--verbose] [--wp_directory=&lt;PATH TO WP DIRECTORY&gt;] [--save] [--force_save] [--filter_tests=&lt;TEST FILTER&gt;] [--filter_test_files=<TEST FILE FILTER>] - Runs a test suite.
+* __wpassure run__ [&lt;PATH TO wpassure.json DIRECTORY&gt;] [--local] [--snapshot_id=&lt;WPSNAPSHOT ID&gt;] [--enforce_clean_db] [--cache_environment] [--db_host=&lt;DATABASE HOST&gt;] [--verbose] [--wp_directory=&lt;PATH TO WP DIRECTORY&gt;] [--save] [--force_save] [--filter_tests=&lt;TEST FILTER&gt;] [--filter_test_files=<TEST FILE FILTER>] [--screenshot_on_failure] - Runs a test suite.
 	* `<PATH TO wpassure.json DIRECTORY>` - Path to `wpassure.json`, defaults to current working directory.
 	* `--local` - Runs your test suite against your local environment.
 	 * `--verbose`, `-v`, `-vv`, `-vvv` - Run with various degrees of verbosity.
@@ -265,6 +265,7 @@ For detailed test examples, look at the [example test suite](https://github.com/
 	* `--cache_environment` - Keep the environment alive so it can be reused later. A cache environment can be used if the config being run is the exact same.
 	* `--filter_tests` - Filter tests to run. Is analagous to PHPUnit --filter.
 	* `--filter_test_files` - Comma separate test files to execute. If used all other test files will be ignored.
+	* `--screenshot_on_failure` - Take a screenshot when a test fails or an error occurs. Screenshot will be placed in `screenshots/` directory from the current working directory.
   
 * __wpassure init__ [--path] - Initialize a new test suite.
 	* `--path` - Optional path to init direftory.
@@ -288,6 +289,7 @@ Here are some tips for writing tests locally:
 * If Docker starts running slowly or you get weird errors. stop and remove all containers: `docker stop $(docker ps -a -q) && docker rm $(docker ps -a -q)`. Then run a system prune: `docker system prune`. If this doesn't fix things, restart Docker. Worst case scenario you made need to prune volumes. Beware pruning volumes will delete all WP Local Docker environment databases you have.
 * If you run into browser/Selenium interaction errors, take a screenshot before the error to see what is happening.
 * Most Selenium errors happen because an element is covered by another element making it unclickable or the page is still loading. If you are dealing with fading elements, a simple PHP sleep, `usleep( 500 );`, works great.
+* Use the `--screenshot_on_failure` to help identify issues with tests that are failing/erroring.
 
 ## Continuous Integration
 
