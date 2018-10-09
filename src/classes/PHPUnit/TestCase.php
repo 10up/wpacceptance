@@ -9,6 +9,7 @@ namespace WPAssure\PHPUnit;
 
 use WPAssure\Log;
 use WPAssure\EnvironmentFactory;
+use PHPUnit\Runner\BaseTestRunner;
 
 /**
  * Class is abstract so PHPUnit doesn't flag it as empty
@@ -44,6 +45,20 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase {
 	 */
 	public function tearDown() {
 		parent::tearDown();
+
+		static $i = 1;
+
+		$status = $this->getStatus();
+
+		if ( BaseTestRunner::STATUS_ERROR === $status || BaseTestRunner::STATUS_FAILURE === $status ) {
+			$config = EnvironmentFactory::get()->getSuiteConfig();
+
+			if ( ! empty( $config['screenshot_on_failure'] ) ) {
+				$this->last_actor->takeScreenshot( $this->getName() . '-' . $i );
+
+				$i++;
+			}
+		}
 
 		$new_last_modifying_query = $this->getLastModifyingQuery();
 

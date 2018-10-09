@@ -28,6 +28,13 @@ trait WebDriver {
 	private $web_driver = null;
 
 	/**
+	 * Instance of last actor
+	 *
+	 * @var Actor
+	 */
+	private $last_actore;
+
+	/**
 	 * Returns web driver instance.
 	 *
 	 * @access protected
@@ -118,6 +125,8 @@ trait WebDriver {
 		$actor = new Actor( $options['name'] );
 		$actor->setWebDriver( $web_driver );
 		$actor->setTest( $this );
+
+		$this->last_actor = $actor;
 
 		return $actor;
 	}

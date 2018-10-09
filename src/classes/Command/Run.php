@@ -39,6 +39,7 @@ class Run extends Command {
 		$this->addArgument( 'suite_config_directory', InputArgument::OPTIONAL, 'Path to a directory that contains wpassure.json.' );
 
 		$this->addOption( 'cache_environment', false, InputOption::VALUE_NONE, 'Cache environment for repeat use.' );
+		$this->addOption( 'screenshot_on_failure', false, InputOption::VALUE_NONE, 'Take screenshot on test failure or error.' );
 
 		$this->addOption( 'local', false, InputOption::VALUE_NONE, 'Run tests against local WordPress install.' );
 		$this->addOption( 'enforce_clean_db', false, InputOption::VALUE_NONE, 'Ensure each test has a clean version of the snapshot database.' );
@@ -114,6 +115,12 @@ class Run extends Command {
 
 		if ( ! empty( $enforce_clean_db ) ) {
 			$suite_config['enforce_clean_db'] = true;
+		}
+
+		$screenshot_on_failure = $input->getOption( 'screenshot_on_failure' );
+
+		if ( ! empty( $screenshot_on_failure ) ) {
+			$suite_config['screenshot_on_failure'] = true;
 		}
 
 		if ( empty( $local ) ) {
