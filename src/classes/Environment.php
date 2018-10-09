@@ -1037,10 +1037,16 @@ class Environment {
 		$network_config = new NetworksCreatePostBody();
 		$network_config->setName( $this->environment_id );
 
-		$this->network = $this->docker->networkCreate( $network_config );
+		try {
+			$this->network = $this->docker->networkCreate( $network_config );
 
-		$network     = $this->docker->networkInspect( $this->environment_id );
-		$ipam_config = $network->getIPAM()->getConfig();
+			$network     = $this->docker->networkInspect( $this->environment_id );
+			$ipam_config = $network->getIPAM()->getConfig();
+		} catch ( \Exception $e ) {
+			Log::instance()->write( 'Could not create network.', 0, 'error' );
+
+			return false;
+		}
 
 		$this->gateway_ip = $ipam_config[0]['Gateway'];
 

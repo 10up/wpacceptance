@@ -54,7 +54,9 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase {
 			$config = EnvironmentFactory::get()->getSuiteConfig();
 
 			if ( ! empty( $config['screenshot_on_failure'] ) ) {
-				$this->last_actor->takeScreenshot( $this->getName() . '-' . $i );
+				@mkdir( 'screenshots' );
+
+				$this->last_actor->takeScreenshot( 'screenshots/' . $this->getName() . '-' . $i );
 
 				$i++;
 			}

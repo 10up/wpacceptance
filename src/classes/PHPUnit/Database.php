@@ -22,7 +22,7 @@ trait Database {
 	protected function getLastModifyingQuery() {
 		$mysql = EnvironmentFactory::get()->getMySQLClient();
 
-		$result = $mysql->query( "SELECT * FROM mysql.general_log WHERE command_type = 'Query' AND user_host LIKE '%wordpress-wpassure%' AND argument REGEXP '^(UPDATE|INSERT|DELETE).*' ORDER BY event_time DESC LIMIT 1" );
+		$result = $mysql->query( "SELECT * FROM mysql.general_log WHERE command_type = 'Query' AND user_host LIKE '%wordpress-wpa%' AND argument REGEXP '^(UPDATE|INSERT|DELETE).*' ORDER BY event_time DESC LIMIT 1" );
 
 		if ( ! $result ) {
 			Log::instance()->write( 'Query error: ' . $this->mysqli_instance->error, 2 );
