@@ -124,7 +124,6 @@ Here's what `wpassure.json` looks like
  	],
 	"snapshot_id": "...",
 	"exclude": [
-		"images",
 		"%REPO_ROOT%/node_modules",
 		"%REPO_ROOT%/vendor"
 	],
@@ -269,6 +268,15 @@ For detailed test examples, look at the [example test suite](https://github.com/
   
 * __wpassure init__ [--path] - Initialize a new test suite.
 	* `--path` - Optional path to init direftory.
+
+## Speed of Testing
+
+Unfortunately, good test suites can take awhile to run. WP Assure has to do a lot of work in order to setup an environment for testing. Here are some tips for getting your test suite to run faster:
+
+* Keep your snapshots as small as possible. If your snapshot database is 1GB that means WP Assure will have to execute a massive SQL file.
+* Utilize environment caching on your local machine. When you run WP Assure, use the `--cache_environment` flag. This will force WP Assure to reuse the same environment as long as the suite configuration hasn't changed.
+* In your suite configuration, exclude unnecessary files and directories such as `node_modules` and `vendor`.
+* Don't require a clean database for each test. Set `disable_clean_db` to false in your suite configuration.
 
 ## Continuous Integration
 
