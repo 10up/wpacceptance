@@ -42,85 +42,67 @@ class EnvironmentFactory {
 	}
 
 	/**
-	 * Build a environment object around an existing environment
+	 * Create environment. Use cached environment if it exists
 	 *
-	 * @param  string $environment_id Environment ID
-	 */
-	public static function createFromId( $environment_id, $preserve_containers = false ) {
-		$environment = new Environment( null, null, $preserve_containers );
-
-		if ( empty( self::$environments ) ) {
-			register_shutdown_function( [ '\WPAssure\EnvironmentFactory', 'handleShutdown' ] );
-		}
-
-		$environment->initiateExistingEnvironment( $environment_id );
-
-		if ( ! $environment->insertRepo() ) {
-			return false;
-		}
-
-		if ( ! $environment->setupMySQL() ) {
-			return false;
-		}
-
-		if ( ! $environment->runBeforeScripts() ) {
-			return false;
-		}
-
-		self::$environments[] = $environment;
-
-		return $environment;
-	}
-
-	/**
-	 * Create environment
-	 *
-	 * @param  string  $snapshot_id WPSnapshot ID to load into environment
 	 * @param  array   $suite_config Config array
-	 * @param  boolean $preserve_containers Keep containers alive or not
+	 * @param  boolean $cache_environment Keep containers alive or not
 	 * @return  \WPAssure\Environment|bool
 	 */
-	public static function create( $snapshot_id, $suite_config, $preserve_containers = false ) {
-		$environment = new Environment( $snapshot_id, $suite_config, $preserve_containers );
+	public static function create( $suite_config, $cache_environment = false ) {
+		$environment = new Environment( $suite_config, $cache_environment );
 
 		if ( empty( self::$environments ) ) {
 			register_shutdown_function( [ '\WPAssure\EnvironmentFactory', 'handleShutdown' ] );
 		}
 
-		if ( ! $environment->createNetwork() ) {
-			return false;
-		}
+		if ( $environment->populateEnvironmentFromCache() ) {
+			if ( ! $environment->insertRepo() ) {
+				return false;
+			}
 
-		if ( ! $environment->downloadImages() ) {
-			return false;
-		}
+			if ( ! $environment->setupMySQL() ) {
+				return false;
+			}
 
-		if ( ! $environment->createContainers() ) {
-			return false;
-		}
+			if ( ! $environment->runBeforeScripts() ) {
+				return false;
+			}
+		} else {
+			if ( ! $environment->createNetwork() ) {
+				return false;
+			}
 
-		if ( ! $environment->startContainers() ) {
-			return false;
-		}
+			if ( ! $environment->downloadImages() ) {
+				return false;
+			}
 
-		if ( ! $environment->pullSnapshot() ) {
-			return false;
-		}
+			if ( ! $environment->createContainers() ) {
+				return false;
+			}
 
-		if ( ! $environment->setupMySQL() ) {
-			return false;
-		}
+			if ( ! $environment->startContainers() ) {
+				return false;
+			}
 
-		if ( ! $environment->insertRepo() ) {
-			return false;
-		}
+			if ( ! $environment->pullSnapshot() ) {
+				return false;
+			}
 
-		if ( ! $environment->writeMetaToWPContainer() ) {
-			return false;
-		}
+			if ( ! $environment->setupMySQL() ) {
+				return false;
+			}
 
-		if ( ! $environment->runBeforeScripts() ) {
-			return false;
+			if ( ! $environment->insertRepo() ) {
+				return false;
+			}
+
+			if ( ! $environment->writeMetaToWPContainer() ) {
+				return false;
+			}
+
+			if ( ! $environment->runBeforeScripts() ) {
+				return false;
+			}
 		}
 
 		self::$environments[] = $environment;

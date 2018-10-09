@@ -254,7 +254,7 @@ For detailed test examples, look at the [example test suite](https://github.com/
 
 ## Commands
 
-* __wpassure run__ [&lt;PATH TO wpassure.json DIRECTORY&gt;] [--local] [--snapshot_id=&lt;WPSNAPSHOT ID&gt;] [--enforce_clean_db] [--preserve_containers] [--db_host=&lt;DATABASE HOST&gt;] [--verbose] [--wp_directory=&lt;PATH TO WP DIRECTORY&gt;] [--save] [--force_save] [--filter_tests=&lt;TEST FILTER&gt;] [--filter_test_files=<TEST FILE FILTER>] - Runs a test suite.
+* __wpassure run__ [&lt;PATH TO wpassure.json DIRECTORY&gt;] [--local] [--snapshot_id=&lt;WPSNAPSHOT ID&gt;] [--enforce_clean_db] [--cache_environment] [--db_host=&lt;DATABASE HOST&gt;] [--verbose] [--wp_directory=&lt;PATH TO WP DIRECTORY&gt;] [--save] [--force_save] [--filter_tests=&lt;TEST FILTER&gt;] [--filter_test_files=<TEST FILE FILTER>] - Runs a test suite.
 	* `<PATH TO wpassure.json DIRECTORY>` - Path to `wpassure.json`, defaults to current working directory.
 	* `--local` - Runs your test suite against your local environment.
 	 * `--verbose`, `-v`, `-vv`, `-vvv` - Run with various degrees of verbosity.
@@ -263,7 +263,7 @@ For detailed test examples, look at the [example test suite](https://github.com/
 	* `--wp_directory` - Path to WordPress. If unset, will search up the directory tree until wp-config.php is found
 	* `--snapshot_id` - Optionally run tests against a snapshot ID.
 	* `--enforce_clean_db` - Use clean database for each test.
-	* `--preserve_containers` - Don't stop/remove containers on run completion.
+	* `--cache_environment` - Keep the environment alive so it can be reused later. A cache environment can be used if the config being run is the exact same.
 	* `--filter_tests` - Filter tests to run. Is analagous to PHPUnit --filter.
 	* `--filter_test_files` - Comma separate test files to execute. If used all other test files will be ignored.
   

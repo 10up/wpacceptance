@@ -467,7 +467,7 @@ class Actor {
 	 */
 	public function getCookie( $name ) {
 		$web_driver = $this->getWebDriver();
-		$cookies   = $web_driver->manage()->getCookies();
+		$cookies    = $web_driver->manage()->getCookies();
 		foreach ( $cookies as $cookie ) {
 			if ( $cookie['name'] === $name ) {
 				return $cookie['value'];
@@ -534,7 +534,7 @@ class Actor {
 		}
 
 		$web_driver = $this->getWebDriver();
-		$by        = $element instanceof WebDriverBy ? $element : WebDriverBy::cssSelector( $element );
+		$by         = $element instanceof WebDriverBy ? $element : WebDriverBy::cssSelector( $element );
 
 		try {
 			return $web_driver->findElement( $by );
@@ -568,7 +568,7 @@ class Actor {
 		}
 
 		$web_driver = $this->getWebDriver();
-		$by        = $elements instanceof WebDriverBy ? $elements : WebDriverBy::cssSelector( $elements );
+		$by         = $elements instanceof WebDriverBy ? $elements : WebDriverBy::cssSelector( $elements );
 
 		try {
 			return $web_driver->findElements( $by );

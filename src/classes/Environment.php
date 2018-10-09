@@ -89,14 +89,7 @@ class Environment {
 	 *
 	 * @var boolean
 	 */
-	protected $preserve_containers = false;
-
-	/**
-	 * Snapshot ID
-	 *
-	 * @var int
-	 */
-	protected $snapshot_id;
+	protected $cache_environment = false;
 
 	/**
 	 * Snapshot instance
@@ -136,22 +129,23 @@ class Environment {
 	/**
 	 * Environment constructor
 	 *
-	 * @param  string  $snapshot_id WPSnapshot ID to load into environment
 	 * @param  Config  $suite_config Config array
-	 * @param  boolean $preserve_containers Keep containers alive or not
+	 * @param  boolean $cache_environment Cache environment for later or not
 	 */
-	public function __construct( $snapshot_id = null, $suite_config = null, $preserve_containers = false ) {
-		$this->environment_id          = 'wpassure' . time();
-		$this->docker              = Docker::create();
-		$this->snapshot_id         = $snapshot_id;
-		$this->suite_config        = $suite_config;
-		$this->preserve_containers = $preserve_containers;
+	public function __construct( $suite_config = null, $cache_environment = false ) {
+		$this->docker            = Docker::create();
+		$this->suite_config      = $suite_config;
+		$this->cache_environment = $cache_environment;
+		$this->environment_id    = 'wpa-' . md5( serialize( $this->suite_config ) );
 	}
 
-	public function initiateExistingEnvironment( $environment_id ) {
-		Log::instance()->write( 'Initiating existing environment: ' . $environment_id, 1 );
-
-		$this->environment_id = $environment_id;
+	/**
+	 * Attempt to populate environment from cache
+	 *
+	 * @return bool
+	 */
+	public function populateEnvironmentFromCache() {
+		Log::instance()->write( 'Getting environment meta...', 1 );
 
 		$command = 'cat /root/environment_meta.json';
 
@@ -161,12 +155,19 @@ class Environment {
 		$exec_config->setAttachStderr( true );
 		$exec_config->setCmd( [ '/bin/sh', '-c', $command ] );
 
-		$exec_command      = $this->docker->containerExec( 'wordpress-' . $this->environment_id, $exec_config );
-		$exec_id           = $exec_command->getId();
-		$exec_start_config = new ExecIdStartPostBody();
-		$exec_start_config->setDetach( false );
+		try {
+			$exec_command      = $this->docker->containerExec( 'wordpress-' . $this->environment_id, $exec_config );
+			$exec_id           = $exec_command->getId();
+			$exec_start_config = new ExecIdStartPostBody();
+			$exec_start_config->setDetach( false );
 
-		$stream = $this->docker->execStart( $exec_id, $exec_start_config );
+			$stream = $this->docker->execStart( $exec_id, $exec_start_config );
+		} catch ( \Exception $e ) {
+			Log::instance()->write( 'Environment NOT found in cache.', 1 );
+			return false;
+		}
+
+		Log::instance()->write( 'Environment found in cache.' );
 
 		$environment_meta = '';
 
@@ -187,10 +188,9 @@ class Environment {
 		$this->gateway_ip             = $environment_meta['gateway_ip'];
 		$this->snapshot_wpassure_path = $environment_meta['snapshot_wpassure_path'];
 		$this->snapshot_repo_path     = $environment_meta['snapshot_repo_path'];
-		$this->snapshot_id            = $environment_meta['snapshot_id'];
-		$this->snapshot               = Snapshot::get( $this->snapshot_id );
+		$this->snapshot               = Snapshot::get( $this->suite_config['snapshot_id'] );
 
-
+		return true;
 	}
 
 	/**
@@ -369,7 +369,7 @@ class Environment {
 
 		Log::instance()->write( 'Pulling snapshot...', 1 );
 
-		$this->snapshot = Snapshot::get( $this->snapshot_id );
+		$this->snapshot = Snapshot::get( $this->suite_config['snapshot_id'] );
 
 		$site_mapping = [];
 
@@ -408,7 +408,7 @@ class Environment {
 			$verbose = '-vvv';
 		}
 
-		$command = '/root/.composer/vendor/bin/wpsnapshots pull ' . $this->snapshot_id . ' --confirm --confirm_wp_version_change --confirm_ms_constant_update --config_db_name="' . $mysql_creds['DB_NAME'] . '" --config_db_user="' . $mysql_creds['DB_USER'] . '" --config_db_password="' . $mysql_creds['DB_PASSWORD'] . '" --config_db_host="' . $mysql_creds['DB_HOST'] . '" --confirm_wp_download --confirm_config_create --main_domain="wpassure.test:' . $this->wordpress_port . '" --site_mapping="' . addslashes( json_encode( $site_mapping ) ) . '" ' . $verbose;
+		$command = '/root/.composer/vendor/bin/wpsnapshots pull ' . $this->suite_config['snapshot_id'] . ' --confirm --confirm_wp_version_change --confirm_ms_constant_update --config_db_name="' . $mysql_creds['DB_NAME'] . '" --config_db_user="' . $mysql_creds['DB_USER'] . '" --config_db_password="' . $mysql_creds['DB_PASSWORD'] . '" --config_db_host="' . $mysql_creds['DB_HOST'] . '" --confirm_wp_download --confirm_config_create --main_domain="wpassure.test:' . $this->wordpress_port . '" --site_mapping="' . addslashes( json_encode( $site_mapping ) ) . '" ' . $verbose;
 
 		Log::instance()->write( 'Running command:', 1 );
 		Log::instance()->write( $command, 1 );
@@ -689,12 +689,12 @@ class Environment {
 	 * @return  bool
 	 */
 	public function destroy() {
-		if ( $this->preserve_containers ) {
-			Log::instance()->write( 'Keeping containers alive... Environment ID is ' . $this->environment_id );
+		if ( $this->cache_environment ) {
+			Log::instance()->write( 'Caching environment.' );
 			return false;
 		}
 
-		Log::instance()->write( 'Destroying containers...', 1 );
+		Log::instance()->write( 'Destroying environment...', 1 );
 
 		$this->stopContainers();
 		$this->deleteContainers();
@@ -847,7 +847,7 @@ class Environment {
 		$host_config->setExtraHosts( [ 'wpassure.test:' . $this->gateway_ip ] );
 		$host_config->setBinds(
 			[
-				\WPSnapshots\Utils\get_snapshot_directory() . $this->snapshot_id . ':/root/.wpsnapshots/' . $this->snapshot_id,
+				\WPSnapshots\Utils\get_snapshot_directory() . $this->suite_config['snapshot_id'] . ':/root/.wpsnapshots/' . $this->suite_config['snapshot_id'],
 				\WPSnapshots\Utils\get_snapshot_directory() . 'config.json:/root/.wpsnapshots/config.json',
 				$this->suite_config['host_repo_path'] . ':/root/repo',
 				WPASSURE_DIR . '/docker/mysql:/etc/mysql/conf.d',
@@ -1146,8 +1146,8 @@ class Environment {
 			'wordpress_port'         => $this->wordpress_port,
 			'selenium_port'          => $this->selenium_port,
 			'mysql_port'             => $this->mysql_port,
-			'snapshot_id'            => $this->snapshot_id,
-			'environment_id'             => $this->environment_id,
+			'snapshot_id'            => $this->suite_config['snapshot_id'],
+			'environment_id'         => $this->environment_id,
 			'gateway_ip'             => $this->gateway_ip,
 			'snapshot_wpassure_path' => $this->snapshot_wpassure_path,
 			'snapshot_repo_path'     => $this->snapshot_repo_path,
