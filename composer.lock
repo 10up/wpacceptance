@@ -12,7 +12,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/10up/wpsnapshots.git",
-                "reference": "c978423d0360726b8f06b55299caf3488b7fce03"
+                "reference": "4abaa7f329c645e7da5eda70f559466f852d696a"
             },
             "require": {
                 "aws/aws-sdk-php": "^3.67",
@@ -58,7 +58,7 @@
                 "snapshots",
                 "wordpress"
             ],
-            "time": "2018-10-10T13:41:28+00:00"
+            "time": "2018-10-10T14:28:49+00:00"
         },
         {
             "name": "aws/aws-sdk-php",
