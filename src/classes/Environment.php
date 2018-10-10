@@ -477,7 +477,7 @@ class Environment {
 		/**
 		 * Determine where codebase is located in snapshot
 		 */
-		Log::instance()->write( 'Finding codebase in snapshot was not provided...', 1 );
+		Log::instance()->write( 'Finding codebase in snapshot...', 1 );
 
 		$exec_config = new ContainersIdExecPostBody();
 		$exec_config->setTty( true );
