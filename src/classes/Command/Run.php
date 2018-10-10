@@ -42,6 +42,7 @@ class Run extends Command {
 		$this->addOption( 'screenshot_on_failure', false, InputOption::VALUE_NONE, 'Take screenshot on test failure or error.' );
 
 		$this->addOption( 'local', false, InputOption::VALUE_NONE, 'Run tests against local WordPress install.' );
+		$this->addOption( 'skip_before_scripts', false, InputOption::VALUE_NONE, 'Do not run before scripts.' );
 		$this->addOption( 'enforce_clean_db', false, InputOption::VALUE_NONE, 'Ensure each test has a clean version of the snapshot database.' );
 		$this->addOption( 'save', false, InputOption::VALUE_NONE, 'If tests are successful, save snapshot ID to wpassure.json and push it to the remote repository.' );
 		$this->addOption( 'force_save', false, InputOption::VALUE_NONE, 'No matter the outcome of the tests, save snapshot ID to wpassure.json and push it to the remote repository.' );
@@ -122,6 +123,10 @@ class Run extends Command {
 
 		if ( ! empty( $enforce_clean_db ) ) {
 			$suite_config['enforce_clean_db'] = true;
+		}
+
+		if ( ! empty( $input->getOption( 'skip_before_scripts' ) ) ) {
+			$suite_config['skip_before_scripts'] = true;
 		}
 
 		$screenshot_on_failure = $input->getOption( 'screenshot_on_failure' );

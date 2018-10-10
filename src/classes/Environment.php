@@ -315,6 +315,10 @@ class Environment {
 			return true;
 		}
 
+		if ( ! empty( $this->suite_config['skip_before_scripts'] ) ) {
+			return true;
+		}
+
 		foreach ( $this->suite_config['before_scripts'] as $script ) {
 			Log::instance()->write( 'Running script: ' . $script, 1 );
 
