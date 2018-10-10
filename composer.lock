@@ -12,7 +12,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/10up/wpsnapshots.git",
-                "reference": "8aff4669a99ada4a0ee4f58df0e5d1f43ea4a9a1"
+                "reference": "c978423d0360726b8f06b55299caf3488b7fce03"
             },
             "require": {
                 "aws/aws-sdk-php": "^3.67",
@@ -58,20 +58,20 @@
                 "snapshots",
                 "wordpress"
             ],
-            "time": "2018-10-04T04:53:09+00:00"
+            "time": "2018-10-10T13:41:28+00:00"
         },
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.68.1",
+            "version": "3.69.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
-                "reference": "2986beb07a14bcde94608e940ee7e5cba1ed4e38"
+                "reference": "65c88e074dffe4cb25b840c154b2f39564b39287"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/2986beb07a14bcde94608e940ee7e5cba1ed4e38",
-                "reference": "2986beb07a14bcde94608e940ee7e5cba1ed4e38",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/65c88e074dffe4cb25b840c154b2f39564b39287",
+                "reference": "65c88e074dffe4cb25b840c154b2f39564b39287",
                 "shasum": ""
             },
             "require": {
@@ -92,6 +92,8 @@
                 "doctrine/cache": "~1.4",
                 "ext-dom": "*",
                 "ext-openssl": "*",
+                "ext-pcntl": "*",
+                "ext-sockets": "*",
                 "nette/neon": "^2.3",
                 "phpunit/phpunit": "^4.8.35|^5.4.3",
                 "psr/cache": "^1.0"
@@ -100,7 +102,8 @@
                 "aws/aws-php-sns-message-validator": "To validate incoming SNS notifications",
                 "doctrine/cache": "To use the DoctrineCacheAdapter",
                 "ext-curl": "To send requests using cURL",
-                "ext-openssl": "Allows working with CloudFront private distributions and verifying received SNS messages"
+                "ext-openssl": "Allows working with CloudFront private distributions and verifying received SNS messages",
+                "ext-sockets": "To use client-side monitoring"
             },
             "type": "library",
             "extra": {
@@ -138,7 +141,7 @@
                 "s3",
                 "sdk"
             ],
-            "time": "2018-10-02T21:11:29+00:00"
+            "time": "2018-10-08T20:05:34+00:00"
         },
         {
             "name": "clue/stream-filter",
@@ -1027,16 +1030,16 @@
         },
         {
             "name": "php-http/client-common",
-            "version": "1.8.0",
+            "version": "1.8.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/php-http/client-common.git",
-                "reference": "949ee8a8cba5fa2abe839c87bf7b885ac3330589"
+                "reference": "0b9ce659aa46aee106f8c66597ea0c070fcd9dff"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/php-http/client-common/zipball/949ee8a8cba5fa2abe839c87bf7b885ac3330589",
-                "reference": "949ee8a8cba5fa2abe839c87bf7b885ac3330589",
+                "url": "https://api.github.com/repos/php-http/client-common/zipball/0b9ce659aa46aee106f8c66597ea0c070fcd9dff",
+                "reference": "0b9ce659aa46aee106f8c66597ea0c070fcd9dff",
                 "shasum": ""
             },
             "require": {
@@ -1084,7 +1087,7 @@
                 "http",
                 "httplug"
             ],
-            "time": "2018-06-22T12:36:17+00:00"
+            "time": "2018-10-09T06:46:29+00:00"
         },
         {
             "name": "php-http/discovery",
@@ -3570,16 +3573,16 @@
         },
         {
             "name": "wimg/php-compatibility",
-            "version": "8.2.0",
+            "version": "9.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPCompatibility/PHPCompatibility.git",
-                "reference": "eaf613c1a8265bcfd7b0ab690783f2aef519f78a"
+                "reference": "e9f4047e5edf53c88f36f1dafc0d49454ce13e25"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPCompatibility/PHPCompatibility/zipball/eaf613c1a8265bcfd7b0ab690783f2aef519f78a",
-                "reference": "eaf613c1a8265bcfd7b0ab690783f2aef519f78a",
+                "url": "https://api.github.com/repos/PHPCompatibility/PHPCompatibility/zipball/e9f4047e5edf53c88f36f1dafc0d49454ce13e25",
+                "reference": "e9f4047e5edf53c88f36f1dafc0d49454ce13e25",
                 "shasum": ""
             },
             "require": {
@@ -3597,29 +3600,34 @@
                 "roave/security-advisories": "dev-master || Helps prevent installing dependencies with known security issues."
             },
             "type": "phpcodesniffer-standard",
-            "autoload": {
-                "psr-4": {
-                    "PHPCompatibility\\": "PHPCompatibility/"
-                }
-            },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "LGPL-3.0-or-later"
             ],
             "authors": [
                 {
+                    "name": "Contributors",
+                    "homepage": "https://github.com/PHPCompatibility/PHPCompatibility/graphs/contributors"
+                },
+                {
                     "name": "Wim Godden",
+                    "homepage": "https://github.com/wimg",
+                    "role": "lead"
+                },
+                {
+                    "name": "Juliette Reinders Folmer",
+                    "homepage": "https://github.com/jrfnl",
                     "role": "lead"
                 }
             ],
-            "description": "A set of sniffs for PHP_CodeSniffer that checks for PHP version compatibility.",
+            "description": "A set of sniffs for PHP_CodeSniffer that checks for PHP cross-version compatibility.",
             "homepage": "http://techblog.wimgodden.be/tag/codesniffer/",
             "keywords": [
                 "compatibility",
                 "phpcs",
                 "standards"
             ],
-            "time": "2018-07-17T13:42:26+00:00"
+            "time": "2018-10-07T17:38:02+00:00"
         },
         {
             "name": "wp-coding-standards/wpcs",

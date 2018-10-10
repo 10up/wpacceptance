@@ -47,6 +47,7 @@ class Run extends Command {
 		$this->addOption( 'force_save', false, InputOption::VALUE_NONE, 'No matter the outcome of the tests, save snapshot ID to wpassure.json and push it to the remote repository.' );
 
 		$this->addOption( 'snapshot_id', null, InputOption::VALUE_REQUIRED, 'WP Snapshot ID.' );
+		$this->addOption( 'repository', null, InputOption::VALUE_REQUIRED, 'WP Snapshots repository to use.' );
 		$this->addOption( 'wp_directory', null, InputOption::VALUE_REQUIRED, 'Path to WordPress wp-config.php directory.' );
 		$this->addOption( 'db_host', null, InputOption::VALUE_REQUIRED, 'Database host.' );
 		$this->addOption( 'db_name', null, InputOption::VALUE_REQUIRED, 'Database name.' );
@@ -89,7 +90,13 @@ class Run extends Command {
 			return 3;
 		}
 
-		$connection = Connection::instance()->connect();
+		$repository = $input->getOption( 'repository' );
+
+		if ( empty( $repository ) && ! empty( $suite_config['repository'] ) )  {
+			$repository = $suite_config['repository'];
+		}
+
+		$connection = Connection::instance()->connect( $repository );
 
 		if ( \WPSnapshots\Utils\is_error( $connection ) ) {
 			Log::instance()->write( 'Could not connect to WP Snapshots repository.', 0, 'error' );
