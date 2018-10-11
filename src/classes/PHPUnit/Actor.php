@@ -209,6 +209,17 @@ class Actor {
 	}
 
 	/**
+	 * Scroll to element
+	 *
+	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
+	 */
+	public function scrollToElement( $element ) {
+		$element = $this->getElement( $element );
+
+		$this->getWebDriver()->action()->moveToElement( $element )->perform();
+	}
+
+	/**
 	 * Execute javascript
 	 *
 	 * @param  string $script JS code
@@ -343,6 +354,18 @@ class Actor {
 			new CookieConstrain( Constraint::ACTION_SEE, $name, $value ),
 			$message
 		);
+	}
+
+	/**
+	 * Wait until element is clickable
+	 *
+	 * @param  string  $element_path Path to element to check
+	 * @param  integer $max_wait  Max wait time in seconds
+	 */
+	public function waitUntilElementClickable( $element_path, $max_wait = 10 ) {
+		$web_driver = $this->getWebDriver();
+
+		$web_driver->wait( $max_wait )->until( WebDriverExpectedCondition::elementToBeClickable( WebDriverBy::cssSelector( $element_path ) ) );
 	}
 
 	/**
@@ -579,16 +602,49 @@ class Actor {
 	}
 
 	/**
-	 * Click an element.
+	 * Click an element with JS.
 	 *
 	 * @access public
-	 * @param string $elemen_path Path to element in DOM to click
+	 * @param string $element_path Path to element in DOM to click
+	 */
+	public function jsClick( $element_path ) {
+		$element = $this->getElement( $element_path );
+
+		$this->waitUntilElementClickable( $element_path );
+
+		$this->waitUntilElementVisible( $element_path );
+
+		$this->executeJavaScript( 'window.document.querySelector( "' . addcslashes( $element_path, '"' ) . '" ).click();' );
+	}
+
+	/**
+	 * Click an element. Click can be buggy. Try jsClick as well.
+	 *
+	 * @access public
+	 * @param string $element_path Path to element in DOM to click
 	 */
 	public function click( $element_path ) {
-		/**
-		 * We use JS here because Selenium click is extremely inconsitent
-		 */
-		$this->executeJavaScript( 'window.document.querySelector( "' . addcslashes( $element_path, '"' ) . '" ).click();' );
+		$element = $this->getElement( $element_path );
+
+		$this->waitUntilElementClickable( $element_path );
+
+		$this->waitUntilElementVisible( $element_path );
+
+		try {
+			$element->sendKeys( '' );
+			$this->executeJavaScript( 'window.document.querySelector( "' . $element_path . '" ).focus(); ' );
+		} catch ( \Exception $e ) {
+			// Just continue
+		}
+
+		try {
+			$element->click();
+		} catch ( UnknownServerException $e ) {
+			// Weird hack to get around inconsistent click behavior
+			$this->executeJavaScript( 'window.scrollTo( 0, ( window.document.documentElement.scrollTop + 100 ) )' );
+
+			$element->click();
+		}
 	}
 
 	/**
@@ -697,6 +753,18 @@ class Actor {
 	}
 
 	/**
+	 * Submit a form from an element.
+	 *
+	 * @access public
+	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
+	 */
+	public function submitForm( $element ) {
+		$element = $this->getElement( $element );
+
+		$element->submit();
+	}
+
+	/**
 	 * Login as a certain user
 	 *
 	 * @param  string $username Username
@@ -713,7 +781,7 @@ class Actor {
 
 		usleep( 100 );
 
-		$this->click( '#wp-submit' );
+		$this->pressEnterKey( '#wp-submit' );
 
 		$this->waitUntilElementVisible( '#wpadminbar' );
 	}

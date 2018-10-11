@@ -50,13 +50,13 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase {
 
 		$status = $this->getStatus();
 
-		if ( BaseTestRunner::STATUS_ERROR === $status || BaseTestRunner::STATUS_FAILURE === $status ) {
+		if ( in_array( $status, [ null, BaseTestRunner::STATUS_ERROR, BaseTestRunner::STATUS_FAILURE ], true ) ) {
 			$config = EnvironmentFactory::get()->getSuiteConfig();
 
 			if ( ! empty( $config['screenshot_on_failure'] ) ) {
 				@mkdir( 'screenshots' );
 
-				$this->last_actor->takeScreenshot( 'screenshots/' . $this->getName() . '-' . $i );
+				$this->last_actor->takeScreenshot( 'screenshots/' . $this->getName() . '-' . time() );
 
 				$i++;
 			}
