@@ -949,19 +949,15 @@ class Environment {
 			$exec_config->setAttachStderr( true );
 			$exec_config->setCmd( [ '/bin/sh', '-c', 'mysqladmin ping -h"' . $mysql_creds['DB_HOST'] . '" -u ' . $mysql_creds['DB_USER'] . ' -p' . $mysql_creds['DB_PASSWORD'] ] );
 
-			try {
-				$exec_id           = $this->docker->containerExec( 'wordpress-' . $this->environment_id, $exec_config )->getId();
-				$exec_start_config = new ExecIdStartPostBody();
-				$exec_start_config->setDetach( false );
+			$exec_id           = $this->docker->containerExec( 'wordpress-' . $this->environment_id, $exec_config )->getId();
+			$exec_start_config = new ExecIdStartPostBody();
+			$exec_start_config->setDetach( false );
 
-				$stream = $this->docker->execStart( $exec_id, $exec_start_config );
+			$stream = $this->docker->execStart( $exec_id, $exec_start_config );
 
-				$stream->wait();
+			$stream->wait();
 
-				$exit_code = $this->docker->execInspect( $exec_id )->getExitCode();
-			} catch ( \Exception $e ) {
-				// Nothing to do
-			}
+			$exit_code = $this->docker->execInspect( $exec_id )->getExitCode();
 
 			if ( 0 === $exit_code ) {
 				Log::instance()->write( 'MySQL connection available after ' . ( $i + 2 ) . ' seconds.', 2 );

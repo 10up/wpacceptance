@@ -226,7 +226,7 @@ class Actor {
 	 * @param string $attribute_value Attribute value
 	 */
 	public function setElementAttribute( $element_path, $attribute_name, $attribute_value ) {
-		$this->executeJavaScript( 'window.document.querySelector("' . $element_path . '").setAttribute("' . $attribute_name . '", "' . $attribute_value . '")' );
+		$this->executeJavaScript( 'window.document.querySelector("' . addcslashes( $element_path, '"' ) . '").setAttribute("' . addcslashes( $attribute_name, '"' ) . '", "' . addcslashes( $attribute_value, '"' ) . '")' );
 	}
 
 	/**
@@ -484,7 +484,7 @@ class Actor {
 	 * @param  strin $element_path A CSS selector for the element.
 	 */
 	public function hideElement( $element_path ) {
-		$this->executeJavaScript( 'window.document.querySelector("' . $element_path . '").style.display = "none";' );
+		$this->executeJavaScript( 'window.document.querySelector("' . addcslashes( $element_path, '"' ) . '").style.display = "none";' );
 	}
 
 	/**
@@ -582,18 +582,13 @@ class Actor {
 	 * Click an element.
 	 *
 	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
+	 * @param string $elemen_path Path to element in DOM to click
 	 */
-	public function click( $element ) {
-		try {
-			$this->getElement( $element )->click();
-		} catch ( UnknownServerException $e ) {
-			// Weird hack to get around inconsistent click behavior
-			$this->executeJavaScript( 'window.scrollTo(0, (window.document.documentElement.scrollTop + 100))' );
-
-			$this->getElement( $element )->click();
-		}
-
+	public function click( $element_path ) {
+		/**
+		 * We use JS here because Selenium click is extremely inconsitent
+		 */
+		$this->executeJavaScript( 'window.document.querySelector( "' . addcslashes( $element_path, '"' ) . '" ).click();' );
 	}
 
 	/**
