@@ -136,7 +136,7 @@ class Environment {
 		$this->docker            = Docker::create();
 		$this->suite_config      = $suite_config;
 		$this->cache_environment = $cache_environment;
-		$this->environment_id    = 'wpa-' . md5( serialize( $this->suite_config ) );
+		$this->environment_id    = 'wpa-' . self::generateEnvironmentId( $suite_config );
 	}
 
 	/**
@@ -1204,5 +1204,29 @@ class Environment {
 		$stream = $stream->wait();
 
 		return true;
+	}
+
+	/**
+	 * Generate an environment ID from config. This is a cache of critical suite config parameters
+	 *
+	 * @param  array $suite_config Suite config
+	 * @return string
+	 */
+	public static function generateEnvironmentId( $suite_config ) {
+		$string = 'name=' . $suite_config['name'] . ',snapshot_id=' . $suite_config['snapshot_id'] . ',host_repo_path=' . $suite_config['host_repo_path'] . ',repo_path=' . $suite_config['repo_path'];
+
+		if ( isset( $suite_configp['enforce_clean_db'] ) ) {
+			$string .= ',enforce_clean_db=' . (int) $suite_configp['enforce_clean_db'];
+		}
+
+		if ( isset( $suite_configp['disable_clean_db'] ) ) {
+			$string .= ',disable_clean_db=' . (int) $suite_configp['disable_clean_db'];
+		}
+
+		if ( isset( $suite_configp['repository'] ) ) {
+			$string .= ',repository=' . (int) $suite_configp['repository'];
+		}
+
+		return md5( $string );
 	}
 }
