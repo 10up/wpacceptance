@@ -20,7 +20,7 @@ use WPAssure\EnvironmentFactory;
 use WPAssure\Log;
 use WPAssure\Utils;
 use WPAssure\Config;
-use WPSnapshots\Connection;
+use WPSnapshots\RepositoryManager;
 use WPSnapshots\Snapshot;
 use WPSnapshots\Log as WPSnapshotsLog;
 
@@ -91,18 +91,21 @@ class Run extends Command {
 			return 3;
 		}
 
-		$repository = $input->getOption( 'repository' );
+		$repository_name = $input->getOption( 'repository' );
 
-		if ( empty( $repository ) && ! empty( $suite_config['repository'] ) )  {
-			$repository = $suite_config['repository'];
+		if ( empty( $repository_name ) && ! empty( $suite_config['repository'] ) )  {
+			$repository_name = $suite_config['repository'];
 		}
 
-		$connection = Connection::instance()->connect( $repository );
+		$repository = RepositoryManager::instance()->setup( $repository_name );
 
-		if ( \WPSnapshots\Utils\is_error( $connection ) ) {
-			Log::instance()->write( 'Could not connect to WP Snapshots repository.', 0, 'error' );
+		if ( ! $repository ) {
+			Log::instance()->write( 'Could not setup WP Snapshots repository.', 0, 'error' );
+
 			return 2;
 		}
+
+		$suite_config['repository'] = $repository->getName();
 
 		$local = $input->getOption( 'local' );
 
@@ -145,7 +148,7 @@ class Run extends Command {
 
 		if ( ! empty( $suite_config['snapshot_id'] ) ) {
 			if ( ! \WPSnapshots\Utils\is_snapshot_cached( $suite_config['snapshot_id'] ) ) {
-				$snapshot = Snapshot::download( $suite_config['snapshot_id'] );
+				$snapshot = Snapshot::download( $suite_config['snapshot_id'], $repository->getName() );
 
 				if ( ! is_a( $snapshot, '\WPSnapshots\Snapshot' ) ) {
 					Log::instance()->write( 'Could not download snapshot. Does it exist?', 0, 'error' );
@@ -163,6 +166,7 @@ class Run extends Command {
 			$snapshot = Snapshot::create(
 				[
 					'path'        => $wp_directory,
+					'repository'  => $suite_config['repository'],
 					'db_host'     => $input->getOption( 'db_host' ),
 					'db_name'     => $input->getOption( 'db_name' ),
 					'db_user'     => $input->getOption( 'db_user' ),

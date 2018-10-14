@@ -412,7 +412,7 @@ class Environment {
 			$verbose = '-vvv';
 		}
 
-		$command = '/root/.composer/vendor/bin/wpsnapshots pull ' . $this->suite_config['snapshot_id'] . ' --confirm --confirm_wp_version_change --confirm_ms_constant_update --config_db_name="' . $mysql_creds['DB_NAME'] . '" --config_db_user="' . $mysql_creds['DB_USER'] . '" --config_db_password="' . $mysql_creds['DB_PASSWORD'] . '" --config_db_host="' . $mysql_creds['DB_HOST'] . '" --confirm_wp_download --confirm_config_create --main_domain="wpassure.test:' . $this->wordpress_port . '" --site_mapping="' . addslashes( json_encode( $site_mapping ) ) . '" ' . $verbose;
+		$command = '/root/.composer/vendor/bin/wpsnapshots pull ' . $this->suite_config['snapshot_id'] . ' --repository=' . $this->suite_config['repository'] . ' --confirm --confirm_wp_version_change --confirm_ms_constant_update --config_db_name="' . $mysql_creds['DB_NAME'] . '" --config_db_user="' . $mysql_creds['DB_USER'] . '" --config_db_password="' . $mysql_creds['DB_PASSWORD'] . '" --config_db_host="' . $mysql_creds['DB_HOST'] . '" --confirm_wp_download --confirm_config_create --main_domain="wpassure.test:' . $this->wordpress_port . '" --site_mapping="' . addslashes( json_encode( $site_mapping ) ) . '" ' . $verbose;
 
 		Log::instance()->write( 'Running command:', 1 );
 		Log::instance()->write( $command, 1 );
@@ -1213,18 +1213,14 @@ class Environment {
 	 * @return string
 	 */
 	public static function generateEnvironmentId( $suite_config ) {
-		$string = 'name=' . $suite_config['name'] . ',snapshot_id=' . $suite_config['snapshot_id'] . ',host_repo_path=' . $suite_config['host_repo_path'] . ',repo_path=' . $suite_config['repo_path'];
+		$string = 'name=' . $suite_config['name'] . ',snapshot_id=' . $suite_config['snapshot_id'] . ',host_repo_path=' . $suite_config['host_repo_path'] . ',repo_path=' . $suite_config['repo_path'] . ',repository=' . (int) $suite_config['repository'];
 
-		if ( isset( $suite_configp['enforce_clean_db'] ) ) {
-			$string .= ',enforce_clean_db=' . (int) $suite_configp['enforce_clean_db'];
+		if ( isset( $suite_config['enforce_clean_db'] ) ) {
+			$string .= ',enforce_clean_db=' . (int) $suite_config['enforce_clean_db'];
 		}
 
-		if ( isset( $suite_configp['disable_clean_db'] ) ) {
-			$string .= ',disable_clean_db=' . (int) $suite_configp['disable_clean_db'];
-		}
-
-		if ( isset( $suite_configp['repository'] ) ) {
-			$string .= ',repository=' . (int) $suite_configp['repository'];
+		if ( isset( $suite_config['disable_clean_db'] ) ) {
+			$string .= ',disable_clean_db=' . (int) $suite_config['disable_clean_db'];
 		}
 
 		return md5( $string );
