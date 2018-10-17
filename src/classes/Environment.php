@@ -127,6 +127,13 @@ class Environment {
 	protected $snapshot_repo_path;
 
 	/**
+	 * Whether we are in gitlab or not
+	 *
+	 * @var bool
+	 */
+	public $gitab = false;
+
+	/**
 	 * Environment constructor
 	 *
 	 * @param  Config  $suite_config Config array
@@ -137,6 +144,27 @@ class Environment {
 		$this->suite_config      = $suite_config;
 		$this->cache_environment = $cache_environment;
 		$this->environment_id    = 'wpa-' . self::generateEnvironmentId( $suite_config );
+
+		$this->gitlab = Utils\is_gitlab();
+	}
+
+	/**
+	 * Run shell command to get volume name
+	 *
+	 * @return bool|string
+	 */
+	private function getGitLabVolumeName() {
+		static $volume_name;
+
+		if ( ! isset( $volume_name ) ) {
+			$volume_name = exec( 'CURRENT_CONTAINER_ID=$(docker ps -q -f "label=com.gitlab.gitlab-runner.job.id=$CI_JOB_ID" -f "label=com.gitlab.gitlab-runner.type=build") /usr/bin/docker inspect --format "{{ range .Mounts }}{{ if eq .Destination \"/builds/$CI_PROJECT_NAMESPACE\"}}{{ .Name }}{{ end }}{{ end }}" $CURRENT_CONTAINER_ID' );
+
+			if ( empty( $volume_name ) ) {
+				$volume_name = false;
+			}
+		}
+
+		return $volume_name;
 	}
 
 	/**
@@ -849,15 +877,22 @@ class Environment {
 
 		$host_config->setNetworkMode( $this->environment_id );
 		$host_config->setExtraHosts( [ 'wpassure.test:' . $this->gateway_ip ] );
-		$host_config->setBinds(
-			[
+
+		if ( Utils\is_gitlab() ) {
+			$binds = [
+				Utils\gitlab_get_volume_name() . ':/root',
+			];
+		} else {
+			$binds = [
 				\WPSnapshots\Utils\get_snapshot_directory() . $this->suite_config['snapshot_id'] . ':/root/.wpsnapshots/' . $this->suite_config['snapshot_id'],
 				\WPSnapshots\Utils\get_snapshot_directory() . 'config.json:/root/.wpsnapshots/config.json',
 				$this->suite_config['host_repo_path'] . ':/root/repo',
 				WPASSURE_DIR . '/docker/mysql:/etc/mysql/conf.d',
 				WPASSURE_DIR . '/docker/wordpress/config/default.conf:/etc/nginx/sites-available/default',
-			]
-		);
+			];
+		}
+
+		$host_config->setBinds( $binds );
 
 		Log::instance()->write( 'Mapping ' . $this->suite_config['host_repo_path'] . ' to /root/repo', 2 );
 
