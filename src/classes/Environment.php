@@ -878,18 +878,13 @@ class Environment {
 
 		if ( GitLab::get()->isGitlab() ) {
 			$binds = [
-				GitLab::get()->getVolumeName() . '/' . GitLab::get()->getProjectDirectory() . ':/root/repo',
-				GitLab::get()->getVolumeName() . '/' . GitLab::get()->getWPAssureDirectory() . '/docker/mysql:/etc/mysql/conf.d',
-				GitLab::get()->getVolumeName() . '/' . GitLab::get()->getWPAssureDirectory() . '/docker/wordpress/config/default.conf:/etc/nginx/sites-available/default',
-				GitLab::get()->getVolumeName() . '/.wpsnapshots:/root/.wpsnapshots',
+				GitLab::get()->getVolumeName() . ':/root',
 			];
 		} else {
 			$binds = [
 				\WPSnapshots\Utils\get_snapshot_directory() . $this->suite_config['snapshot_id'] . ':/root/.wpsnapshots/' . $this->suite_config['snapshot_id'],
 				\WPSnapshots\Utils\get_snapshot_directory() . 'config.json:/root/.wpsnapshots/config.json',
 				$this->suite_config['host_repo_path'] . ':/root/repo',
-				WPASSURE_DIR . '/docker/mysql:/etc/mysql/conf.d',
-				WPASSURE_DIR . '/docker/wordpress/config/default.conf:/etc/nginx/sites-available/default',
 			];
 		}
 

@@ -83,6 +83,10 @@ class Run extends Command {
 			return 3;
 		}
 
+		if ( GitLab::get()->isGitlab() ) {
+			Log::instance()->write( 'Running WP Assure in GitLab.', 1 );
+		}
+
 		$suite_config_directory = $input->getArgument( 'suite_config_directory' );
 
 		$suite_config = Config::create( $suite_config_directory );

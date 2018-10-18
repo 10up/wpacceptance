@@ -21,4 +21,8 @@ RUN /bin/bash -c "source $NVM_DIR/nvm.sh && nvm install $NODE_VERSION && nvm use
 ENV NODE_PATH $NVM_DIR/versions/node/$NODE_VERSION/lib/node_modules
 ENV PATH      $NVM_DIR/versions/node/$NODE_VERSION/bin:$PATH
 
+COPY ./mysql /etc/mysql/conf.d/
+
+COPY ./nginx /etc/nginx/sites-available/
+
 CMD nginx && php-fpm
