@@ -144,8 +144,6 @@ class Environment {
 		$this->suite_config      = $suite_config;
 		$this->cache_environment = $cache_environment;
 		$this->environment_id    = 'wpa-' . self::generateEnvironmentId( $suite_config );
-
-		$this->gitlab = Utils\is_gitlab();
 	}
 
 	/**
@@ -878,9 +876,12 @@ class Environment {
 		$host_config->setNetworkMode( $this->environment_id );
 		$host_config->setExtraHosts( [ 'wpassure.test:' . $this->gateway_ip ] );
 
-		if ( Utils\is_gitlab() ) {
+		if ( GitLab::get()->isGitlab() ) {
 			$binds = [
-				Utils\gitlab_get_volume_name() . ':/root',
+				GitLab::get()->getVolumeName() . '/' . GitLab::get()->getProjectDirectory() . ':/root/repo',
+				GitLab::get()->getVolumeName() . '/' . GitLab::get()->getWPAssureDirectory() . '/docker/mysql:/etc/mysql/conf.d',
+				GitLab::get()->getVolumeName() . '/' . GitLab::get()->getWPAssureDirectory() . '/docker/wordpress/config/default.conf:/etc/nginx/sites-available/default',
+				GitLab::get()->getVolumeName() . '/.wpsnapshots:/root/.wpsnapshots',
 			];
 		} else {
 			$binds = [

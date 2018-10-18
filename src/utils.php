@@ -21,26 +21,6 @@ function find_match( $content, $string_or_pattern ) {
 }
 
 /**
- * Detect whether we are in gitlab or not
- *
- * @return boolean
- */
-function is_gitlab() {
-	return ! empty( getenv( 'CI_CONFIG_PATH' ) );
-}
-
-/**
- * Run shell command to get volume name
- *
- * @return bool|string
- */
-function gitlab_get_volume_name() {
-	$volume = exec( 'CURRENT_CONTAINER_ID=$(docker ps -q -f "label=com.gitlab.gitlab-runner.job.id=$CI_JOB_ID" -f "label=com.gitlab.gitlab-runner.type=build") /usr/bin/docker inspect --format "{{ range .Mounts }}{{ if eq .Destination \"/builds/$CI_PROJECT_NAMESPACE\"}}{{ .Name }}{{ end }}{{ end }}" $CURRENT_CONTAINER_ID' );
-
-	return empty( $volume ) ? false : volume;
-}
-
-/**
  * Find root of WP install (where wp-config.php resides)
  *
  * @param  string $path Directory to start searching from. Defaults to cwd
