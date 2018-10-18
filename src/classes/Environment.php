@@ -876,7 +876,11 @@ class Environment {
 		$host_config->setNetworkMode( $this->environment_id );
 		$host_config->setExtraHosts( [ 'wpassure.test:' . $this->gateway_ip ] );
 
+		$container_config = new ContainersCreatePostBody();
+
 		if ( GitLab::get()->isGitlab() ) {
+			$container_config->setEnv( [ 'WPSNAPSHOTS_DIR=/gitlab/.wpsnapshots/' ] );
+
 			$binds = [
 				GitLab::get()->getVolumeName() . ':/root',
 			];
@@ -894,8 +898,6 @@ class Environment {
 
 		$container_port_map           = new \ArrayObject();
 		$container_port_map['80/tcp'] = new \stdClass();
-
-		$container_config = new ContainersCreatePostBody();
 
 		$container_config->setImage( '10up/wpassure-wordpress' );
 		$container_config->setAttachStdin( true );

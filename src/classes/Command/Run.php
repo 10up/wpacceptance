@@ -20,6 +20,7 @@ use WPAssure\EnvironmentFactory;
 use WPAssure\Log;
 use WPAssure\Utils;
 use WPAssure\Config;
+use WPAssure\GitLab;
 use WPSnapshots\RepositoryManager;
 use WPSnapshots\Snapshot;
 use WPSnapshots\Log as WPSnapshotsLog;
