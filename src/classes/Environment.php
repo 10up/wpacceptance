@@ -854,8 +854,6 @@ class Environment {
 				\WPSnapshots\Utils\get_snapshot_directory() . $this->suite_config['snapshot_id'] . ':/root/.wpsnapshots/' . $this->suite_config['snapshot_id'],
 				\WPSnapshots\Utils\get_snapshot_directory() . 'config.json:/root/.wpsnapshots/config.json',
 				$this->suite_config['host_repo_path'] . ':/root/repo',
-				WPASSURE_DIR . '/docker/mysql:/etc/mysql/conf.d',
-				WPASSURE_DIR . '/docker/wordpress/config/default.conf:/etc/nginx/sites-available/default',
 			]
 		);
 
