@@ -882,7 +882,7 @@ class Environment {
 			$container_config->setEnv( [ 'WPSNAPSHOTS_DIR=/gitlab/.wpsnapshots/' ] );
 
 			$binds = [
-				GitLab::get()->getVolumeName() . ':/root',
+				GitLab::get()->getVolumeName() . ':/gitlab',
 			];
 		} else {
 			$binds = [
