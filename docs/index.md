@@ -337,3 +337,7 @@ done
 
 exit $EXIT_CODE
 ```
+
+### GitLab
+
+WP Assure works well with GitLab as well. The only difference is when running `wpsnapshots configure`, you need to prefix with an environmental variable `WPSNAPSHOTS_DIR` e.g. `WPSNAPSHOTS_DIR=WPSNAPSHOTS_DIR=/builds/NAMESPACE/.wpsnapshots/`.
