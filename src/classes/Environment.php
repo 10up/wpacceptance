@@ -504,7 +504,7 @@ class Environment {
 	 * @return boolean
 	 */
 	public function setupMySQL() {
-		$this->mysql_client = new MySQL( $this->getMySQLCredentials(), $this->mysql_port, $this->snapshot->meta['table_prefix'] );
+		$this->mysql_client = new MySQL( $this->getMySQLCredentials(), $this->getLocalIP(), $this->mysql_port, $this->snapshot->meta['table_prefix'] );
 
 		/**
 		 * Create duplicate WP DB to dirty
