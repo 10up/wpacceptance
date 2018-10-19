@@ -166,7 +166,16 @@ class Environment {
 	}
 
 	/**
-	 * Get repo root in WP container
+	 * Get local IP. Different for gitlab
+	 *
+	 * @return string
+	 */
+	public function getLocalIP() {
+		return ( GitLab::get()->isGitLab() ) ? $this->getGatewayIP() : '127.0.0.1';
+	}
+
+	/**
+	 * Get repo root in WP container. Different for gitlab
 	 *
 	 * @return string
 	 */
@@ -289,7 +298,7 @@ class Environment {
 			return false;
 		}
 
-		$this->mysql_client = new MySQL( $this->getMySQLCredentials(), $this->mysql_port, $this->snapshot->meta['table_prefix'] );
+		$this->mysql_client = new MySQL( $this->getMySQLCredentials(), $this->getLocalIP(), $this->mysql_port, $this->snapshot->meta['table_prefix'] );
 
 		return $this->current_mysql_db;
 	}
@@ -798,7 +807,7 @@ class Environment {
 		static $used_ports = [];
 
 		for ( $i = 1000; $i <= 9999; $i++ ) {
-			if ( ! in_array( $i, $used_ports, true ) && Utils\is_open_port( '127.0.0.1', $i ) ) {
+			if ( ! in_array( $i, $used_ports, true ) && Utils\is_open_port( $this->getLocalIP(), $i ) ) {
 				$used_ports[] = $i;
 
 				return $i;
@@ -1127,7 +1136,7 @@ class Environment {
 	 * @return string
 	 */
 	public function getSeleniumServerUrl() {
-		return 'http://localhost:' . intval( $this->selenium_port ) . '/wd/hub';
+		return 'http://' . $this->getLocalIP() . ':' . intval( $this->selenium_port ) . '/wd/hub';
 	}
 
 	/**

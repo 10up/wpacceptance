@@ -37,14 +37,22 @@ class MySQL {
 	protected $port;
 
 	/**
+	 * IP address for mysql
+	 *
+	 * @var string
+	 */
+	protected $ip;
+
+	/**
 	 * Setup MySQL
 	 *
 	 * @param  array  $mysql_creds MySQL creds
+	 * @param  string $ip IP address
 	 * @param  int    $port External MySQL port
 	 * @param  string $table_prefix Table prefix to use in queries
 	 */
-	public function __construct( $mysql_creds, $port, $table_prefix ) {
-		$this->mysqli_instance = new mysqli( '127.0.0.1:' . $port, $mysql_creds['DB_USER'], $mysql_creds['DB_PASSWORD'], $mysql_creds['DB_NAME'] );
+	public function __construct( $mysql_creds, $ip, $port, $table_prefix ) {
+		$this->mysqli_instance = new mysqli( $ip . ':' . $port, $mysql_creds['DB_USER'], $mysql_creds['DB_PASSWORD'], $mysql_creds['DB_NAME'] );
 
 		if ( $this->mysqli_instance->connect_error ) {
 			$this->mysqli_instance = false;
@@ -53,6 +61,7 @@ class MySQL {
 		$this->table_prefix = $table_prefix;
 
 		$this->port = $port;
+		$this->ip   = $ip;
 	}
 
 	/**
