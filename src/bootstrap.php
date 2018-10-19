@@ -18,6 +18,10 @@ define( 'WPASSURE_DIR', dirname( __DIR__ ) );
  */
 ini_set( 'memory_limit', '-1' );
 
+if ( GitLab::get()->isGitLab() ) {
+	putenv( 'WPSNAPSHOTS_DIR=' . GitLab::get()->getSnapshotsDirectory() );
+}
+
 /**
  * Register commands
  */

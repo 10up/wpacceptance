@@ -20,6 +20,7 @@ use WPAssure\EnvironmentFactory;
 use WPAssure\Log;
 use WPAssure\Utils;
 use WPAssure\Config;
+use WPAssure\GitLab;
 use WPSnapshots\RepositoryManager;
 use WPSnapshots\Snapshot;
 use WPSnapshots\Log as WPSnapshotsLog;
@@ -81,6 +82,10 @@ class Run extends Command {
 		if ( ! function_exists( 'mysqli_init' ) ) {
 			Log::instance()->write( 'WP Assure requires the mysqli PHP extension is installed.', 0, 'error' );
 			return 3;
+		}
+
+		if ( GitLab::get()->isGitLab() ) {
+			Log::instance()->write( 'Running WP Assure in GitLab.', 1 );
 		}
 
 		$suite_config_directory = $input->getArgument( 'suite_config_directory' );

@@ -127,6 +127,13 @@ class Environment {
 	protected $snapshot_repo_path;
 
 	/**
+	 * Whether we are in gitlab or not
+	 *
+	 * @var bool
+	 */
+	public $gitab = false;
+
+	/**
 	 * Environment constructor
 	 *
 	 * @param  Config  $suite_config Config array
@@ -137,6 +144,43 @@ class Environment {
 		$this->suite_config      = $suite_config;
 		$this->cache_environment = $cache_environment;
 		$this->environment_id    = 'wpa-' . self::generateEnvironmentId( $suite_config );
+	}
+
+	/**
+	 * Run shell command to get volume name
+	 *
+	 * @return bool|string
+	 */
+	private function getGitLabVolumeName() {
+		static $volume_name;
+
+		if ( ! isset( $volume_name ) ) {
+			$volume_name = exec( 'CURRENT_CONTAINER_ID=$(docker ps -q -f "label=com.gitlab.gitlab-runner.job.id=$CI_JOB_ID" -f "label=com.gitlab.gitlab-runner.type=build") /usr/bin/docker inspect --format "{{ range .Mounts }}{{ if eq .Destination \"/builds/$CI_PROJECT_NAMESPACE\"}}{{ .Name }}{{ end }}{{ end }}" $CURRENT_CONTAINER_ID' );
+
+			if ( empty( $volume_name ) ) {
+				$volume_name = false;
+			}
+		}
+
+		return $volume_name;
+	}
+
+	/**
+	 * Get local IP. Different for gitlab
+	 *
+	 * @return string
+	 */
+	public function getLocalIP() {
+		return ( GitLab::get()->isGitLab() ) ? $this->getGatewayIP() : '127.0.0.1';
+	}
+
+	/**
+	 * Get repo root in WP container. Different for gitlab
+	 *
+	 * @return string
+	 */
+	public function getWPContainerRepoRoot() {
+		return ( GitLab::get()->isGitLab() ) ? '/gitlab/' . GitLab::get()->getProjectDirectory() : '/root/repo';
 	}
 
 	/**
@@ -254,7 +298,7 @@ class Environment {
 			return false;
 		}
 
-		$this->mysql_client = new MySQL( $this->getMySQLCredentials(), $this->mysql_port, $this->snapshot->meta['table_prefix'] );
+		$this->mysql_client = new MySQL( $this->getMySQLCredentials(), $this->getLocalIP(), $this->mysql_port, $this->snapshot->meta['table_prefix'] );
 
 		return $this->current_mysql_db;
 	}
@@ -460,7 +504,7 @@ class Environment {
 	 * @return boolean
 	 */
 	public function setupMySQL() {
-		$this->mysql_client = new MySQL( $this->getMySQLCredentials(), $this->mysql_port, $this->snapshot->meta['table_prefix'] );
+		$this->mysql_client = new MySQL( $this->getMySQLCredentials(), $this->getLocalIP(), $this->mysql_port, $this->snapshot->meta['table_prefix'] );
 
 		/**
 		 * Create duplicate WP DB to dirty
@@ -607,7 +651,7 @@ class Environment {
 			}
 		}
 
-		$rsync_command = 'rsync -a -I --exclude=".git" ' . $excludes . ' /root/repo/ ' . $this->snapshot_repo_path;
+		$rsync_command = 'rsync -a -I --exclude=".git" ' . $excludes . ' ' . $this->getWPContainerRepoRoot() . '/ ' . $this->snapshot_repo_path;
 
 		Log::instance()->write( $rsync_command, 2 );
 
@@ -763,7 +807,7 @@ class Environment {
 		static $used_ports = [];
 
 		for ( $i = 1000; $i <= 9999; $i++ ) {
-			if ( ! in_array( $i, $used_ports, true ) && Utils\is_open_port( '127.0.0.1', $i ) ) {
+			if ( ! in_array( $i, $used_ports, true ) && Utils\is_open_port( $this->getLocalIP(), $i ) ) {
 				$used_ports[] = $i;
 
 				return $i;
@@ -849,20 +893,29 @@ class Environment {
 
 		$host_config->setNetworkMode( $this->environment_id );
 		$host_config->setExtraHosts( [ 'wpassure.test:' . $this->gateway_ip ] );
-		$host_config->setBinds(
-			[
+
+		$container_config = new ContainersCreatePostBody();
+
+		if ( GitLab::get()->isGitLab() ) {
+			$container_config->setEnv( [ 'WPSNAPSHOTS_DIR=/gitlab/.wpsnapshots/' ] );
+
+			$binds = [
+				GitLab::get()->getVolumeName() . ':/gitlab',
+			];
+		} else {
+			$binds = [
 				\WPSnapshots\Utils\get_snapshot_directory() . $this->suite_config['snapshot_id'] . ':/root/.wpsnapshots/' . $this->suite_config['snapshot_id'],
 				\WPSnapshots\Utils\get_snapshot_directory() . 'config.json:/root/.wpsnapshots/config.json',
 				$this->suite_config['host_repo_path'] . ':/root/repo',
-			]
-		);
+			];
+		}
 
-		Log::instance()->write( 'Mapping ' . $this->suite_config['host_repo_path'] . ' to /root/repo', 2 );
+		$host_config->setBinds( $binds );
+
+		Log::instance()->write( 'Mapping ' . $this->suite_config['host_repo_path'] . ' to ' . $this->getWPContainerRepoRoot(), 2 );
 
 		$container_port_map           = new \ArrayObject();
 		$container_port_map['80/tcp'] = new \stdClass();
-
-		$container_config = new ContainersCreatePostBody();
 
 		$container_config->setImage( '10up/wpassure-wordpress' );
 		$container_config->setAttachStdin( true );
@@ -1083,7 +1136,7 @@ class Environment {
 	 * @return string
 	 */
 	public function getSeleniumServerUrl() {
-		return 'http://localhost:' . intval( $this->selenium_port ) . '/wd/hub';
+		return 'http://' . $this->getLocalIP() . ':' . intval( $this->selenium_port ) . '/wd/hub';
 	}
 
 	/**
