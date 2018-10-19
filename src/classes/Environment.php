@@ -166,6 +166,15 @@ class Environment {
 	}
 
 	/**
+	 * Get repo root in WP container
+	 *
+	 * @return string
+	 */
+	public function getWPContainerRepoRoot() {
+		return ( GitLab::get()->is_gitlab() ) ? '/gitlab/' . GitLab::get()->getProjectDirectory() : '/root/repo';
+	}
+
+	/**
 	 * Attempt to populate environment from cache
 	 *
 	 * @return bool
@@ -633,7 +642,7 @@ class Environment {
 			}
 		}
 
-		$rsync_command = 'rsync -a -I --exclude=".git" ' . $excludes . ' /root/repo/ ' . $this->snapshot_repo_path;
+		$rsync_command = 'rsync -a -I --exclude=".git" ' . $excludes . ' ' . $this->getWPContainerRepoRoot() . '/ ' . $this->snapshot_repo_path;
 
 		Log::instance()->write( $rsync_command, 2 );
 
@@ -894,7 +903,7 @@ class Environment {
 
 		$host_config->setBinds( $binds );
 
-		Log::instance()->write( 'Mapping ' . $this->suite_config['host_repo_path'] . ' to /root/repo', 2 );
+		Log::instance()->write( 'Mapping ' . $this->suite_config['host_repo_path'] . ' to ' . $this->getWPContainerRepoRoot(), 2 );
 
 		$container_port_map           = new \ArrayObject();
 		$container_port_map['80/tcp'] = new \stdClass();
