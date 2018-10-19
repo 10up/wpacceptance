@@ -59,7 +59,7 @@ class GitLab {
 	 *
 	 * @return boolean
 	 */
-	public function isGitlab() {
+	public function isGitLab() {
 		return $this->is_gitlab;
 	}
 

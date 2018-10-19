@@ -84,7 +84,7 @@ class Run extends Command {
 			return 3;
 		}
 
-		if ( GitLab::get()->isGitlab() ) {
+		if ( GitLab::get()->isGitLab() ) {
 			Log::instance()->write( 'Running WP Assure in GitLab.', 1 );
 		}
 

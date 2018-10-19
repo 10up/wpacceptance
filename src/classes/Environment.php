@@ -171,7 +171,7 @@ class Environment {
 	 * @return string
 	 */
 	public function getWPContainerRepoRoot() {
-		return ( GitLab::get()->is_gitlab() ) ? '/gitlab/' . GitLab::get()->getProjectDirectory() : '/root/repo';
+		return ( GitLab::get()->isGitLab() ) ? '/gitlab/' . GitLab::get()->getProjectDirectory() : '/root/repo';
 	}
 
 	/**
@@ -887,7 +887,7 @@ class Environment {
 
 		$container_config = new ContainersCreatePostBody();
 
-		if ( GitLab::get()->isGitlab() ) {
+		if ( GitLab::get()->isGitLab() ) {
 			$container_config->setEnv( [ 'WPSNAPSHOTS_DIR=/gitlab/.wpsnapshots/' ] );
 
 			$binds = [
