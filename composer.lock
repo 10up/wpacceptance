@@ -12,7 +12,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/10up/wpsnapshots.git",
-                "reference": "049fa3795e70ab2dd25a5968465e2dcb79484ff6"
+                "reference": "d4f4411cf3a5a93445bb44ea73c33d26ac5b79ff"
             },
             "require": {
                 "aws/aws-sdk-php": "^3.67",
@@ -58,20 +58,20 @@
                 "snapshots",
                 "wordpress"
             ],
-            "time": "2018-10-14T22:04:44+00:00"
+            "time": "2018-10-17T18:52:31+00:00"
         },
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.69.2",
+            "version": "3.69.10",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
-                "reference": "65c88e074dffe4cb25b840c154b2f39564b39287"
+                "reference": "ec24754778d1223e0728d16783b0ee31efc55dce"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/65c88e074dffe4cb25b840c154b2f39564b39287",
-                "reference": "65c88e074dffe4cb25b840c154b2f39564b39287",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/ec24754778d1223e0728d16783b0ee31efc55dce",
+                "reference": "ec24754778d1223e0728d16783b0ee31efc55dce",
                 "shasum": ""
             },
             "require": {
@@ -141,7 +141,7 @@
                 "s3",
                 "sdk"
             ],
-            "time": "2018-10-08T20:05:34+00:00"
+            "time": "2018-10-18T20:39:29+00:00"
         },
         {
             "name": "clue/stream-filter",
@@ -3486,12 +3486,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/10up/phpcs-composer.git",
-                "reference": "b3b1f2149dd01a42e8c384f1f8e1d01f161eb04f"
+                "reference": "fc869717964c5097041d07a20b2886b970f9caea"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/10up/phpcs-composer/zipball/b3b1f2149dd01a42e8c384f1f8e1d01f161eb04f",
-                "reference": "b3b1f2149dd01a42e8c384f1f8e1d01f161eb04f",
+                "url": "https://api.github.com/repos/10up/phpcs-composer/zipball/fc869717964c5097041d07a20b2886b970f9caea",
+                "reference": "fc869717964c5097041d07a20b2886b970f9caea",
                 "shasum": ""
             },
             "require": {
@@ -3518,7 +3518,7 @@
                     "email": "ephraim.gregor@10up.com"
                 }
             ],
-            "time": "2018-08-30T03:14:09+00:00"
+            "time": "2018-10-11T17:46:49+00:00"
         },
         {
             "name": "squizlabs/php_codesniffer",
