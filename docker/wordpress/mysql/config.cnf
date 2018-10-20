@@ -1,4 +1,0 @@
-[mysqld]
-general_log_file = /var/log/mysql/query.log
-general_log      = 1
-log_output       = TABLE

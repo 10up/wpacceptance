@@ -506,6 +506,10 @@ class Environment {
 	public function setupMySQL() {
 		$this->mysql_client = new MySQL( $this->getMySQLCredentials(), $this->getLocalIP(), $this->mysql_port, $this->snapshot->meta['table_prefix'] );
 
+		// Enable general logging
+		$this->mysql_client->query( 'SET global general_log = 1' );
+		$this->mysql_client->query( 'SET global log_output = "table"' );
+
 		/**
 		 * Create duplicate WP DB to dirty
 		 */
