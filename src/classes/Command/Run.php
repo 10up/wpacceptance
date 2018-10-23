@@ -98,7 +98,7 @@ class Run extends Command {
 
 		$repository_name = $input->getOption( 'repository' );
 
-		if ( empty( $repository_name ) && ! empty( $suite_config['repository'] ) )  {
+		if ( empty( $repository_name ) && ! empty( $suite_config['repository'] ) ) {
 			$repository_name = $suite_config['repository'];
 		}
 

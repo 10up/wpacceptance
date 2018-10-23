@@ -107,11 +107,10 @@ class GitLab {
 		$this->container_id = exec( 'docker ps -q -f "label=com.gitlab.gitlab-runner.job.id=$CI_JOB_ID" -f "label=com.gitlab.gitlab-runner.type=build"' );
 
 		if ( ! empty( $this->container_id ) ) {
-			$this->volume_name         = exec( 'docker inspect --format "{{ range .Mounts }}{{ if eq .Destination \"/builds/$CI_PROJECT_NAMESPACE\"}}{{ .Name }}{{ end }}{{ end }}" ' . $this->container_id );
+			$this->volume_name = exec( 'docker inspect --format "{{ range .Mounts }}{{ if eq .Destination \"/builds/$CI_PROJECT_NAMESPACE\"}}{{ .Name }}{{ end }}{{ end }}" ' . $this->container_id );
 		}
 
 		$this->project_directory   = getenv( 'CI_PROJECT_NAME' );
-		//$this->wpassure_directory  = str_replace( '/builds/' . getenv( 'CI_PROJECT_NAMESPACE' ) . '/', '', WPASSURE_DIR );
 		$this->snapshots_directory = '/builds/' . getenv( 'CI_PROJECT_NAMESPACE' ) . '/.wpsnapshots/';
 	}
 

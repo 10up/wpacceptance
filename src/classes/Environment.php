@@ -147,25 +147,6 @@ class Environment {
 	}
 
 	/**
-	 * Run shell command to get volume name
-	 *
-	 * @return bool|string
-	 */
-	private function getGitLabVolumeName() {
-		static $volume_name;
-
-		if ( ! isset( $volume_name ) ) {
-			$volume_name = exec( 'CURRENT_CONTAINER_ID=$(docker ps -q -f "label=com.gitlab.gitlab-runner.job.id=$CI_JOB_ID" -f "label=com.gitlab.gitlab-runner.type=build") /usr/bin/docker inspect --format "{{ range .Mounts }}{{ if eq .Destination \"/builds/$CI_PROJECT_NAMESPACE\"}}{{ .Name }}{{ end }}{{ end }}" $CURRENT_CONTAINER_ID' );
-
-			if ( empty( $volume_name ) ) {
-				$volume_name = false;
-			}
-		}
-
-		return $volume_name;
-	}
-
-	/**
 	 * Get local IP. Different for gitlab
 	 *
 	 * @return string
