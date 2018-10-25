@@ -87,6 +87,8 @@ After our tests pass, you will see the snapshot get pushed upstream.
 
 You should create new snapshots when new features, plugins, content types, etc. are added to your web application.
 
+*Note:* Make sure you run WP Assure on your HOST machine, not within another Docker environment.
+
 ## Workflow and Snapshots
 
 There are two scenarios or workflows for running WP Assure:
