@@ -92,6 +92,13 @@ class Environment {
 	protected $cache_environment = false;
 
 	/**
+	 * If a valid cached environment exists, don't use it. Don't cache the new environment.
+	 *
+	 * @var boolean
+	 */
+	protected $skip_cache = false;
+
+	/**
 	 * Snapshot instance
 	 *
 	 * @var \WPSnapshots\Snapshot
@@ -138,12 +145,18 @@ class Environment {
 	 *
 	 * @param  Config  $suite_config Config array
 	 * @param  boolean $cache_environment Cache environment for later or not
+	 * @param  boolean $skip_cache If a valid cached environment exists, don't use it. Don't cache the new environment.
 	 */
-	public function __construct( $suite_config = null, $cache_environment = false ) {
+	public function __construct( $suite_config = null, $cache_environment = false, $skip_cache = false ) {
 		$this->docker            = Docker::create();
 		$this->suite_config      = $suite_config;
 		$this->cache_environment = $cache_environment;
-		$this->environment_id    = 'wpa-' . self::generateEnvironmentId( $suite_config );
+		$this->skip_cache        = $skip_cache;
+
+		// If we are skipping cache just get a semi random hash for the id so collisions dont occur
+		$id = ( $skip_cache ) ? md5( time() . '' . rand( 0, 10000 ) ) : self::generateEnvironmentId( $suite_config );
+
+		$this->environment_id = 'wpa-' . $id;
 	}
 
 	/**
@@ -170,6 +183,11 @@ class Environment {
 	 * @return bool
 	 */
 	public function populateEnvironmentFromCache() {
+		if ( $this->skip_cache ) {
+			Log::instance()->write( 'Skipping environment cache look up.', 1 );
+			return false;
+		}
+
 		Log::instance()->write( 'Getting environment meta...', 1 );
 
 		$command = 'cat /root/environment_meta.json';
@@ -722,7 +740,7 @@ class Environment {
 	 * @return  bool
 	 */
 	public function destroy() {
-		if ( $this->cache_environment ) {
+		if ( $this->cache_environment && ! $this->skip_cache ) {
 			Log::instance()->write( 'Caching environment.' );
 			return false;
 		}
