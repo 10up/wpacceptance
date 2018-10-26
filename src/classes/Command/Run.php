@@ -40,7 +40,7 @@ class Run extends Command {
 		$this->addArgument( 'suite_config_directory', InputArgument::OPTIONAL, 'Path to a directory that contains wpassure.json.' );
 
 		$this->addOption( 'cache_environment', false, InputOption::VALUE_NONE, 'Cache environment for repeat use.' );
-		$this->addOption( 'skip_cache', false, InputOption::VALUE_NONE, "If a valid cached environment exists, don't use it. Don't cache the new environment." );
+		$this->addOption( 'skip_environment_cache', false, InputOption::VALUE_NONE, "If a valid cached environment exists, don't use it. Don't cache the new environment." );
 		$this->addOption( 'screenshot_on_failure', false, InputOption::VALUE_NONE, 'Take screenshot on test failure or error.' );
 
 		$this->addOption( 'local', false, InputOption::VALUE_NONE, 'Run tests against local WordPress install.' );
