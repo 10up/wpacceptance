@@ -200,7 +200,7 @@ class Run extends Command {
 
 		Log::instance()->write( 'Creating environment...' );
 
-		$environment = EnvironmentFactory::create( $suite_config, $input->getOption( 'cache_environment' ), $input->getOption( 'skip_cache' ) );
+		$environment = EnvironmentFactory::create( $suite_config, $input->getOption( 'cache_environment' ), $input->getOption( 'skip_environment_cache' ) );
 
 		if ( ! $environment ) {
 			return 2;
