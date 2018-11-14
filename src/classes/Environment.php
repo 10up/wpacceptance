@@ -158,7 +158,7 @@ class Environment {
 		// if
 		$id = ( $skip_environment_cache ) ? md5( time() . '' . rand( 0, 10000 ) ) : self::generateEnvironmentId( $suite_config );
 
-		$this->environment_id = ( ! empty( $environment_id ) ) ? $environment_id : 'wpa-' . $id;
+		$this->environment_id = ( ! empty( $environment_id ) ) ? $environment_id . '-wpa' : $id . '-wpa';
 	}
 
 	/**
@@ -201,7 +201,7 @@ class Environment {
 		$exec_config->setCmd( [ '/bin/sh', '-c', $command ] );
 
 		try {
-			$exec_command      = $this->docker->containerExec( 'wordpress-' . $this->environment_id, $exec_config );
+			$exec_command      = $this->docker->containerExec( $this->environment_id . '-wordpress', $exec_config );
 			$exec_id           = $exec_command->getId();
 			$exec_start_config = new ExecIdStartPostBody();
 			$exec_start_config->setDetach( false );
@@ -271,7 +271,7 @@ class Environment {
 		$exec_config->setAttachStderr( true );
 		$exec_config->setCmd( [ '/bin/sh', '-c', $command ] );
 
-		$exec_command      = $this->docker->containerExec( 'wordpress-' . $this->environment_id, $exec_config );
+		$exec_command      = $this->docker->containerExec( $this->environment_id . '-wordpress', $exec_config );
 		$exec_id           = $exec_command->getId();
 		$exec_start_config = new ExecIdStartPostBody();
 		$exec_start_config->setDetach( false );
@@ -321,7 +321,7 @@ class Environment {
 		$exec_config->setAttachStderr( true );
 		$exec_config->setCmd( [ '/bin/sh', '-c', $command ] );
 
-		$exec_command      = $this->docker->containerExec( 'mysql-' . $this->environment_id, $exec_config );
+		$exec_command      = $this->docker->containerExec( $this->environment_id . '-mysql', $exec_config );
 		$exec_id           = $exec_command->getId();
 		$exec_start_config = new ExecIdStartPostBody();
 		$exec_start_config->setDetach( false );
@@ -375,7 +375,7 @@ class Environment {
 			$exec_config->setAttachStderr( true );
 			$exec_config->setCmd( [ '/bin/bash', '-c', $command ] );
 
-			$exec_command      = $this->docker->containerExec( 'wordpress-' . $this->environment_id, $exec_config );
+			$exec_command      = $this->docker->containerExec( $this->environment_id . '-wordpress', $exec_config );
 			$exec_id           = $exec_command->getId();
 			$exec_start_config = new ExecIdStartPostBody();
 			$exec_start_config->setDetach( false );
@@ -468,7 +468,7 @@ class Environment {
 		$exec_config->setAttachStderr( true );
 		$exec_config->setCmd( [ '/bin/sh', '-c', $command ] );
 
-		$exec_command      = $this->docker->containerExec( 'wordpress-' . $this->environment_id, $exec_config );
+		$exec_command      = $this->docker->containerExec( $this->environment_id . '-wordpress', $exec_config );
 		$exec_id           = $exec_command->getId();
 		$exec_start_config = new ExecIdStartPostBody();
 		$exec_start_config->setDetach( false );
@@ -538,7 +538,7 @@ class Environment {
 		$exec_config->setAttachStderr( true );
 		$exec_config->setCmd( [ '/bin/sh', '-c', 'find /var/www/html -name "wpassure.json" -not -path "/var/www/html/wp-includes/*" -not -path "/var/www/html/wp-admin/*"' ] );
 
-		$exec_id           = $this->docker->containerExec( 'wordpress-' . $this->environment_id, $exec_config )->getId();
+		$exec_id           = $this->docker->containerExec( $this->environment_id . '-wordpress', $exec_config )->getId();
 		$exec_start_config = new ExecIdStartPostBody();
 		$exec_start_config->setDetach( false );
 
@@ -582,7 +582,7 @@ class Environment {
 			$exec_config->setAttachStderr( true );
 			$exec_config->setCmd( [ '/bin/sh', '-c', 'php -r "\$config = json_decode(file_get_contents(\"' . $suite_config_file . '\"), true); echo \$config[\"name\"];"' ] );
 
-			$exec_id           = $this->docker->containerExec( 'wordpress-' . $this->environment_id, $exec_config )->getId();
+			$exec_id           = $this->docker->containerExec( $this->environment_id . '-wordpress', $exec_config )->getId();
 			$exec_start_config = new ExecIdStartPostBody();
 			$exec_start_config->setDetach( false );
 
@@ -666,7 +666,7 @@ class Environment {
 		$exec_config->setAttachStderr( true );
 		$exec_config->setCmd( [ '/bin/sh', '-c', $rsync_command ] );
 
-		$exec_id           = $this->docker->containerExec( 'wordpress-' . $this->environment_id, $exec_config )->getId();
+		$exec_id           = $this->docker->containerExec( $this->environment_id . '-wordpress', $exec_config )->getId();
 		$exec_start_config = new ExecIdStartPostBody();
 		$exec_start_config->setDetach( false );
 
@@ -705,7 +705,7 @@ class Environment {
 		$exec_config->setAttachStderr( true );
 		$exec_config->setCmd( [ '/bin/sh', '-c', 'chmod -R 0777 /var/www/html/wp-content/uploads' ] );
 
-		$exec_id           = $this->docker->containerExec( 'wordpress-' . $this->environment_id, $exec_config )->getId();
+		$exec_id           = $this->docker->containerExec( $this->environment_id . '-wordpress', $exec_config )->getId();
 		$exec_start_config = new ExecIdStartPostBody();
 		$exec_start_config->setDetach( false );
 
@@ -876,10 +876,10 @@ class Environment {
 		Log::instance()->write( 'Container Request Body (MySQL):', 2 );
 		Log::instance()->write( $container_body[1], 2 );
 
-		$this->containers['mysql'] = $this->docker->containerCreate( $container_config, [ 'name' => 'mysql-' . $this->environment_id ] );
+		$this->containers['mysql'] = $this->docker->containerCreate( $container_config, [ 'name' => $this->environment_id . '-mysql' ] );
 
 		$this->mysql_stream = $this->docker->containerAttach(
-			'mysql-' . $this->environment_id,
+			$this->environment_id . '-mysql',
 			[
 				'stream' => true,
 				'stdin'  => true,
@@ -946,7 +946,7 @@ class Environment {
 		Log::instance()->write( 'Container Request Body (WordPress):', 2 );
 		Log::instance()->write( $container_body[1], 2 );
 
-		$this->containers['wordpress'] = $this->docker->containerCreate( $container_config, [ 'name' => 'wordpress-' . $this->environment_id ] );
+		$this->containers['wordpress'] = $this->docker->containerCreate( $container_config, [ 'name' => $this->environment_id . '-wordpress' ] );
 
 		/**
 		 * Create selenium container
@@ -979,7 +979,7 @@ class Environment {
 		Log::instance()->write( 'Container Request Body (Selenium):', 2 );
 		Log::instance()->write( $container_body[1], 2 );
 
-		$this->containers['selenium'] = $this->docker->containerCreate( $container_config, [ 'name' => 'selenium-' . $this->environment_id ] );
+		$this->containers['selenium'] = $this->docker->containerCreate( $container_config, [ 'name' => $this->environment_id . '-selenium' ] );
 
 		return true;
 	}
@@ -1005,7 +1005,7 @@ class Environment {
 			$exec_config->setAttachStderr( true );
 			$exec_config->setCmd( [ '/bin/sh', '-c', 'mysqladmin ping -h"' . $mysql_creds['DB_HOST'] . '" -u ' . $mysql_creds['DB_USER'] . ' -p' . $mysql_creds['DB_PASSWORD'] ] );
 
-			$exec_id           = $this->docker->containerExec( 'wordpress-' . $this->environment_id, $exec_config )->getId();
+			$exec_id           = $this->docker->containerExec( $this->environment_id . '-wordpress', $exec_config )->getId();
 			$exec_start_config = new ExecIdStartPostBody();
 			$exec_start_config->setDetach( false );
 
@@ -1178,7 +1178,7 @@ class Environment {
 	 */
 	public function getMySQLCredentials() {
 		return [
-			'DB_HOST'     => 'mysql-' . $this->environment_id,
+			'DB_HOST'     => $this->environment_id . '-mysql',
 			'DB_NAME'     => $this->current_mysql_db,
 			'DB_USER'     => 'root',
 			'DB_PASSWORD' => 'password',
@@ -1238,7 +1238,7 @@ class Environment {
 		$exec_config->setAttachStderr( true );
 		$exec_config->setCmd( [ '/bin/sh', '-c', $command ] );
 
-		$exec_command      = $this->docker->containerExec( 'wordpress-' . $this->environment_id, $exec_config );
+		$exec_command      = $this->docker->containerExec( $this->environment_id . '-wordpress', $exec_config );
 		$exec_id           = $exec_command->getId();
 		$exec_start_config = new ExecIdStartPostBody();
 		$exec_start_config->setDetach( false );
