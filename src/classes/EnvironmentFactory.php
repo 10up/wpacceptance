@@ -47,10 +47,11 @@ class EnvironmentFactory {
 	 * @param  array   $suite_config Config array
 	 * @param  boolean $cache_environment Keep containers alive or not
 	 * @param  boolean $skip_environment_cache If a valid cached environment exists, don't use it. Don't cache the new environment.
+	 * @param  string  $environment_id Allow for manual environment ID override
 	 * @return  \WPAssure\Environment|bool
 	 */
-	public static function create( $suite_config, $cache_environment = false, $skip_environment_cache = false ) {
-		$environment = new Environment( $suite_config, $cache_environment, $skip_environment_cache );
+	public static function create( $suite_config, $cache_environment = false, $skip_environment_cache = false, $environment_id = null ) {
+		$environment = new Environment( $suite_config, $cache_environment, $skip_environment_cache, $environment_id );
 
 		if ( empty( self::$environments ) ) {
 			register_shutdown_function( [ '\WPAssure\EnvironmentFactory', 'handleShutdown' ] );

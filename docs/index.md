@@ -257,7 +257,7 @@ For detailed test examples, look at the [example test suite](https://github.com/
 
 ## Commands
 
-* __wpassure run__ [&lt;PATH TO wpassure.json DIRECTORY&gt;] [--local] [--snapshot_id=&lt;WPSNAPSHOT ID&gt;] [--enforce_clean_db] [--cache_environment] [--skip_environment_cache] [--db_host=&lt;DATABASE HOST&gt;] [--verbose] [--wp_directory=&lt;PATH TO WP DIRECTORY&gt;] [--save] [--force_save] [--filter_tests=&lt;TEST FILTER&gt;] [--filter_test_files=<TEST FILE FILTER>] [--repository=<REPOSITORY>] [--screenshot_on_failure] - Runs a test suite.
+* __wpassure run__ [&lt;PATH TO wpassure.json DIRECTORY&gt;] [--local] [--snapshot_id=&lt;WPSNAPSHOT ID&gt;] [--enforce_clean_db] [--cache_environment] [--skip_environment_cache] [--db_host=&lt;DATABASE HOST&gt;] [--verbose] [--wp_directory=&lt;PATH TO WP DIRECTORY&gt;] [--save] [--force_save] [--filter_tests=&lt;TEST FILTER&gt;] [--filter_test_files=<TEST FILE FILTER>] [--repository=<REPOSITORY>] [--screenshot_on_failure] [--environment_id=&lt;ENVIRONMENT ID&gt;] - Runs a test suite.
 	* `<PATH TO wpassure.json DIRECTORY>` - Path to `wpassure.json`, defaults to current working directory.
 	* `--local` - Runs your test suite against your local environment.
 	 * `--verbose`, `-v`, `-vv`, `-vvv` - Run with various degrees of verbosity.
@@ -272,6 +272,7 @@ For detailed test examples, look at the [example test suite](https://github.com/
 	* `--filter_test_files` - Comma separate test files to execute. If used all other test files will be ignored.
 	* `--screenshot_on_failure` - Take a screenshot when a test fails or an error occurs. Screenshot will be placed in `screenshots/` directory from the current working directory.
 	* `--repository` - WP Snapshots repository to use.
+	* `--environment_id` - Manually specify environment ID. Useful for CI.
   
 * __wpassure init__ [--path] - Initialize a new test suite.
 	* `--path` - Optional path to init direftory.
