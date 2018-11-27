@@ -1024,6 +1024,10 @@ class Environment {
 			sleep( 1 );
 		}
 
+		Log::instance()->write( 'MySQL Host: ' . $mysql_creds['DB_HOST'], 2 );
+		Log::instance()->write( 'MySQL DB User: ' . $mysql_creds['DB_USER'], 2 );
+		Log::instance()->write( 'MySQL DB Password: ' . $mysql_creds['DB_PASSWORD'], 2 );
+
 		Log::instance()->write( 'MySQL never became available.', 0, 'error' );
 
 		return false;
