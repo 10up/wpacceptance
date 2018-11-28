@@ -145,21 +145,32 @@ class Environment {
 	public $gitab = false;
 
 	/**
+	 * How long should we wait for MySQL to be available
+	 *
+	 * @var  int
+	 */
+	protected $mysql_wait_time = 30;
+
+	/**
 	 * Environment constructor
 	 *
 	 * @param  Config  $suite_config Config array
 	 * @param  boolean $cache_environment Cache environment for later or not
 	 * @param  boolean $skip_environment_cache If a valid cached environment exists, don't use it. Don't cache the new environment.
 	 * @param  string  $environment_id Allow for manual environment ID override
+	 * @param  int     $mysql_wait_time How long should we wait for MySQL to become available (seconds)
 	 */
-	public function __construct( $suite_config = null, $cache_environment = false, $skip_environment_cache = false, $environment_id = null ) {
+	public function __construct( $suite_config = null, $cache_environment = false, $skip_environment_cache = false, $environment_id = null, $mysql_wait_time = null ) {
 		$this->docker                 = Docker::create();
 		$this->suite_config           = $suite_config;
 		$this->cache_environment      = $cache_environment;
 		$this->skip_environment_cache = $skip_environment_cache;
 
+		if ( ! empty( $mysql_wait_time ) ) {
+			$this->mysql_wait_time = $mysql_wait_time;
+		}
+
 		// If we are skipping cache just get a semi random hash for the id so collisions dont occur
-		// if
 		$id = ( $skip_environment_cache ) ? md5( time() . '' . rand( 0, 10000 ) ) : self::generateEnvironmentId( $suite_config );
 
 		$this->environment_id = ( ! empty( $environment_id ) ) ? $environment_id . '-wpa' : $id . '-wpa';
@@ -1000,7 +1011,7 @@ class Environment {
 	 * @return  bool
 	 */
 	public function waitForMySQL() {
-		Log::instance()->write( 'Waiting for MySQL to start...', 1 );
+		Log::instance()->write( 'Waiting up to ' . $this->mysql_wait_time . ' seconds for MySQL to start...', 1 );
 
 		sleep( 1 );
 
@@ -1008,7 +1019,7 @@ class Environment {
 
 		$exit_code = null;
 
-		for ( $i = 0; $i < 20; $i ++ ) {
+		for ( $i = 0; $i < $this->mysql_wait_time; $i ++ ) {
 			$exec_config = new ContainersIdExecPostBody();
 			$exec_config->setTty( true );
 			$exec_config->setAttachStdout( true );

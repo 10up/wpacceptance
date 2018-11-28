@@ -58,6 +58,7 @@ class Run extends Command {
 		$this->addOption( 'db_user', null, InputOption::VALUE_REQUIRED, 'Database user.' );
 		$this->addOption( 'db_password', null, InputOption::VALUE_REQUIRED, 'Database password.' );
 
+		$this->addOption( 'mysql_wait_time', null, InputOption::VALUE_REQUIRED, 'Determine how long WP Assure should wait in seconds for MySQL to be available.' );
 		$this->addOption( 'filter_test_files', null, InputOption::VALUE_REQUIRED, 'Comma separate test files to execute. If used all other test files will be ignored.' );
 		$this->addOption( 'filter_tests', null, InputOption::VALUE_REQUIRED, 'Filter tests to run. Is analagous to PHPUnit --filter.' );
 		$this->addOption( 'colors', null, InputOption::VALUE_REQUIRED, 'Use colors in output ("never", "auto" or "always")' );
@@ -208,7 +209,7 @@ class Run extends Command {
 
 		Log::instance()->write( 'Creating environment...' );
 
-		$environment = EnvironmentFactory::create( $suite_config, $input->getOption( 'cache_environment' ), $input->getOption( 'skip_environment_cache' ), $input->getOption( 'environment_id' ) );
+		$environment = EnvironmentFactory::create( $suite_config, $input->getOption( 'cache_environment' ), $input->getOption( 'skip_environment_cache' ), $input->getOption( 'environment_id' ), $input->getOption( 'mysql_wait_time' ) );
 
 		if ( ! $environment ) {
 			return 2;
