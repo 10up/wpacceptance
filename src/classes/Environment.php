@@ -153,10 +153,10 @@ class Environment {
 	 * @param  string  $environment_id Allow for manual environment ID override
 	 */
 	public function __construct( $suite_config = null, $cache_environment = false, $skip_environment_cache = false, $environment_id = null ) {
-		$this->docker            = Docker::create();
-		$this->suite_config      = $suite_config;
-		$this->cache_environment = $cache_environment;
-		$this->skip_environment_cache        = $skip_environment_cache;
+		$this->docker                 = Docker::create();
+		$this->suite_config           = $suite_config;
+		$this->cache_environment      = $cache_environment;
+		$this->skip_environment_cache = $skip_environment_cache;
 
 		// If we are skipping cache just get a semi random hash for the id so collisions dont occur
 		// if
