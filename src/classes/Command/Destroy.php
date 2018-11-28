@@ -30,7 +30,8 @@ class Destroy extends Command {
 		$this->setName( 'destroy' );
 		$this->setDescription( 'Stops and destroys a running WP Assure environment' );
 
-		$this->addArgument( 'environment_id', InputArgument::REQUIRED, 'Environment ID.' );
+		$this->addArgument( 'environment_id', InputArgument::OPTIONAL, 'Environment ID.' );
+		$this->addOption( 'all', false, InputOption::VALUE_NONE, 'Destroy all environments.' );
 	}
 
 	/**
@@ -42,7 +43,20 @@ class Destroy extends Command {
 	protected function execute( InputInterface $input, OutputInterface $output ) {
 		Log::instance()->setOutput( $output );
 
-		EnvironmentFactory::destroy( $input->getArgument( 'environment_id' ) );
+		$environment_id = $input->getArgument( 'environment_id' );
+		$all            = $input->getOption( 'all' );
+
+		Log::instance()->write( 'Destroying environment(s).', 0 );
+
+		if ( ! empty( $all ) ) {
+			EnvironmentFactory::destroyAll();
+		} elseif ( ! empty( $environment_id ) ) {
+			EnvironmentFactory::destroy( $input->getArgument( 'environment_id' ) );
+		} else {
+			Log::instance()->write( 'You must provide an environment ID or --all.', 0, 'error' );
+
+			return 1;
+		}
 
 		Log::instance()->write( 'Done.', 0, 'success' );
 	}

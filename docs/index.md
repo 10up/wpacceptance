@@ -277,8 +277,9 @@ For detailed test examples, look at the [example test suite](https://github.com/
 * __wpassure init__ [--path] - Initialize a new test suite.
 	* `--path` - Optional path to init directory.
 
-* __wpassure destroy__  &ltenvironment_id&gt; - Stop and destroy a running WP Assure environment
+* __wpassure destroy__  &ltenvironment_id&gt; [--all] - Stop and destroy running WP Assure environment(s)
 	* `<environment_id>` - ID of environment to destroy.
+	* `[--all]` - Destroy all WP Assure environments.
 
 ## Speed of Testing
 

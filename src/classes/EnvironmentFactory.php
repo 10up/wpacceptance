@@ -7,6 +7,8 @@
 
 namespace WPAssure;
 
+use Docker\Docker;
+
 /**
  * Environment factory class
  */
@@ -51,6 +53,29 @@ class EnvironmentFactory {
 		$environment = new Environment( null, false, false, $environment_id );
 
 		$environment->destroy();
+
+		return true;
+	}
+
+	/**
+	 * Stop and destroy all environments
+	 *
+	 * @return boolean
+	 */
+	public static function destroyAll() {
+		$docker = Docker::create();
+
+		$containers = $docker->containerList();
+
+		foreach ( $containers as $container ) {
+			$names = $container->getNames();
+
+			if ( ! empty( $names[0] ) && false !== strpos( $names[0], '-wpa' ) ) {
+				$environment_id = preg_replace( '#^/(.*)-wpa.*$#', '$1', $names[0] );
+
+				self::destroy( $environment_id );
+			}
+		}
 
 		return true;
 	}
