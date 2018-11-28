@@ -97,6 +97,8 @@ class EnvironmentFactory {
 		}
 
 		if ( $environment->populateEnvironmentFromCache() ) {
+			self::$environments[] = $environment;
+
 			if ( ! $environment->insertRepo() ) {
 				return false;
 			}
@@ -112,6 +114,8 @@ class EnvironmentFactory {
 			if ( ! $environment->createNetwork() ) {
 				return false;
 			}
+
+			self::$environments[] = $environment;
 
 			if ( ! $environment->downloadImages() ) {
 				return false;
@@ -145,8 +149,6 @@ class EnvironmentFactory {
 				return false;
 			}
 		}
-
-		self::$environments[] = $environment;
 
 		return $environment;
 	}

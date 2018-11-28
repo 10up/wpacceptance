@@ -424,6 +424,12 @@ class Environment {
 
 		$this->snapshot = Snapshot::get( $this->suite_config['snapshot_id'] );
 
+		if ( empty( $this->snapshot ) || empty( $this->snapshot->meta ) || empty( $this->snapshot->meta['sites'] ) ) {
+			Log::instance()->write( 'Snapshot invalid.', 0, 'error' );
+
+			return false;
+		}
+
 		$site_mapping = [];
 
 		Log::instance()->write( 'Snapshot site mapping:', 1 );
