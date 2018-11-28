@@ -275,7 +275,10 @@ For detailed test examples, look at the [example test suite](https://github.com/
 	* `--environment_id` - Manually specify environment ID. Useful for CI.
   
 * __wpassure init__ [--path] - Initialize a new test suite.
-	* `--path` - Optional path to init direftory.
+	* `--path` - Optional path to init directory.
+
+* __wpassure destroy__  &ltenvironment_id&gt; - Stop and destroy a running WP Assure environment
+	* `<environment_id>` - ID of environment to destroy.
 
 ## Speed of Testing
 
@@ -308,16 +311,16 @@ Here is an example `.travis.yml` that includes WP Assure:
 ```yaml
 language: php
 php:
-- 7.2
+  - 7.2
 env:
   global:
   - WP_VERSION=master
   - WP_VERSION=4.7
 before_script:
-- composer install
+  - composer install
 script:
-- ./vendor/bin/wpsnapshots configure REPO_NAME --aws_key=$AWS_ACCESS_KEY --aws_secret=$SECRET_ACCESS_KEY --user_name=Travis --user_email=travis@10up.com
-- bash run-wpassure.sh
+  - if [ -n "$AWS_ACCESS_KEY" ]; then ./vendor/bin/wpsnapshots configure 10up --aws_key=$AWS_ACCESS_KEY --aws_secret=$SECRET_ACCESS_KEY --user_name=Travis --user_email=travis@10up.com; fi
+  - if [ -n "$AWS_ACCESS_KEY" ]; then bash run-wpassure.sh; fi
 sudo: required
 services: docker
 ```

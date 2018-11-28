@@ -27,5 +27,6 @@ if ( GitLab::get()->isGitLab() ) {
  */
 $app->add( new Command\Init() );
 $app->add( new Command\Run() );
+$app->add( new Command\Destroy() );
 
 $app->run();

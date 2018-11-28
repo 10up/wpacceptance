@@ -33,7 +33,11 @@ class Environment {
 	 *
 	 * @var array
 	 */
-	protected $containers = [];
+	protected $containers = [
+		'mysql',
+		'wordpress',
+		'selenium',
+	];
 
 	/**
 	 * Environment ID
@@ -876,7 +880,7 @@ class Environment {
 		Log::instance()->write( 'Container Request Body (MySQL):', 2 );
 		Log::instance()->write( $container_body[1], 2 );
 
-		$this->containers['mysql'] = $this->docker->containerCreate( $container_config, [ 'name' => $this->environment_id . '-mysql' ] );
+		$this->docker->containerCreate( $container_config, [ 'name' => $this->environment_id . '-mysql' ] );
 
 		$this->mysql_stream = $this->docker->containerAttach(
 			$this->environment_id . '-mysql',
@@ -946,7 +950,7 @@ class Environment {
 		Log::instance()->write( 'Container Request Body (WordPress):', 2 );
 		Log::instance()->write( $container_body[1], 2 );
 
-		$this->containers['wordpress'] = $this->docker->containerCreate( $container_config, [ 'name' => $this->environment_id . '-wordpress' ] );
+		$this->docker->containerCreate( $container_config, [ 'name' => $this->environment_id . '-wordpress' ] );
 
 		/**
 		 * Create selenium container
@@ -979,7 +983,7 @@ class Environment {
 		Log::instance()->write( 'Container Request Body (Selenium):', 2 );
 		Log::instance()->write( $container_body[1], 2 );
 
-		$this->containers['selenium'] = $this->docker->containerCreate( $container_config, [ 'name' => $this->environment_id . '-selenium' ] );
+		$this->docker->containerCreate( $container_config, [ 'name' => $this->environment_id . '-selenium' ] );
 
 		return true;
 	}
@@ -1042,7 +1046,7 @@ class Environment {
 		Log::instance()->write( 'Starting containers...', 1 );
 
 		foreach ( $this->containers as $container ) {
-			$response = $this->docker->containerStart( $container->getId() );
+			$response = $this->docker->containerStart( $this->environment_id . '-' . $container );
 		}
 
 		return $this->waitForMySQL();
@@ -1058,9 +1062,9 @@ class Environment {
 
 		foreach ( $this->containers as $container ) {
 			try {
-				$this->docker->containerStop( $container->getId() );
+				$this->docker->containerStop( $this->environment_id . '-' . $container );
 			} catch ( \Exception $exception ) {
-				// Proceed no matter what
+				Log::instance()->write( 'Could not stop container: ' . $this->environment_id . '-' . $container, 1 );
 			}
 		}
 
@@ -1078,14 +1082,14 @@ class Environment {
 		foreach ( $this->containers as $container ) {
 			try {
 				$this->docker->containerDelete(
-					$container->getId(),
+					$this->environment_id . '-' . $container,
 					[
 						'v'     => true,
 						'force' => true,
 					]
 				);
 			} catch ( \Exception $exception ) {
-				// Proceed no matter what
+				Log::instance()->write( 'Could not delete container: ' . $this->environment_id . '-' . $container, 1 );
 			}
 		}
 

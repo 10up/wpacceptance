@@ -42,6 +42,20 @@ class EnvironmentFactory {
 	}
 
 	/**
+	 * Stop and destroy an environment
+	 *
+	 * @param  string $environment_id Environment id
+	 * @return boolean
+	 */
+	public static function destroy( $environment_id ) {
+		$environment = new Environment( null, false, false, $environment_id );
+
+		$environment->destroy();
+
+		return true;
+	}
+
+	/**
 	 * Create environment. Use cached environment if it exists
 	 *
 	 * @param  array   $suite_config Config array
