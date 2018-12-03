@@ -38,28 +38,22 @@ trait WebDriver {
 	 * Returns web driver instance.
 	 *
 	 * @access protected
-	 * @param  array $options Chrome options to define
+	 * @param  array $browser_options Chrome options to define
 	 * @return \Facebook\WebDriver\Remote\RemoteWebDriver Instance of remote web driver.
 	 */
-	protected function createWebDriver( $options ) {
+	protected function createWebDriver( $browser_options ) {
 		if ( ! empty( $this->web_driver ) ) {
 			$this->web_driver->close();
 		}
 
 		$chrome_options = new ChromeOptions();
 
-		$processed_options = [];
-
-		foreach ( $options as $key => $value ) {
-			$processed_options[] = $key . '=' . $value;
-		}
-
-		$chrome_options->addArguments( $processed_options );
+		$chrome_options->addArguments( $browser_options );
 
 		$capabilities = DesiredCapabilities::chrome();
 		$capabilities->setCapability( ChromeOptions::CAPABILITY, $chrome_options );
 
-		$this->web_driver = RemoteWebDriver::create( $this->getSeleniumServerUrl(), $capabilities, 20000 );
+		$this->web_driver = RemoteWebDriver::create( $this->getSeleniumServerUrl(), $capabilities, ( 30 * 1000 ), ( 30 * 1000 ) );
 
 		return $this->web_driver;
 	}
@@ -113,14 +107,19 @@ trait WebDriver {
 		}
 
 		$default_options = [
-			'name'   => 'anonymous user',
-			'width'  => 1366,
-			'height' => 768,
+			'name'     => 'anonymous user',
+			'width'    => 1366,
+			'height'   => 768,
+			'headless' => true,
 		];
 
 		$options = array_merge( $default_options, $options );
 
-		$web_driver = $this->createWebDriver( [ '--window-size' => $options['width'] . ',' . $options['height'] ] );
+		$browser_options = [
+			'--window-size=' . $options['width'] . ',' . $options['height'],
+		];
+
+		$web_driver = $this->createWebDriver( $browser_options );
 
 		$actor = new Actor( $options['name'] );
 		$actor->setWebDriver( $web_driver );
