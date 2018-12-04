@@ -315,7 +315,7 @@ class Actor {
 			$path = '/' . $path;
 		}
 
-		$page = $this->test->getWordPressUrl() . $path;
+		$page = $this->test->getWPHomeUrl() . $path;
 
 		if ( ! empty( $url_parts['query'] ) ) {
 			$page .= '?' . $url_parts['query'];
@@ -477,7 +477,7 @@ class Actor {
 		$params['value'] = (string) $value;
 
 		if ( ! isset( $params['domain'] ) ) {
-			$url = EnvironmentFactory::get()->getWpHomepageUrl();
+			$url = EnvironmentFactory::get()->getWPHomeUrl();
 
 			$params['domain'] = '.' . parse_url( $url, PHP_URL_HOST );
 		}
