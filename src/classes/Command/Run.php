@@ -154,7 +154,12 @@ class Run extends Command {
 			}
 		}
 
-		if ( ! empty( $suite_config['snapshot_id'] ) ) {
+		if ( empty( $local ) ) {
+			if ( empty( $suite_config['snapshot_id'] ) ) {
+				Log::instance()->write( 'You must either provide --snapshot_id, have a snapshot ID in wpassure.json, or provide the --local parameter.', 0, 'error' );
+				return 3;
+			}
+
 			if ( ! \WPSnapshots\Utils\is_snapshot_cached( $suite_config['snapshot_id'] ) ) {
 				$snapshot = Snapshot::download( $suite_config['snapshot_id'], $repository->getName() );
 
@@ -171,11 +176,6 @@ class Run extends Command {
 				}
 			}
 		} else {
-			if ( empty( $local ) ) {
-				Log::instance()->write( 'You must either provide --snapshot_id, have a snapshot ID in wpassure.json, or provide the --local parameter.', 0, 'error' );
-				return 3;
-			}
-
 			Log::instance()->write( 'Creating snapshot...' );
 
 			$snapshot = Snapshot::create(
