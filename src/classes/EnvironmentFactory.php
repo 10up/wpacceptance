@@ -134,6 +134,10 @@ class EnvironmentFactory {
 				return false;
 			}
 
+			if ( ! $environment->setupHosts() ) {
+				return false;
+			}
+
 			if ( ! $environment->setupMySQL() ) {
 				return false;
 			}

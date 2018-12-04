@@ -138,6 +138,13 @@ class Environment {
 	protected $snapshot_repo_path;
 
 	/**
+	 * Sites referenced by WordPress
+	 *
+	 * @var array
+	 */
+	protected $sites = [];
+
+	/**
 	 * Whether we are in gitlab or not
 	 *
 	 * @var bool
@@ -248,6 +255,7 @@ class Environment {
 		$this->gateway_ip             = $environment_meta['gateway_ip'];
 		$this->snapshot_wpassure_path = $environment_meta['snapshot_wpassure_path'];
 		$this->snapshot_repo_path     = $environment_meta['snapshot_repo_path'];
+		$this->sites                  = $environment_meta['sites'];
 		$this->snapshot               = Snapshot::get( $this->suite_config['snapshot_id'] );
 
 		return true;
@@ -422,6 +430,74 @@ class Environment {
 	}
 
 	/**
+	 * Setup internal hosts for WP and Selenium
+	 *
+	 * @return bool
+	 */
+	public function setupHosts() {
+		Log::instance()->write( 'Setting up hosts...', 1 );
+
+		$host_line = $this->gateway_ip . ' ';
+
+		foreach ( $this->sites as $site ) {
+			$home_host = parse_url( $site['home_url'], PHP_URL_HOST );
+			$site_host = parse_url( $site['site_url'], PHP_URL_HOST );
+
+			// Doesn't matter if the same host gets added more than once
+			$host_line .= ' ' . $home_host . ' ' . $site_host;
+		}
+
+		Log::instance()->write( 'Hosts insert: ' . $host_line, 2 );
+
+		foreach ( [ 'wordpress', 'selenium' ] as $container ) {
+			$command = "echo '" . $host_line . "' >> /etc/hosts";
+
+			if ( 'selenium' === $container ) {
+				$command = "echo '" . $host_line . "' | sudo tee --append /etc/hosts";
+			} else {
+				$command = "echo '" . $host_line . "' >> /etc/hosts";
+			}
+
+			Log::instance()->write( 'Running `' . $command . '` on ' . $container, 2 );
+
+			$exec_config = new ContainersIdExecPostBody();
+			$exec_config->setTty( true );
+			$exec_config->setAttachStdout( true );
+			$exec_config->setAttachStderr( true );
+			$exec_config->setCmd( [ '/bin/bash', '-c', $command ] );
+
+			$exec_id           = $this->docker->containerExec( $this->environment_id . '-' . $container, $exec_config )->getId();
+			$exec_start_config = new ExecIdStartPostBody();
+			$exec_start_config->setDetach( false );
+
+			$stream = $this->docker->execStart( $exec_id, $exec_start_config );
+
+			$stream->onStdout(
+				function( $stdout ) {
+					Log::instance()->write( $stdout, 1 );
+				}
+			);
+
+			$stream->onStderr(
+				function( $stderr ) {
+					Log::instance()->write( $stderr, 1 );
+				}
+			);
+
+			$stream->wait();
+
+			$exit_code = $this->docker->execInspect( $exec_id )->getExitCode();
+
+			if ( 0 !== $exit_code ) {
+				Log::instance()->write( 'Failed to setup hosts in ' . $container . ' container.', 0, 'error' );
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
 	 * Pull WP Snapshot into container
 	 *
 	 * @return  bool
@@ -450,8 +526,8 @@ class Environment {
 			$site_host = parse_url( $site['site_url'], PHP_URL_HOST );
 
 			$map = [
-				'home_url' => preg_replace( '#^https?://' . $home_host . '(.*)$#i', 'http://wpassure.test:' . $this->wordpress_port . '$1', $site['home_url'] ),
-				'site_url' => preg_replace( '#^https?://' . $site_host . '(.*)$#i', 'http://wpassure.test:' . $this->wordpress_port . '$1', $site['site_url'] ),
+				'home_url' => preg_replace( '#^https?://' . $home_host . '(.*)$#i', 'http://' . $home_host . ':' . $this->wordpress_port . '$1', $site['home_url'] ),
+				'site_url' => preg_replace( '#^https?://' . $site_host . '(.*)$#i', 'http://' . $site_host . ':' . $this->wordpress_port . '$1', $site['site_url'] ),
 			];
 
 			if ( ! empty( $site['blog_id'] ) ) {
@@ -464,7 +540,15 @@ class Environment {
 
 			Log::instance()->write( 'Home URL: ' . $map['home_url'], 1 );
 			Log::instance()->write( 'Site URL: ' . $map['site_url'], 1 );
+
+			if ( $this->snapshot->meta['domain_current_site'] === $home_host ) {
+				$map['main_domain'] = true;
+			}
+
+			$this->sites[] = $map;
 		}
+
+		$main_domain = ( ! empty( $this->snapshot->meta['domain_current_site'] ) ) ? ' --main_domain="' . $this->snapshot->meta['domain_current_site'] . ':' . $this->wordpress_port . '" ' : '';
 
 		$mysql_creds = $this->getMySQLCredentials();
 
@@ -478,7 +562,7 @@ class Environment {
 			$verbose = '-vvv';
 		}
 
-		$command = '/root/.composer/vendor/bin/wpsnapshots pull ' . $this->suite_config['snapshot_id'] . ' --repository=' . $this->suite_config['repository'] . ' --confirm --confirm_wp_version_change --confirm_ms_constant_update --config_db_name="' . $mysql_creds['DB_NAME'] . '" --config_db_user="' . $mysql_creds['DB_USER'] . '" --config_db_password="' . $mysql_creds['DB_PASSWORD'] . '" --config_db_host="' . $mysql_creds['DB_HOST'] . '" --confirm_wp_download --confirm_config_create --main_domain="wpassure.test:' . $this->wordpress_port . '" --site_mapping="' . addslashes( json_encode( $site_mapping ) ) . '" ' . $verbose;
+		$command = '/root/.composer/vendor/bin/wpsnapshots pull ' . $this->suite_config['snapshot_id'] . ' --repository=' . $this->suite_config['repository'] . ' --confirm --confirm_wp_version_change --confirm_ms_constant_update --config_db_name="' . $mysql_creds['DB_NAME'] . '" --config_db_user="' . $mysql_creds['DB_USER'] . '" --config_db_password="' . $mysql_creds['DB_PASSWORD'] . '" --config_db_host="' . $mysql_creds['DB_HOST'] . '" --confirm_wp_download --confirm_config_create ' . $main_domain . ' --site_mapping="' . addslashes( json_encode( $site_mapping ) ) . '" ' . $verbose;
 
 		Log::instance()->write( 'Running command:', 1 );
 		Log::instance()->write( $command, 1 );
@@ -918,7 +1002,6 @@ class Environment {
 		$host_config = new HostConfig();
 
 		$host_config->setNetworkMode( $this->environment_id );
-		$host_config->setExtraHosts( [ 'wpassure.test:' . $this->gateway_ip ] );
 
 		$container_config = new ContainersCreatePostBody();
 
@@ -977,7 +1060,6 @@ class Environment {
 
 		$host_config = new HostConfig();
 		$host_config->setNetworkMode( $this->environment_id );
-		$host_config->setExtraHosts( [ 'wpassure.test:' . $this->gateway_ip ] );
 		$host_config->setShmSize( ( 1000 * 1000 * 1000 ) ); // 1GB in bytes
 
 		$container_config = new ContainersCreatePostBody();
@@ -1125,15 +1207,21 @@ class Environment {
 		$network_config->setName( $this->environment_id );
 
 		try {
-			$this->network = $this->docker->networkCreate( $network_config );
-
-			$network     = $this->docker->networkInspect( $this->environment_id );
-			$ipam_config = $network->getIPAM()->getConfig();
+			$this->docker->networkCreate( $network_config );
 		} catch ( \Exception $e ) {
 			Log::instance()->write( 'Could not create network.', 0, 'error' );
 
 			return false;
 		}
+
+		$network = $this->docker->networkInspect( $this->environment_id );
+		if ( empty( $network ) ) {
+			Log::instance()->write( 'Could not create network. This network address might already exist. Try `docker network prune`.', 0, 'error' );
+
+			return false;
+		}
+
+		$ipam_config = $network->getIPAM()->getConfig();
 
 		$this->gateway_ip = $ipam_config[0]['Gateway'];
 
@@ -1170,12 +1258,50 @@ class Environment {
 	}
 
 	/**
-	 * Get WordPress homepage URL
+	 * Get WordPress homepage URL.
 	 *
+	 * @param  mixed $id_or_url Pass in an ID or url to get the url of another blog on the
+	 *                           network. Leaving blank gets the home URL for the main blog.
 	 * @return string
 	 */
-	public function getWpHomepageUrl() {
-		return 'http://wpassure.test:' . intval( $this->wordpress_port );
+	public function getWPHomeUrl( $id_or_url = '' ) {
+		$url = '';
+
+		foreach ( $this->sites as $site ) {
+			// If we have no url, use the first one
+			if ( empty( $url ) ) {
+				$url = $site['home_url'];
+			}
+
+			if ( ! empty( $site['main_domain'] ) ) {
+				$url = $site['home_url'];
+			}
+
+			// If an id or url is provided, always use this
+			if ( ! empty( $id_or_url ) ) {
+				if ( is_numeric( $id_or_url ) ) {
+					if ( (int) $id_or_url === (int) $site['blog_id'] ) {
+						$url = $site['home_url'];
+					}
+				} else {
+					// Make sure everything has a trailing slash to populate `path`
+					$param_url_parts = parse_url( rtrim( $id_or_url, '/' ) . '/' );
+					$home_url_parts  = parse_url( rtrim( $site['home_url'], '/' ) . '/' );
+
+					if ( $param_url_parts['host'] === $home_url_parts['host'] && $param_url_parts['path'] === $home_url_parts['path'] ) {
+						$url = $site['home_url'];
+					}
+				}
+			}
+		}
+
+		// Make sure we have a trailingslash
+		$url_parts = parse_url( rtrim( $url, '/' ) . '/' );
+
+		// Rebuild url
+		$url = rtrim( $url_parts['scheme'] . '://' . $url_parts['host'] . ':' . intval( $this->wordpress_port ) . $url_parts['path'], '/' );
+
+		return $url;
 	}
 
 	/**
@@ -1244,6 +1370,7 @@ class Environment {
 			'gateway_ip'             => $this->gateway_ip,
 			'snapshot_wpassure_path' => $this->snapshot_wpassure_path,
 			'snapshot_repo_path'     => $this->snapshot_repo_path,
+			'sites'                  => $this->sites,
 		];
 	}
 
