@@ -541,7 +541,7 @@ class Environment {
 			Log::instance()->write( 'Home URL: ' . $map['home_url'], 1 );
 			Log::instance()->write( 'Site URL: ' . $map['site_url'], 1 );
 
-			if ( $this->snapshot->meta['domain_current_site'] === $home_host ) {
+			if ( ! empty( $this->snapshot->meta['multisite'] ) && (int) $this->snapshot->meta['blog_id_current_site'] === (int) $site['blog_id'] ) {
 				$map['main_domain'] = true;
 			}
 
