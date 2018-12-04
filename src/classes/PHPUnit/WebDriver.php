@@ -68,12 +68,15 @@ trait WebDriver {
 	}
 
 	/**
-	 * Get WordPress URL
+	 * Get WordPress home URL
+	 *
+	 * @param  mixed $id_or_url Pass in an ID or url to get the url of another blog on the
+	 *                           network. Leaving blank gets the home URL for the main blog.
 	 *
 	 * @return string
 	 */
-	public function getWordPressUrl() {
-		return EnvironmentFactory::get()->getWpHomepageUrl();
+	public function getWPHomeUrl( $id_or_url = '' ) {
+		return EnvironmentFactory::get()->getWPHomeUrl( $id_or_url );
 	}
 
 	/**
