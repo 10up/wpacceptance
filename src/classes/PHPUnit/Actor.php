@@ -310,9 +310,13 @@ class Actor {
 
 		if ( ! empty( $url_parts['host'] ) ) {
 			// If we have full url
-			$url = $url_parts['scheme'] . '://' . $url_parts['host'] . ':' . intval( EnvironmentFactory::get()->getWordPressPort() ) . $url_parts['path'];
+			$url = $url_parts['scheme'] . '://' . $url_parts['host'] . ':' . intval( EnvironmentFactory::get()->getWordPressPort() );
 		} else {
-			$url = $this->test->getWPHomeUrl( (int) $blog_id ) . '/' . ltrim( $url_parts['path'], '/' );
+			$url = $this->test->getWPHomeUrl( (int) $blog_id );
+		}
+
+		if ( ! empty( $url_parts['path'] ) ) {
+			$url .= '/' . ltrim( $url_parts['path'], '/' );
 		}
 
 		if ( ! empty( $url_parts['query'] ) ) {
