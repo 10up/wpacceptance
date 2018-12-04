@@ -25,3 +25,5 @@ There are many acceptance tests frameworks out there. They all have one major fl
 ## Usage
 
 [Learn how to use WP Assure on the docs site](https://wpassure.readthedocs.io/en/latest/)
+
+<a href="http://10up.com/contact/"><img src="https://10updotcom-wpengine.s3.amazonaws.com/uploads/2016/10/10up-Github-Banner.png" width="850"></a>
