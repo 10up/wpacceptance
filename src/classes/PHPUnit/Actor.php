@@ -312,7 +312,7 @@ class Actor {
 			// If we have full url
 			$url = $url_parts['scheme'] . '://' . $url_parts['host'] . ':' . intval( EnvironmentFactory::get()->getWordPressPort() ) . $url_parts['path'];
 		} else {
-			$url = $this->test->getWPHomeUrl( (int) $blog_id ) . '/' . ltrim( $url_or_path, '/' );
+			$url = $this->test->getWPHomeUrl( (int) $blog_id ) . '/' . ltrim( $url_parts['path'], '/' );
 		}
 
 		if ( ! empty( $url_parts['query'] ) ) {
