@@ -301,30 +301,28 @@ class Actor {
 	 * Navigate to a new URL.
 	 *
 	 * @access public
-	 * @param string $url_path URL path
+	 * @param string $url_or_path Path (relative to main site in network) or full url
+	 * @param int    $blog_id Optional blog id
 	 */
-	public function moveTo( $url_path ) {
+	public function moveTo( $url_or_path, $blog_id = null ) {
 
-		$url_parts = parse_url( $url_path );
+		$url_parts = parse_url( $url_or_path );
 
-		$path = $url_parts['path'];
-
-		if ( empty( $path ) ) {
-			$path = '/';
-		} elseif ( '/' !== substr( $path, 0, 1 ) ) {
-			$path = '/' . $path;
+		if ( ! empty( $url_parts['host'] ) ) {
+			// If we have full url
+			$url = $url_parts['scheme'] . '://' . $url_parts['host'] . ':' . intval( EnvironmentFactory::get()->getWordPressPort() ) . $url_parts['path'];
+		} else {
+			$url = $this->test->getWPHomeUrl( (int) $blog_id ) . '/' . ltrim( $url_or_path, '/' );
 		}
 
-		$page = $this->test->getWPHomeUrl() . $path;
-
 		if ( ! empty( $url_parts['query'] ) ) {
-			$page .= '?' . $url_parts['query'];
+			$url .= '?' . $url_parts['query'];
 		}
 
 		$web_driver = $this->getWebDriver();
-		$web_driver->get( $page );
+		$web_driver->get( $url );
 
-		Log::instance()->write( 'Navigating to URL: ' . $page, 1 );
+		Log::instance()->write( 'Navigating to URL: ' . $url, 1 );
 	}
 
 	/**
@@ -477,9 +475,7 @@ class Actor {
 		$params['value'] = (string) $value;
 
 		if ( ! isset( $params['domain'] ) ) {
-			$url = EnvironmentFactory::get()->getWPHomeUrl();
-
-			$params['domain'] = '.' . parse_url( $url, PHP_URL_HOST );
+			$params['domain'] = '.' . parse_url( $this->test->getWPHomeUrl(), PHP_URL_HOST );
 		}
 
 		$web_driver->manage()->addCookie( $params );

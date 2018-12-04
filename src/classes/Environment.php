@@ -1375,6 +1375,15 @@ class Environment {
 	}
 
 	/**
+	 * Get WP container port
+	 *
+	 * @return int
+	 */
+	public function getWordPressPort() {
+		return $this->wordpress_port;
+	}
+
+	/**
 	 * Write meta data to WP container
 	 */
 	public function writeMetaToWPContainer() {
