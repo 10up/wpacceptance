@@ -521,6 +521,8 @@ class Environment {
 
 		Log::instance()->write( 'Snapshot site mapping:', 1 );
 
+		$main_domain = '';
+
 		foreach ( $this->snapshot->meta['sites'] as $site ) {
 			$home_host = parse_url( $site['home_url'], PHP_URL_HOST );
 			$site_host = parse_url( $site['site_url'], PHP_URL_HOST );
@@ -541,14 +543,37 @@ class Environment {
 			Log::instance()->write( 'Home URL: ' . $map['home_url'], 1 );
 			Log::instance()->write( 'Site URL: ' . $map['site_url'], 1 );
 
-			if ( ! empty( $this->snapshot->meta['multisite'] ) && (int) $this->snapshot->meta['blog_id_current_site'] === (int) $site['blog_id'] ) {
-				$map['main_domain'] = true;
+			if ( ! empty( $this->snapshot->meta['multisite'] ) ) {
+				// We have to do this for backwards compat where wpsnapshots didnt set domain_current_site
+				if ( ! empty( $this->snapshot->meta['blog_id_current_site'] ) ) {
+					if ( (int) $this->snapshot->meta['blog_id_current_site'] === (int) $site['blog_id'] ) {
+						$map['main_domain'] = true;
+
+						$main_domain = $home_host;
+					}
+				} else {
+					// Just set first site as main domain if we don't have blog_id_current_site
+					if ( empty( $main_domain ) ) {
+						$map['main_domain'] = true;
+
+						$main_domain = $home_host;
+					}
+				}
 			}
 
 			$this->sites[] = $map;
 		}
 
-		$main_domain = ( ! empty( $this->snapshot->meta['domain_current_site'] ) ) ? ' --main_domain="' . $this->snapshot->meta['domain_current_site'] . ':' . $this->wordpress_port . '" ' : '';
+		$main_domain_param = '';
+
+		if ( ! empty( $this->snapshot->meta['multisite'] ) ) {
+			if ( ! empty( $this->snapshot->meta['domain_current_site'] ) ) {
+				$main_domain_param = ' --main_domain="' . $this->snapshot->meta['domain_current_site'] . ':' . $this->wordpress_port . '" ';
+			} else {
+				// We have to do this for backwards compat where wpsnapshots didnt set domain_current_site
+				$main_domain_param = ' --main_domain="' . $main_domain . ':' . $this->wordpress_port . '" ';
+			}
+		}
 
 		$mysql_creds = $this->getMySQLCredentials();
 
@@ -562,7 +587,7 @@ class Environment {
 			$verbose = '-vvv';
 		}
 
-		$command = '/root/.composer/vendor/bin/wpsnapshots pull ' . $this->suite_config['snapshot_id'] . ' --repository=' . $this->suite_config['repository'] . ' --confirm --confirm_wp_version_change --confirm_ms_constant_update --config_db_name="' . $mysql_creds['DB_NAME'] . '" --config_db_user="' . $mysql_creds['DB_USER'] . '" --config_db_password="' . $mysql_creds['DB_PASSWORD'] . '" --config_db_host="' . $mysql_creds['DB_HOST'] . '" --confirm_wp_download --confirm_config_create ' . $main_domain . ' --site_mapping="' . addslashes( json_encode( $site_mapping ) ) . '" ' . $verbose;
+		$command = '/root/.composer/vendor/bin/wpsnapshots pull ' . $this->suite_config['snapshot_id'] . ' --repository=' . $this->suite_config['repository'] . ' --confirm --confirm_wp_version_change --confirm_ms_constant_update --config_db_name="' . $mysql_creds['DB_NAME'] . '" --config_db_user="' . $mysql_creds['DB_USER'] . '" --config_db_password="' . $mysql_creds['DB_PASSWORD'] . '" --config_db_host="' . $mysql_creds['DB_HOST'] . '" --confirm_wp_download --confirm_config_create ' . $main_domain_param . ' --site_mapping="' . addslashes( json_encode( $site_mapping ) ) . '" ' . $verbose;
 
 		Log::instance()->write( 'Running command:', 1 );
 		Log::instance()->write( $command, 1 );
