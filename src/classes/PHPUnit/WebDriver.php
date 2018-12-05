@@ -53,7 +53,7 @@ trait WebDriver {
 		$capabilities = DesiredCapabilities::chrome();
 		$capabilities->setCapability( ChromeOptions::CAPABILITY, $chrome_options );
 
-		$this->web_driver = RemoteWebDriver::create( $this->getSeleniumServerUrl(), $capabilities, ( 30 * 1000 ), ( 30 * 1000 ) );
+		$this->web_driver = RemoteWebDriver::create( $this->getSeleniumServerUrl(), $capabilities, ( 60 * 1000 ), ( 60 * 1000 ) );
 
 		return $this->web_driver;
 	}
@@ -120,6 +120,7 @@ trait WebDriver {
 
 		$browser_options = [
 			'--window-size=' . $options['width'] . ',' . $options['height'],
+			'--no-sandbox',
 		];
 
 		$web_driver = $this->createWebDriver( $browser_options );
