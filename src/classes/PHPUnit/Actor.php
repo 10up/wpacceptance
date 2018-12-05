@@ -661,7 +661,7 @@ class Actor {
 		}
 
 		if ( $expect_navigate && ! empty( $this->executeJavaScript( 'return window.' . __FUNCTION__ . ' || false;' ) ) ) {
-			$this->click( $element );
+			$element->click();
 		}
 	}
 
