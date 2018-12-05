@@ -625,9 +625,15 @@ class Actor {
 	 * Click an element. Click can be buggy. Try jsClick as well.
 	 *
 	 * @access public
-	 * @param string $element_path Path to element in DOM to click
+	 * @param string  $element_path Path to element in DOM to click
+	 * @param boolean $expect_navigate If true, will try harder to ensure navigation occurs circumventing
+	 *                                  buggy Selenium.
 	 */
-	public function click( $element_path ) {
+	public function click( $element_path, $expect_navigate = false ) {
+		if ( $expect_navigate ) {
+			$this->executeJavaScript( 'window.' . __FUNCTION__ . ' = 1;' );
+		}
+
 		$element = $this->getElement( $element_path );
 
 		$this->waitUntilElementClickable( $element_path );
@@ -648,6 +654,14 @@ class Actor {
 			$this->executeJavaScript( 'window.scrollTo( 0, ( window.document.documentElement.scrollTop + 100 ) )' );
 
 			$element->click();
+		}
+
+		if ( $expect_navigate && ! empty( $this->executeJavaScript( 'return window.' . __FUNCTION__ . ' || false;' ) ) ) {
+			$this->pressKey( $element, WebDriverKeys::ENTER );
+		}
+
+		if ( $expect_navigate && ! empty( $this->executeJavaScript( 'return window.' . __FUNCTION__ . ' || false;' ) ) ) {
+			$this->click( $element );
 		}
 	}
 
@@ -785,7 +799,7 @@ class Actor {
 
 		usleep( 100 );
 
-		$this->pressEnterKey( '#wp-submit' );
+		$this->click( '#wp-submit', true );
 
 		$this->waitUntilElementVisible( '#wpadminbar' );
 	}
