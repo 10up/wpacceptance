@@ -16,7 +16,7 @@ function testPostPublish() {
 
 	$I->setElementAttribute( '#content', 'value', 'Test content' );
 
-	$I->click( '#publish' );
+	$I->click( '#publish', true );
 
 	$I->waitUntilElementVisible( '.notice-success' );
 
@@ -48,7 +48,7 @@ function testFeaturedImage() {
 
 	$I->waitUntilElementVisible( '#remove-post-thumbnail' );
 
-	$I->click( '#publish' );
+	$I->click( '#publish', true );
 
 	$I->waitUntilElementVisible( '#wpadminbar' );
 
