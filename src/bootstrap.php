@@ -9,7 +9,7 @@ namespace WPAssure;
 
 use \Symfony\Component\Console\Application;
 
-$app = new Application( 'WPAssure', '0.9' );
+$app = new Application( 'WPAssure', '0.9.1' );
 
 define( 'WPASSURE_DIR', dirname( __DIR__ ) );
 

@@ -517,6 +517,8 @@ class Environment {
 			return false;
 		}
 
+		Log::instance()->write( 'WordPress version is ' . $this->snapshot->meta['wp_version'], 1 );
+
 		$site_mapping = [];
 
 		Log::instance()->write( 'Snapshot site mapping:', 1 );
