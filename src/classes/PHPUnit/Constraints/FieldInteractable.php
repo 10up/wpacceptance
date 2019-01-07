@@ -2,17 +2,17 @@
 /**
  * Check if field can be interacted with
  *
- * @package  wpassure
+ * @package  wpacceptance
  */
 
-namespace WPAssure\PHPUnit\Constraints;
+namespace WPAcceptance\PHPUnit\Constraints;
 
 use Facebook\WebDriver\Exception\InvalidElementStateException;
 
 /**
  * Constraint class
  */
-class FieldInteractable extends \WPAssure\PHPUnit\Constraint {
+class FieldInteractable extends \WPAcceptance\PHPUnit\Constraint {
 
 	use Traits\ElementToMessage;
 
@@ -41,7 +41,7 @@ class FieldInteractable extends \WPAssure\PHPUnit\Constraint {
 	 * Evaluate if the actor can or can't see the element
 	 *
 	 * @access protected
-	 * @param \WPAssure\PHPUnit\Actor $other The actor instance.
+	 * @param \WPAcceptance\PHPUnit\Actor $other The actor instance.
 	 * @return boolean TRUE if the constrain is met, otherwise FALSE.
 	 */
 	protected function matches( $other ): bool {

@@ -5,7 +5,7 @@
  * @package wpsnapshots
  */
 
-namespace WPAssure;
+namespace WPAcceptance;
 
 use Symfony\Component\Console\Output\OutputInterface;
 

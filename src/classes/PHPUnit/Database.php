@@ -2,12 +2,12 @@
 /**
  * Database (MySQL) helper functionality to integrate with test class
  *
- * @package  wpassure
+ * @package  wpacceptance
  */
 
-namespace WPAssure\PHPUnit;
+namespace WPAcceptance\PHPUnit;
 
-use WPAssure\EnvironmentFactory;
+use WPAcceptance\EnvironmentFactory;
 
 /**
  * Database trait

@@ -2,13 +2,13 @@
 /**
  * Test menu is functioning properly
  *
- * @package wpassure
+ * @package wpacceptance
  */
 
 /**
  * PHPUnit test class
  */
-class MainMenuTest extends \WPAssure\PHPUnit\TestCase {
+class MainMenuTest extends \WPAcceptance\PHPUnit\TestCase {
 
 	/**
 	 * On small screen, menu is hidden initially and opens on click

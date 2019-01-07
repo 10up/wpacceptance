@@ -2,13 +2,13 @@
 /**
  * Test if homepage is showing properly
  *
- * @package wpassure
+ * @package wpacceptance
  */
 
 /**
  * PHPUnit test class
  */
-class HomePageTest extends \WPAssure\PHPUnit\TestCase {
+class HomePageTest extends \WPAcceptance\PHPUnit\TestCase {
 
 	/**
 	 * Fill out search form, press enter, search page shows with results

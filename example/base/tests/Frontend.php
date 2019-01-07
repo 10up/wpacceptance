@@ -2,13 +2,13 @@
 /**
  * Test the front end
  *
- * @package wpassure
+ * @package wpacceptance
  */
 
 /**
  * PHPUnit test class
  */
-class FrontendTest extends \WPAssure\PHPUnit\TestCase {
+class FrontendTest extends \WPAcceptance\PHPUnit\TestCase {
 
 	/**
 	 * Check that all html outputted on homepage

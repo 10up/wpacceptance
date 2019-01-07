@@ -2,19 +2,19 @@
 /**
  * Test links on page constraint
  *
- * @package  wpassure
+ * @package  wpacceptance
  */
 
-namespace WPAssure\PHPUnit\Constraints;
+namespace WPAcceptance\PHPUnit\Constraints;
 
 use Facebook\WebDriver\Exception\NoSuchElementException;
 use Facebook\WebDriver\WebDriverBy;
-use WPAssure\Utils;
+use WPAcceptance\Utils;
 
 /**
  * Constraint class
  */
-class LinkOnPage extends \WPAssure\PHPUnit\Constraint {
+class LinkOnPage extends \WPAcceptance\PHPUnit\Constraint {
 
 	/**
 	 * A text of a link to look for.
@@ -51,7 +51,7 @@ class LinkOnPage extends \WPAssure\PHPUnit\Constraint {
 	 * Evaluate if the actor can or can't see a link with specific text and url.
 	 *
 	 * @access protected
-	 * @param \WPAssure\PHPUnit\Actor $other The actor instance.
+	 * @param \WPAcceptance\PHPUnit\Actor $other The actor instance.
 	 * @return boolean TRUE if the constrain is met, otherwise FALSE.
 	 */
 	protected function matches( $other ): bool {

@@ -2,13 +2,13 @@
 /**
  * Test the front end
  *
- * @package wpassure
+ * @package wpacceptance
  */
 
 /**
  * PHPUnit test class
  */
-class BackendTest extends \WPAssure\PHPUnit\TestCase {
+class BackendTest extends \WPAcceptance\PHPUnit\TestCase {
 
 	/**
 	 * Test that someone can login

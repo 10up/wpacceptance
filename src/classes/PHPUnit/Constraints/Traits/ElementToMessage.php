@@ -2,10 +2,10 @@
 /**
  * Convert element to failure message.
  *
- * @package wpassure
+ * @package wpacceptance
  */
 
-namespace WPAssure\PHPUnit\Constraints\Traits;
+namespace WPAcceptance\PHPUnit\Constraints\Traits;
 
 use Facebook\WebDriver\Remote\RemoteWebElement;
 

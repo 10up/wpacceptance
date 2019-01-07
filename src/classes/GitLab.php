@@ -1,11 +1,11 @@
 <?php
 /**
- * Functionality used if WP Assure is used inside Gitlab. We do all this because GitLab runs docker in docker.
+ * Functionality used if WP Acceptance is used inside Gitlab. We do all this because GitLab runs docker in docker.
  *
- * @package wpassure
+ * @package wpacceptance
  */
 
-namespace WPAssure;
+namespace WPAcceptance;
 
 /**
  * Gitlab singleton
@@ -48,11 +48,11 @@ class GitLab {
 	private $project_directory;
 
 	/**
-	 * Path to wpassure directory
+	 * Path to wpacceptance directory
 	 *
 	 * @var string
 	 */
-	private $wpassure_directory;
+	private $wpacceptance_directory;
 
 	/**
 	 * Are we inside gitlab or not
@@ -91,11 +91,11 @@ class GitLab {
 	}
 
 	/**
-	 * Get wp assure directory
+	 * Get wp acceptance directory
 	 *
 	 * @return string
 	 */
-	public function getWPAssureDirectory() {
+	public function getWPAcceptanceDirectory() {
 		return $this->project_directory;
 	}
 

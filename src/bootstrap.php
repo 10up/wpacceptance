@@ -1,20 +1,20 @@
 <?php
 /**
- * Bootstrap WPAssure
+ * Bootstrap WPAcceptance
  *
- * @package  wpassure
+ * @package  wpacceptance
  */
 
-namespace WPAssure;
+namespace WPAcceptance;
 
 use \Symfony\Component\Console\Application;
 
-$app = new Application( 'WPAssure', '0.9.1' );
+$app = new Application( 'WPAcceptance', '0.9.1' );
 
-define( 'WPASSURE_DIR', dirname( __DIR__ ) );
+define( 'WPACCEPTANCE_DIR', dirname( __DIR__ ) );
 
 /**
- * Attempt to set this as WPAssure can consume a lot of memory.
+ * Attempt to set this as WPAcceptance can consume a lot of memory.
  */
 ini_set( 'memory_limit', '-1' );
 

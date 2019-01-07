@@ -2,15 +2,15 @@
 /**
  * Test cookies constraint
  *
- * @package  wpassure
+ * @package  wpacceptance
  */
 
-namespace WPAssure\PHPUnit\Constraints;
+namespace WPAcceptance\PHPUnit\Constraints;
 
 /**
  * Constraint class
  */
-class Cookie extends \WPAssure\PHPUnit\Constraint {
+class Cookie extends \WPAcceptance\PHPUnit\Constraint {
 
 	use Traits\SeeableAction;
 
@@ -49,7 +49,7 @@ class Cookie extends \WPAssure\PHPUnit\Constraint {
 	 * Evaluate if the actor can or can't see a cookie.
 	 *
 	 * @access protected
-	 * @param \WPAssure\PHPUnit\Actor $other The actor instance.
+	 * @param \WPAcceptance\PHPUnit\Actor $other The actor instance.
 	 * @return boolean TRUE if the constrain is met, otherwise FALSE.
 	 */
 	protected function matches( $other ): bool {

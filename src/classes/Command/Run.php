@@ -2,10 +2,10 @@
 /**
  * Run test suite command
  *
- * @package wpassure
+ * @package wpacceptance
  */
 
-namespace WPAssure\Command;
+namespace WPAcceptance\Command;
 
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -16,11 +16,11 @@ use Symfony\Component\Console\Input\InputOption;
 use PHPUnit\Framework\TestSuite as PHPUnitTestSuite;
 use PHPUnit\TextUI\ResultPrinter as PHPUnitResultPrinter;
 
-use WPAssure\EnvironmentFactory;
-use WPAssure\Log;
-use WPAssure\Utils;
-use WPAssure\Config;
-use WPAssure\GitLab;
+use WPAcceptance\EnvironmentFactory;
+use WPAcceptance\Log;
+use WPAcceptance\Utils;
+use WPAcceptance\Config;
+use WPAcceptance\GitLab;
 use WPSnapshots\RepositoryManager;
 use WPSnapshots\Snapshot;
 use WPSnapshots\Log as WPSnapshotsLog;
@@ -35,9 +35,9 @@ class Run extends Command {
 	 */
 	protected function configure() {
 		$this->setName( 'run' );
-		$this->setDescription( 'Run an WPAssure test suite.' );
+		$this->setDescription( 'Run an WPAcceptance test suite.' );
 
-		$this->addArgument( 'suite_config_directory', InputArgument::OPTIONAL, 'Path to a directory that contains wpassure.json.' );
+		$this->addArgument( 'suite_config_directory', InputArgument::OPTIONAL, 'Path to a directory that contains wpacceptance.json.' );
 
 		$this->addOption( 'cache_environment', false, InputOption::VALUE_NONE, 'Cache environment for repeat use.' );
 		$this->addOption( 'skip_environment_cache', false, InputOption::VALUE_NONE, "If a valid cached environment exists, don't use it. Don't cache the new environment." );
@@ -46,8 +46,8 @@ class Run extends Command {
 		$this->addOption( 'local', false, InputOption::VALUE_NONE, 'Run tests against local WordPress install.' );
 		$this->addOption( 'skip_before_scripts', false, InputOption::VALUE_NONE, 'Do not run before scripts.' );
 		$this->addOption( 'enforce_clean_db', false, InputOption::VALUE_NONE, 'Ensure each test has a clean version of the snapshot database.' );
-		$this->addOption( 'save', false, InputOption::VALUE_NONE, 'If tests are successful, save snapshot ID to wpassure.json and push it to the remote repository.' );
-		$this->addOption( 'force_save', false, InputOption::VALUE_NONE, 'No matter the outcome of the tests, save snapshot ID to wpassure.json and push it to the remote repository.' );
+		$this->addOption( 'save', false, InputOption::VALUE_NONE, 'If tests are successful, save snapshot ID to wpacceptance.json and push it to the remote repository.' );
+		$this->addOption( 'force_save', false, InputOption::VALUE_NONE, 'No matter the outcome of the tests, save snapshot ID to wpacceptance.json and push it to the remote repository.' );
 
 		$this->addOption( 'snapshot_id', null, InputOption::VALUE_REQUIRED, 'WP Snapshot ID.' );
 		$this->addOption( 'environment_id', null, InputOption::VALUE_REQUIRED, 'Manually set environment ID.' );
@@ -58,7 +58,7 @@ class Run extends Command {
 		$this->addOption( 'db_user', null, InputOption::VALUE_REQUIRED, 'Database user.' );
 		$this->addOption( 'db_password', null, InputOption::VALUE_REQUIRED, 'Database password.' );
 
-		$this->addOption( 'mysql_wait_time', null, InputOption::VALUE_REQUIRED, 'Determine how long WP Assure should wait in seconds for MySQL to be available.' );
+		$this->addOption( 'mysql_wait_time', null, InputOption::VALUE_REQUIRED, 'Determine how long WP Acceptance should wait in seconds for MySQL to be available.' );
 		$this->addOption( 'filter_test_files', null, InputOption::VALUE_REQUIRED, 'Comma separate test files to execute. If used all other test files will be ignored.' );
 		$this->addOption( 'filter_tests', null, InputOption::VALUE_REQUIRED, 'Filter tests to run. Is analagous to PHPUnit --filter.' );
 		$this->addOption( 'colors', null, InputOption::VALUE_REQUIRED, 'Use colors in output ("never", "auto" or "always")' );
@@ -83,12 +83,12 @@ class Run extends Command {
 		WPSnapshotsLog::instance()->setVerbosityOffset( 1 );
 
 		if ( ! function_exists( 'mysqli_init' ) ) {
-			Log::instance()->write( 'WP Assure requires the mysqli PHP extension is installed.', 0, 'error' );
+			Log::instance()->write( 'WP Acceptance requires the mysqli PHP extension is installed.', 0, 'error' );
 			return 3;
 		}
 
 		if ( GitLab::get()->isGitLab() ) {
-			Log::instance()->write( 'Running WP Assure in GitLab.', 1 );
+			Log::instance()->write( 'Running WP Acceptance in GitLab.', 1 );
 		}
 
 		$suite_config_directory = $input->getArgument( 'suite_config_directory' );
@@ -156,7 +156,7 @@ class Run extends Command {
 
 		if ( empty( $local ) ) {
 			if ( empty( $suite_config['snapshot_id'] ) ) {
-				Log::instance()->write( 'You must either provide --snapshot_id, have a snapshot ID in wpassure.json, or provide the --local parameter.', 0, 'error' );
+				Log::instance()->write( 'You must either provide --snapshot_id, have a snapshot ID in wpacceptance.json, or provide the --local parameter.', 0, 'error' );
 				return 3;
 			}
 
@@ -186,8 +186,8 @@ class Run extends Command {
 					'db_name'     => $input->getOption( 'db_name' ),
 					'db_user'     => $input->getOption( 'db_user' ),
 					'db_password' => $input->getOption( 'db_password' ),
-					'project'     => 'wpassure-' . str_replace( ' ', '-', trim( strtolower( $suite_config['name'] ) ) ),
-					'description' => 'WP Assure snapshot',
+					'project'     => 'wpacceptance-' . str_replace( ' ', '-', trim( strtolower( $suite_config['name'] ) ) ),
+					'description' => 'WP Acceptance snapshot',
 					'no_scrub'    => false,
 					'exclude'     => [
 						'vendor',
@@ -290,7 +290,7 @@ class Run extends Command {
 				Log::instance()->write( 'Snapshot Project Slug - ' . $snapshot->meta['project'], 1 );
 
 				if ( $snapshot->push() ) {
-					Log::instance()->write( 'Snapshot ID saved to wpassure.json', 0, 'success' );
+					Log::instance()->write( 'Snapshot ID saved to wpacceptance.json', 0, 'success' );
 
 					$suite_config['snapshot_id'] = $suite_config['snapshot_id'];
 					$suite_config->write();

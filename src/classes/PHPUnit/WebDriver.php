@@ -2,14 +2,14 @@
 /**
  * Functionality for setting up web driver. See https://github.com/facebook/php-webdriver
  *
- * @package  wpassure
+ * @package  wpacceptance
  */
 
-namespace WPAssure\PHPUnit;
+namespace WPAcceptance\PHPUnit;
 
-use WPAssure\Log;
-use WPAssure\EnvironmentFactory;
-use WPAssure\PHPUnit\Actor;
+use WPAcceptance\Log;
+use WPAcceptance\EnvironmentFactory;
+use WPAcceptance\PHPUnit\Actor;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Chrome\ChromeOptions;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
@@ -93,7 +93,7 @@ trait WebDriver {
 	 *
 	 * @access public
 	 * @param array $options Actor options
-	 * @return \WPAssure\PHPUnit\Actor An actor instance.
+	 * @return \WPAcceptance\PHPUnit\Actor An actor instance.
 	 */
 	public function getAnonymousUser( $options = [] ) {
 		if ( ! empty( $options['screen_size'] ) ) {

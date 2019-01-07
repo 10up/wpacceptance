@@ -2,10 +2,10 @@
 /**
  * Create an environment
  *
- * @package wpassure
+ * @package wpacceptance
  */
 
-namespace WPAssure;
+namespace WPAcceptance;
 
 use Docker\API\Model\NetworkCreate;
 use Docker\API\Model\NetworksCreatePostBody;
@@ -20,7 +20,7 @@ use Docker\API\Endpoint\ContainerCreate;
 use Docker\Context\Context;
 use Docker\Docker;
 use GrantLucas\PortFinder;
-use WPAssure\Utils as Utils;
+use WPAcceptance\Utils as Utils;
 use WPSnapshots\Snapshot;
 
 /**
@@ -124,11 +124,11 @@ class Environment {
 	protected $current_mysql_db = 'wordpress_clean';
 
 	/**
-	 * Path to wpassure.json in snapshot
+	 * Path to wpacceptance.json in snapshot
 	 *
 	 * @var string
 	 */
-	protected $snapshot_wpassure_path;
+	protected $snapshot_wpacceptance_path;
 
 	/**
 	 * Path to repo in snapshot
@@ -253,7 +253,7 @@ class Environment {
 		$this->selenium_port          = $environment_meta['selenium_port'];
 		$this->mysql_port             = $environment_meta['mysql_port'];
 		$this->gateway_ip             = $environment_meta['gateway_ip'];
-		$this->snapshot_wpassure_path = $environment_meta['snapshot_wpassure_path'];
+		$this->snapshot_wpacceptance_path = $environment_meta['snapshot_wpacceptance_path'];
 		$this->snapshot_repo_path     = $environment_meta['snapshot_repo_path'];
 		$this->sites                  = $environment_meta['sites'];
 		$this->snapshot               = Snapshot::get( $this->suite_config['snapshot_id'] );
@@ -390,7 +390,7 @@ class Environment {
 		foreach ( $this->suite_config['before_scripts'] as $script ) {
 			Log::instance()->write( 'Running script: ' . $script, 1 );
 
-			$command = 'cd ' . $this->snapshot_wpassure_path . ' && ' . $script;
+			$command = 'cd ' . $this->snapshot_wpacceptance_path . ' && ' . $script;
 
 			$exec_config = new ContainersIdExecPostBody();
 			$exec_config->setTty( true );
@@ -668,7 +668,7 @@ class Environment {
 		$exec_config->setTty( true );
 		$exec_config->setAttachStdout( true );
 		$exec_config->setAttachStderr( true );
-		$exec_config->setCmd( [ '/bin/sh', '-c', 'find /var/www/html -name "wpassure.json" -not -path "/var/www/html/wp-includes/*" -not -path "/var/www/html/wp-admin/*"' ] );
+		$exec_config->setCmd( [ '/bin/sh', '-c', 'find /var/www/html -name "wpacceptance.json" -not -path "/var/www/html/wp-includes/*" -not -path "/var/www/html/wp-admin/*"' ] );
 
 		$exec_id           = $this->docker->containerExec( $this->environment_id . '-wordpress', $exec_config )->getId();
 		$exec_start_config = new ExecIdStartPostBody();
@@ -738,22 +738,22 @@ class Environment {
 			$stream->wait();
 
 			if ( trim( $suite_config_name ) === trim( $this->suite_config['name'] ) ) {
-				$this->snapshot_wpassure_path = Utils\trailingslash( dirname( $suite_config_file ) );
+				$this->snapshot_wpacceptance_path = Utils\trailingslash( dirname( $suite_config_file ) );
 				break;
 			}
 		}
 
-		if ( empty( $this->snapshot_wpassure_path ) ) {
-			Log::instance()->write( 'Could not copy codebase files into snapshot. The snapshot must contain a codebase with a wpassure.json file.', 0, 'error' );
+		if ( empty( $this->snapshot_wpacceptance_path ) ) {
+			Log::instance()->write( 'Could not copy codebase files into snapshot. The snapshot must contain a codebase with a wpacceptance.json file.', 0, 'error' );
 			return false;
 		}
 
 		// If no repo_path or repo_path is relative
 		if ( empty( $this->suite_config['repo_path'] ) ) {
-			$this->snapshot_repo_path = $this->snapshot_wpassure_path;
+			$this->snapshot_repo_path = $this->snapshot_wpacceptance_path;
 		} else {
 			if ( false === stripos( $this->suite_config['repo_path'], '%WP_ROOT%' ) ) {
-				$this->snapshot_repo_path = $this->snapshot_wpassure_path . $this->suite_config['repo_path'];
+				$this->snapshot_repo_path = $this->snapshot_wpacceptance_path . $this->suite_config['repo_path'];
 			} else {
 				$this->snapshot_repo_path = preg_replace( '#^/?%WP_ROOT%/?(.*)$#i', '/var/www/html/$1', $this->suite_config['repo_path'] );
 			}
@@ -777,10 +777,10 @@ class Environment {
 					$excludes .= '--exclude="' . preg_replace( '#^/?%REPO_ROOT%/?(.*)$#i', '$1', $exclude ) . '" ';
 				} else {
 					// Exclude is relative
-					if ( $this->snapshot_repo_path === $this->snapshot_wpassure_path ) {
+					if ( $this->snapshot_repo_path === $this->snapshot_wpacceptance_path ) {
 						$excludes .= '--exclude="' . $exclude . '" ';
 					} else {
-						$abs_exclude = Utils\resolve_absolute_path( $this->snapshot_wpassure_path . $exclude );
+						$abs_exclude = Utils\resolve_absolute_path( $this->snapshot_wpacceptance_path . $exclude );
 
 						$excludes .= '--exclude="' . str_replace( Utils\trailingslash( $this->snapshot_repo_path ), '', $abs_exclude ) . '" ';
 					}
@@ -902,7 +902,7 @@ class Environment {
 				'tag'  => '5.7',
 			],
 			[
-				'name' => '10up/wpassure-wordpress',
+				'name' => '10up/wpacceptance-wordpress',
 				'tag'  => 'latest',
 			],
 			[
@@ -975,7 +975,7 @@ class Environment {
 		$host_config->setNetworkMode( $this->environment_id );
 		$host_config->setBinds(
 			[
-				WPASSURE_DIR . '/docker/mysql:/etc/mysql/conf.d',
+				WPACCEPTANCE_DIR . '/docker/mysql:/etc/mysql/conf.d',
 			]
 		);
 
@@ -1053,7 +1053,7 @@ class Environment {
 		$container_port_map           = new \ArrayObject();
 		$container_port_map['80/tcp'] = new \stdClass();
 
-		$container_config->setImage( '10up/wpassure-wordpress' );
+		$container_config->setImage( '10up/wpacceptance-wordpress' );
 		$container_config->setAttachStdin( true );
 		$container_config->setAttachStdout( true );
 		$container_config->setExposedPorts( $container_port_map );
@@ -1366,7 +1366,7 @@ class Environment {
 	/**
 	 * Get MySQL client
 	 *
-	 * @return \WPAssure\MySQL
+	 * @return \WPAcceptance\MySQL
 	 */
 	public function getMySQLClient() {
 		return $this->mysql_client;
@@ -1375,7 +1375,7 @@ class Environment {
 	/**
 	 * Get suite config
 	 *
-	 * @return \WPAssure\Config
+	 * @return \WPAcceptance\Config
 	 */
 	public function getSuiteConfig() {
 		return $this->suite_config;
@@ -1395,7 +1395,7 @@ class Environment {
 			'snapshot_id'            => $this->suite_config['snapshot_id'],
 			'environment_id'         => $this->environment_id,
 			'gateway_ip'             => $this->gateway_ip,
-			'snapshot_wpassure_path' => $this->snapshot_wpassure_path,
+			'snapshot_wpacceptance_path' => $this->snapshot_wpacceptance_path,
 			'snapshot_repo_path'     => $this->snapshot_repo_path,
 			'sites'                  => $this->sites,
 		];

@@ -3,13 +3,13 @@
  * Test contact form is functioning properly
  * Located on /contact/
  *
- * @package wpassure
+ * @package wpacceptance
  */
 
 /**
  * PHPUnit test class
  */
-class ContactFormTest extends \WPAssure\PHPUnit\TestCase {
+class ContactFormTest extends \WPAcceptance\PHPUnit\TestCase {
 
 	/**
 	 * When I don't fill out required fields, contact form wont submit

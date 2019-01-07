@@ -2,10 +2,10 @@
 /**
  * An Actor is used in a test to interact with the website
  *
- * @package  wpassure
+ * @package  wpacceptance
  */
 
-namespace WPAssure\PHPUnit;
+namespace WPAcceptance\PHPUnit;
 
 use Facebook\WebDriver\Exception\NoSuchElementException;
 use Facebook\WebDriver\Remote\RemoteWebElement;
@@ -19,22 +19,22 @@ use Facebook\WebDriver\Exception\UnknownServerException;
 use PHPUnit\Framework\ExpectationFailedException;
 use PHPUnit\Framework\TestCase;
 
-use WPAssure\Exception;
-use WPAssure\Log;
-use WPAssure\Utils;
-use WPAssure\EnvironmentFactory;
-use WPAssure\PHPUnit\Constraint;
-use WPAssure\PHPUnit\Constraints\Cookie as CookieConstrain;
-use WPAssure\PHPUnit\Constraints\PageContains as PageContainsConstrain;
-use WPAssure\PHPUnit\Constraints\PageSourceContains as PageSourceContainsConstrain;
-use WPAssure\PHPUnit\Constraints\LinkOnPage as LinkOnPageConstrain;
-use WPAssure\PHPUnit\Constraints\ElementVisible as ElementVisibleConstrain;
-use WPAssure\PHPUnit\Constraints\UrlContains as UrlContainsConstrain;
-use WPAssure\PHPUnit\Constraints\CheckboxChecked as CheckboxCheckedConstrain;
-use WPAssure\PHPUnit\Constraints\FieldValueContains as FieldValueContainsConstrain;
-use WPAssure\PHPUnit\Constraints\FieldInteractable as FieldInteractableConstrain;
-use WPAssure\PHPUnit\Constraints\AttributeContains as AttributeContainsConstrain;
-use WPAssure\PHPUnit\Constraints\NewDatabaseEntry as NewDatabaseEntry;
+use WPAcceptance\Exception;
+use WPAcceptance\Log;
+use WPAcceptance\Utils;
+use WPAcceptance\EnvironmentFactory;
+use WPAcceptance\PHPUnit\Constraint;
+use WPAcceptance\PHPUnit\Constraints\Cookie as CookieConstrain;
+use WPAcceptance\PHPUnit\Constraints\PageContains as PageContainsConstrain;
+use WPAcceptance\PHPUnit\Constraints\PageSourceContains as PageSourceContainsConstrain;
+use WPAcceptance\PHPUnit\Constraints\LinkOnPage as LinkOnPageConstrain;
+use WPAcceptance\PHPUnit\Constraints\ElementVisible as ElementVisibleConstrain;
+use WPAcceptance\PHPUnit\Constraints\UrlContains as UrlContainsConstrain;
+use WPAcceptance\PHPUnit\Constraints\CheckboxChecked as CheckboxCheckedConstrain;
+use WPAcceptance\PHPUnit\Constraints\FieldValueContains as FieldValueContainsConstrain;
+use WPAcceptance\PHPUnit\Constraints\FieldInteractable as FieldInteractableConstrain;
+use WPAcceptance\PHPUnit\Constraints\AttributeContains as AttributeContainsConstrain;
+use WPAcceptance\PHPUnit\Constraints\NewDatabaseEntry as NewDatabaseEntry;
 
 /**
  * Actor class
@@ -149,7 +149,7 @@ class Actor {
 	 * Perform assertion for a specific constraint.
 	 *
 	 * @access protected
-	 * @param \WPAssure\PHPUnit\Constraint $constraint An instance of constraint class.
+	 * @param \WPAcceptance\PHPUnit\Constraint $constraint An instance of constraint class.
 	 * @param string                       $message Optional. A message for a failure.
 	 */
 	protected function assertThat( $constraint, $message = '' ) {
@@ -789,19 +789,45 @@ class Actor {
 	 * @param  string $password Password
 	 */
 	public function loginAs( $username, $password = 'password' ) {
-		$this->moveTo( 'wp-login.php' );
+		static $cookies_by_username = [];
 
-		$this->setElementAttribute( '#user_login', 'value', $username );
+		$web_driver = $this->getWebDriver();
 
-		usleep( 100 );
+		if ( empty( $cookies_by_username[ $username ] ) ) {
+			Log::instance()->write( 'Login not cached for ' . $username, 2 );
 
-		$this->setElementAttribute( '#user_pass', 'value', $password );
+			$this->moveTo( 'wp-login.php' );
 
-		usleep( 100 );
+			$this->setElementAttribute( '#user_login', 'value', $username );
 
-		$this->click( '#wp-submit', true );
+			usleep( 100 );
 
-		$this->waitUntilElementVisible( '#wpadminbar' );
+			$this->setElementAttribute( '#user_pass', 'value', $password );
+
+			usleep( 100 );
+
+			$this->click( '#wp-submit', true );
+
+			$this->waitUntilElementVisible( '#wpadminbar' );
+
+			$cookies_by_username[ $username ] = [];
+
+			$cookies = $this->getCookies();
+
+			foreach ( $cookies as $cookie ) {
+				if ( preg_match( '#^(wordpress\_|wp\-)#', $cookie['name'] ) ) {
+					$cookies_by_username[ $username ][] = $cookie;
+				}
+			}
+		} else {
+			Log::instance()->write( 'Login cached for ' . $username, 2 );
+
+			foreach ( $cookies_by_username[ $username ] as $cookie ) {
+				var_dump( $web_driver->manage()->addCookie( $cookie ) );
+			}
+
+			$this->moveTo( 'wp-admin' );
+		}
 	}
 
 	/**

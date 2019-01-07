@@ -2,10 +2,10 @@
 /**
  * MySQL client to use in tests
  *
- * @package  wpassure
+ * @package  wpacceptance
  */
 
-namespace WPAssure;
+namespace WPAcceptance;
 
 use \mysqli;
 

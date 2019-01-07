@@ -2,10 +2,10 @@
 /**
  * Environment factory for storing Environments
  *
- * @package wpassure
+ * @package wpacceptance
  */
 
-namespace WPAssure;
+namespace WPAcceptance;
 
 use Docker\Docker;
 
@@ -24,7 +24,7 @@ class EnvironmentFactory {
 	 * Get an environment given an index
 	 *
 	 * @param  int $index Environments index
-	 * @return \WPAssure\Environment|boolean;
+	 * @return \WPAcceptance\Environment|boolean;
 	 */
 	public static function get( $index = 0 ) {
 		if ( ! empty( self::$environments[ $index ] ) ) {
@@ -88,13 +88,13 @@ class EnvironmentFactory {
 	 * @param  boolean $skip_environment_cache If a valid cached environment exists, don't use it. Don't cache the new environment.
 	 * @param  string  $environment_id Allow for manual environment ID override
 	 * @param  int     $mysql_wait_time How long should we wait for MySQL to become available (seconds)
-	 * @return  \WPAssure\Environment|bool
+	 * @return  \WPAcceptance\Environment|bool
 	 */
 	public static function create( $suite_config, $cache_environment = false, $skip_environment_cache = false, $environment_id = null, $mysql_wait_time = null ) {
 		$environment = new Environment( $suite_config, $cache_environment, $skip_environment_cache, $environment_id, $mysql_wait_time );
 
 		if ( empty( self::$environments ) ) {
-			register_shutdown_function( [ '\WPAssure\EnvironmentFactory', 'handleShutdown' ] );
+			register_shutdown_function( [ '\WPAcceptance\EnvironmentFactory', 'handleShutdown' ] );
 		}
 
 		if ( $environment->populateEnvironmentFromCache() ) {

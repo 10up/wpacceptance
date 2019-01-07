@@ -2,13 +2,13 @@
 /**
  * Test gallery is functioning properly
  *
- * @package wpassure
+ * @package wpacceptance
  */
 
 /**
  * PHPUnit test class
  */
-class GalleryTest extends \WPAssure\PHPUnit\TestCase {
+class GalleryTest extends \WPAcceptance\PHPUnit\TestCase {
 
 	/**
 	 * Test gallery dots

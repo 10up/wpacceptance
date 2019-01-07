@@ -2,18 +2,18 @@
 /**
  * Check field values constraint
  *
- * @package  wpassure
+ * @package  wpacceptance
  */
 
-namespace WPAssure\PHPUnit\Constraints;
+namespace WPAcceptance\PHPUnit\Constraints;
 
 use Facebook\WebDriver\WebDriverSelect;
-use WPAssure\Utils;
+use WPAcceptance\Utils;
 
 /**
  * Constraint class
  */
-class FieldValueContains extends \WPAssure\PHPUnit\Constraint {
+class FieldValueContains extends \WPAcceptance\PHPUnit\Constraint {
 
 	use Traits\ElementToMessage;
 
@@ -52,7 +52,7 @@ class FieldValueContains extends \WPAssure\PHPUnit\Constraint {
 	 * Evaluate if the actor can or can't see a value in the field.
 	 *
 	 * @access protected
-	 * @param \WPAssure\PHPUnit\Actor $other The actor instance.
+	 * @param \WPAcceptance\PHPUnit\Actor $other The actor instance.
 	 * @return boolean TRUE if the constrain is met, otherwise FALSE.
 	 */
 	protected function matches( $other ): bool {

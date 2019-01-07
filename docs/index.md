@@ -1,8 +1,8 @@
-# WP Assure
+# WP Acceptance
 
 *(Beta) A team scalable solution for reliable WordPress acceptance testing.*
 
-WP Assure is a toolkit that empowers developers and CI pipelines to test codebases using version controlled acceptance tests and sharable, defined file and database snapshots.
+WP Acceptance is a toolkit that empowers developers and CI pipelines to test codebases using version controlled acceptance tests and sharable, defined file and database snapshots.
 
 ---
 
@@ -16,50 +16,50 @@ WP Assure is a toolkit that empowers developers and CI pipelines to test codebas
 
 ## Installation
 
-WP Assure is easiest to use as a project-level Composer package:
+WP Acceptance is easiest to use as a project-level Composer package:
 
-1\. Since WP Assure is in beta, you will need to set your project minimum stability to `dev`:
+1\. Since WP Acceptance is in beta, you will need to set your project minimum stability to `dev`:
 ```
 composer config minimum-stability dev
 ```
 
-2\. Next, require the WP Assure package:
+2\. Next, require the WP Acceptance package:
 ```
-composer require 10up/wpassure:dev-master --dev
-```
-
-3\. Finally, verify and run WP Assure by calling the script in the Composer bin directory:
-```
-./vendor/bin/wpassure
+composer require 10up/wpacceptance:dev-master --dev
 ```
 
-After installation, you will want to [setup WP Assure on a project](https://wpassure.readthedocs.io/en/latest/project-setup/).
+3\. Finally, verify and run WP Acceptance by calling the script in the Composer bin directory:
+```
+./vendor/bin/wpacceptance
+```
+
+After installation, you will want to [setup WP Acceptance on a project](https://wpacceptance.readthedocs.io/en/latest/project-setup/).
 
 ## Project Setup
 
-After [installing WP Assure](https://wpassure.readthedocs.io/en/latest/install/), you need to setup your project and development workflow.
+After [installing WP Acceptance](https://wpacceptance.readthedocs.io/en/latest/install/), you need to setup your project and development workflow.
 
-1\. Spin up your local environment. WP Assure will use your local if run with the  `--local` flag. We highly recommend [WP Local Docker](https://github.com/10up/wp-local-docker).
+1\. Spin up your local environment. WP Acceptance will use your local if run with the  `--local` flag. We highly recommend [WP Local Docker](https://github.com/10up/wp-local-docker).
 
-2\. Decide where you want to initialize WP Assure (create wpassure.json) which must be the root of your version controlled repository. This is usually in `wp-content/`, a theme, or a plugin. `wp-content/` might make most sense if you are developing an entire website. Let's assume we are initializing our WP Assure project in `wp-content/` and have installed WP Assure in the same directory.
+2\. Decide where you want to initialize WP Acceptance (create wpacceptance.json) which must be the root of your version controlled repository. This is usually in `wp-content/`, a theme, or a plugin. `wp-content/` might make most sense if you are developing an entire website. Let's assume we are initializing our WP Acceptance project in `wp-content/` and have installed WP Acceptance in the same directory.
 
 Navigate to `wp-content` in the command line. Run the following command:
 ```
-./vendor/bin/wpassure init
+./vendor/bin/wpacceptance init
 ```
 
-3\. You will be presented with some command prompts. Choose a project slug and select the defaults for the other options. When the command is finished, there will be a `wpassure.json` file in `wp-content` as well as a `tests` directory and an example test, `tests/ExampleTest.php`.
+3\. You will be presented with some command prompts. Choose a project slug and select the defaults for the other options. When the command is finished, there will be a `wpacceptance.json` file in `wp-content` as well as a `tests` directory and an example test, `tests/ExampleTest.php`.
 
-WP Assure reads `wpassure.json` every time tests are run. The file must contain both `name` and `tests` properties in JSON format. `name` is the name of your test suite, and it must be unique. `snapshot_id` is optional and is explained in [Workflow and Snapshots](https://wpassure.readthedocs.io/en/latest/workflow-snapshots/). `tests` points to your test files. WP Assure tests are written in PHP and PHPUnit based.
+WP Acceptance reads `wpacceptance.json` every time tests are run. The file must contain both `name` and `tests` properties in JSON format. `name` is the name of your test suite, and it must be unique. `snapshot_id` is optional and is explained in [Workflow and Snapshots](https://wpacceptance.readthedocs.io/en/latest/workflow-snapshots/). `tests` points to your test files. WP Acceptance tests are written in PHP and PHPUnit based.
 
-*There are a few important rules for wpassure.json:*
+*There are a few important rules for wpacceptance.json:*
 
-* `wpassure.json` and the actual tests __must__ exist within the codebase you are testing.
-* `wpassure.json` __must__ be located in the root of your version controlled codebase (unless you set `repo_path`, see below). Typically this means `wpassure.json` is in the root of a theme, plugin, or `wp-content` directory.
+* `wpacceptance.json` and the actual tests __must__ exist within the codebase you are testing.
+* `wpacceptance.json` __must__ be located in the root of your version controlled codebase (unless you set `repo_path`, see below). Typically this means `wpacceptance.json` is in the root of a theme, plugin, or `wp-content` directory.
 
 4\. Now let's run our tests to make sure everything works:
 ```
-./vendor/bin/wpassure run --local
+./vendor/bin/wpacceptance run --local
 ```
 
 You should see your tests passing.
@@ -71,52 +71,52 @@ You should see your tests passing.
 
 You will need to create a repository if you don't have one. At 10up, we use `10up` as our `<repository-name>`.
 
-6\. Now that we are ready with WP Snapshots, let's run our tests again but this time saving the snapshot ID to our `wpassure.json` and pushing the snapshot to our remote repository:
+6\. Now that we are ready with WP Snapshots, let's run our tests again but this time saving the snapshot ID to our `wpacceptance.json` and pushing the snapshot to our remote repository:
 ```
-./vendor/bin/wpassure run --local --save
+./vendor/bin/wpacceptance run --local --save
 ```
 
 After our tests pass, you will see the snapshot get pushed upstream.
 
 7\. Commit the snapshot ID to your repository and push the new commit upstream.
 
-8\. Now that you have a snapshot ID in your `wpassure.json`, you can run your test suite without having a local environment running:
+8\. Now that you have a snapshot ID in your `wpacceptance.json`, you can run your test suite without having a local environment running:
 ```
-./vendor/bin/wpassure run
+./vendor/bin/wpacceptance run
 ```
 
 You should create new snapshots when new features, plugins, content types, etc. are added to your web application.
 
-*Note:* Make sure you run WP Assure on your HOST machine, not within another Docker environment.
+*Note:* Make sure you run WP Acceptance on your HOST machine, not within another Docker environment.
 
 ## Workflow and Snapshots
 
-There are two scenarios or workflows for running WP Assure:
+There are two scenarios or workflows for running WP Acceptance:
 
 1. Testing a codebase using your local environment (files and database).
 2. Testing a codebase against a "primary" snapshot.
 
-The power of WP Assure is working with a team that is all testing it's code against one *primary snapshot*. Of course, in order for this to be successful the primary snapshot must be kept relevant which is the responsiblity of the development team. For example, when new content types are added, content should be added and a new primary snapshot created.
+The power of WP Acceptance is working with a team that is all testing it's code against one *primary snapshot*. Of course, in order for this to be successful the primary snapshot must be kept relevant which is the responsiblity of the development team. For example, when new content types are added, content should be added and a new primary snapshot created.
 
-To test a codebase on your local environment, you would run the following command in the directory of `wpassure.json`:
+To test a codebase on your local environment, you would run the following command in the directory of `wpacceptance.json`:
 ```
-wpassure run --local --save
-```
-
-The `--local` flag will force WP Assure to ignore a snapshot ID defined in `wpassure.json`. The `--save` flag will make WP Assure create a new snapshot from your local and save the ID to `wpassure.json` (overwritting any old ID). After saving a new primary snapshot to `wpassure.json`, you will want to commit and push the change upstream.
-
-To test a codebase on a primary snapshot, you would simply run the following command in the directory of `wpassure.json`:
-```
-wpassure run
+wpacceptance run --local --save
 ```
 
-You can only run WP Assure against snapshots that contain some version of the codebase your are testing. This means the snapshot must contain `wpassure.json` with the same `name` as the one you are running.
+The `--local` flag will force WP Acceptance to ignore a snapshot ID defined in `wpacceptance.json`. The `--save` flag will make WP Acceptance create a new snapshot from your local and save the ID to `wpacceptance.json` (overwritting any old ID). After saving a new primary snapshot to `wpacceptance.json`, you will want to commit and push the change upstream.
 
-## wpassure.json File
+To test a codebase on a primary snapshot, you would simply run the following command in the directory of `wpacceptance.json`:
+```
+wpacceptance run
+```
 
-`wpassure.json` is the "configuration" file read by WP Assure. This file is required for each project. Whenever a test suite is run via the `run` command, `wpassure.json` is processed.
+You can only run WP Acceptance against snapshots that contain some version of the codebase your are testing. This means the snapshot must contain `wpacceptance.json` with the same `name` as the one you are running.
 
-Here's what `wpassure.json` looks like
+## wpacceptance.json File
+
+`wpacceptance.json` is the "configuration" file read by WP Acceptance. This file is required for each project. Whenever a test suite is run via the `run` command, `wpacceptance.json` is processed.
+
+Here's what `wpacceptance.json` looks like
 
 ```json
 {
@@ -142,22 +142,22 @@ Here's what `wpassure.json` looks like
 ```
 
 * `name` (required) - Name of test suite.
-* `tests` (required) - This is an array of path(s) to tests. Each path in the array is processed via PHP `glob`. `*.php` will include every PHP file in the directory. Sholud be relative to `wpassure.json`.
+* `tests` (required) - This is an array of path(s) to tests. Each path in the array is processed via PHP `glob`. `*.php` will include every PHP file in the directory. Sholud be relative to `wpacceptance.json`.
 * `snapshot_id` - "Primary" snapshot to test again. If the `run` command is executed without the `--local` flag, this snapshot ID will be used.
-* `exclude` - WP Assure copys all the files in your repository into the snapshot for testing. There may be directories you want to include to speed things up e.g. `node_modules` and `vendor`. Should be relative `wp_assure.json` or use variable `%REPO_ROOT%` to make absolute.
+* `exclude` - WP Acceptance copys all the files in your repository into the snapshot for testing. There may be directories you want to include to speed things up e.g. `node_modules` and `vendor`. Should be relative `wp_assure.json` or use variable `%REPO_ROOT%` to make absolute.
 * `enforce_clean_db` - If set to `true`, a "clean" DB will be used for each test in the suite. "clean" means the untampered DB from the snapshot.
 * `disable_clean_db` - Will force WP Snapshots to disable "clean" DB functionality. By default, a clean DB is created even if `enforce_clean_db` is false since there is a test method for refreshing the DB.
-* `bootstrap` - Path to bootstrap file. This file will be executed before test execution begins. Should be relative to `wpassure.json`.
-* `repo_path` - The path to the root of your repository. WP Assure needs to know where to insert your codebase into the snapshot. If `repo_path` is not provided, it assumes `wpassure.json` is in the root of your repo. `repo_path` can be relative (from your `wpassure.json` file) or you can use the `%WP_ROOT%` variable to set the path.
-* `before_scripts` - An array of scripts to run in the same directory as `wpassure.json` before running tests.
+* `bootstrap` - Path to bootstrap file. This file will be executed before test execution begins. Should be relative to `wpacceptance.json`.
+* `repo_path` - The path to the root of your repository. WP Acceptance needs to know where to insert your codebase into the snapshot. If `repo_path` is not provided, it assumes `wpacceptance.json` is in the root of your repo. `repo_path` can be relative (from your `wpacceptance.json` file) or you can use the `%WP_ROOT%` variable to set the path.
+* `before_scripts` - An array of scripts to run in the same directory as `wpacceptance.json` before running tests.
 * `repository` - You can optionally specify a WP Snapshots repository.
 
 ## Writing Tests
 
-WP Assure tests are based on [PHPUnit](https://phpunit.de/). Here is a simple example of a test:
+WP Acceptance tests are based on [PHPUnit](https://phpunit.de/). Here is a simple example of a test:
 
 ```php
-class ExampleTest extends \WPAssure\PHPUnit\TestCase {
+class ExampleTest extends \WPAcceptance\PHPUnit\TestCase {
 
 	/**
 	 * Example test
@@ -168,15 +168,15 @@ class ExampleTest extends \WPAssure\PHPUnit\TestCase {
 }
 ```
 
-You can place tests in whatever files you choose (as long as `tests` points to the right place in `wpassure.json`). However, per PHPUnit defaults, your test code must be in a class (or classes across multiple files) with name(s) that end in `Test`. Inside your test class(es), each test method must begin with `test`.
+You can place tests in whatever files you choose (as long as `tests` points to the right place in `wpacceptance.json`). However, per PHPUnit defaults, your test code must be in a class (or classes across multiple files) with name(s) that end in `Test`. Inside your test class(es), each test method must begin with `test`.
 
-All your tests must extend `\WPAssure\PHPUnit\TestCase`. `\WPAssure\PHPUnit\TestCase` extends `\PHPUnit\Framework\TestCase` so you will have access to all the standard PHPUnit methods e.g. `assertTrue`, `assertEquals`, etc.
+All your tests must extend `\WPAcceptance\PHPUnit\TestCase`. `\WPAcceptance\PHPUnit\TestCase` extends `\PHPUnit\Framework\TestCase` so you will have access to all the standard PHPUnit methods e.g. `assertTrue`, `assertEquals`, etc.
 
-Along with standard PHPUnit functionality, you have WP Assure special methods/functions/classes:
+Along with standard PHPUnit functionality, you have WP Acceptance special methods/functions/classes:
 
 ### Actor
 
-The most poweful WP Assure functionality is provided by the `Actor` class and let's you interact as a Chrome browser user with your website.
+The most poweful WP Acceptance functionality is provided by the `Actor` class and let's you interact as a Chrome browser user with your website.
 
 A new Actor must be initialized for each test and is done like so:
 ```php
@@ -212,7 +212,7 @@ $I->checkOptions( '.checkbox-or-radio' );
 $I->selectOptions( '.select', 'value-to-select' );
 ```
 
-Since WP Assure is built on WP Snapshots, the `wpsnapshots` user is always available as a super admin with password, `password`.
+Since WP Acceptance is built on WP Snapshots, the `wpsnapshots` user is always available as a super admin with password, `password`.
 
 Since `$I` is literally interacting with a browser, we can do anything a browser can: click on elements, follow links, get specific DOM elements, run JavaScript, resize the browser, refresh the page, interact with forms, move the mouse, interact with the keyboard, etc.
 
@@ -234,7 +234,7 @@ $I->dontSeeTextInUrl( 'Title Text' );
 
 ### Database
 
-WP Assure not only let's you test UI elements but how your web application interacts with the database as well.
+WP Acceptance not only let's you test UI elements but how your web application interacts with the database as well.
 
 We can assert that new posts (or other custom post types) were created:
 ```php
@@ -249,45 +249,45 @@ self::assertNewPostsExist( $last_id, [ 'post_type' => 'post' ], 'No new post.' )
 
 ### Full API Documentation
 
-To read about all WP Assure testing related methods, look at the [source code Actor class](https://github.com/10up/wpassure/blob/master/src/classes/PHPUnit/Actor.php).
+To read about all WP Acceptance testing related methods, look at the [source code Actor class](https://github.com/10up/wpacceptance/blob/master/src/classes/PHPUnit/Actor.php).
 
 ### Examples
 
-For detailed test examples, look at the [example test suite](https://github.com/10up/wpassure/tree/master/example/twentyseventeen).
+For detailed test examples, look at the [example test suite](https://github.com/10up/wpacceptance/tree/master/example/twentyseventeen).
 
 ## Commands
 
-* __wpassure run__ [&lt;PATH TO wpassure.json DIRECTORY&gt;] [--local] [--snapshot_id=&lt;WPSNAPSHOT ID&gt;] [--enforce_clean_db] [--cache_environment] [--skip_environment_cache] [--db_host=&lt;DATABASE HOST&gt;] [--verbose] [--wp_directory=&lt;PATH TO WP DIRECTORY&gt;] [--save] [--force_save] [--filter_tests=&lt;TEST FILTER&gt;] [--filter_test_files=&lt;TEST FILE FILTER&gt;] [--repository=&lt;REPOSITORY&gt;] [--mysql_wait_time=&lt;MYSQL WAIT TIME&gt;] [--screenshot_on_failure] [--environment_id=&lt;ENVIRONMENT ID&gt;] - Runs a test suite.
-	* `<PATH TO wpassure.json DIRECTORY>` - Path to `wpassure.json`, defaults to current working directory.
+* __wpacceptance run__ [&lt;PATH TO wpacceptance.json DIRECTORY&gt;] [--local] [--snapshot_id=&lt;WPSNAPSHOT ID&gt;] [--enforce_clean_db] [--cache_environment] [--skip_environment_cache] [--db_host=&lt;DATABASE HOST&gt;] [--verbose] [--wp_directory=&lt;PATH TO WP DIRECTORY&gt;] [--save] [--force_save] [--filter_tests=&lt;TEST FILTER&gt;] [--filter_test_files=&lt;TEST FILE FILTER&gt;] [--repository=&lt;REPOSITORY&gt;] [--mysql_wait_time=&lt;MYSQL WAIT TIME&gt;] [--screenshot_on_failure] [--environment_id=&lt;ENVIRONMENT ID&gt;] - Runs a test suite.
+	* `<PATH TO wpacceptance.json DIRECTORY>` - Path to `wpacceptance.json`, defaults to current working directory.
 	* `--local` - Runs your test suite against your local environment.
 	 * `--verbose`, `-v`, `-vv`, `-vvv` - Run with various degrees of verbosity.
-	* `--save` - If tests are successful, save snapshot ID to `wpassure.json` and push snapshot upstream.
-	* `--force_save` - Save snapshot ID to `wpassure.json` and push snapshot upstream no matter what.
+	* `--save` - If tests are successful, save snapshot ID to `wpacceptance.json` and push snapshot upstream.
+	* `--force_save` - Save snapshot ID to `wpacceptance.json` and push snapshot upstream no matter what.
 	* `--wp_directory` - Path to WordPress. If unset, will search up the directory tree until wp-config.php is found
 	* `--snapshot_id` - Optionally run tests against a snapshot ID.
 	* `--enforce_clean_db` - Use clean database for each test.
 	* `--cache_environment` - Keep the environment alive so it can be reused later. A cache environment can be used if the config being run is the exact same.
-	* `--skip_environment_cache` - Ensures a fresh environment is used on each run even if a cached one exists. This also will prevent environment caching. This is useful if you are running WP Assure multiple times on the same server e.g. shared GitLab runner.
+	* `--skip_environment_cache` - Ensures a fresh environment is used on each run even if a cached one exists. This also will prevent environment caching. This is useful if you are running WP Acceptance multiple times on the same server e.g. shared GitLab runner.
 	* `--filter_tests` - Filter tests to run. Is analagous to PHPUnit --filter.
 	* `--filter_test_files` - Comma separate test files to execute. If used all other test files will be ignored.
 	* `--screenshot_on_failure` - Take a screenshot when a test fails or an error occurs. Screenshot will be placed in `screenshots/` directory from the current working directory.
 	* `--repository` - WP Snapshots repository to use.
 	* `--environment_id` - Manually specify environment ID. Useful for CI.
-	* `--mysql_wait_time` - Set how long WP Assure should wait for MySQL to become available in seconds.
+	* `--mysql_wait_time` - Set how long WP Acceptance should wait for MySQL to become available in seconds.
   
-* __wpassure init__ [--path] - Initialize a new test suite.
+* __wpacceptance init__ [--path] - Initialize a new test suite.
 	* `--path` - Optional path to init directory.
 
-* __wpassure destroy__  &ltenvironment_id&gt; [--all] - Stop and destroy running WP Assure environment(s)
+* __wpacceptance destroy__  &ltenvironment_id&gt; [--all] - Stop and destroy running WP Acceptance environment(s)
 	* `<environment_id>` - ID of environment to destroy.
-	* `[--all]` - Destroy all WP Assure environments.
+	* `[--all]` - Destroy all WP Acceptance environments.
 
 ## Speed of Testing
 
-Unfortunately, good test suites can take awhile to run. WP Assure has to do a lot of work in order to setup an environment for testing. Here are some tips for getting your test suite to run faster:
+Unfortunately, good test suites can take awhile to run. WP Acceptance has to do a lot of work in order to setup an environment for testing. Here are some tips for getting your test suite to run faster:
 
-* Keep your snapshots as small as possible. If your snapshot database is 1GB that means WP Assure will have to execute a massive SQL file.
-* Utilize environment caching on your local machine. When you run WP Assure, use the `--cache_environment` flag. This will force WP Assure to reuse the same environment as long as the suite configuration hasn't changed.
+* Keep your snapshots as small as possible. If your snapshot database is 1GB that means WP Acceptance will have to execute a massive SQL file.
+* Utilize environment caching on your local machine. When you run WP Acceptance, use the `--cache_environment` flag. This will force WP Acceptance to reuse the same environment as long as the suite configuration hasn't changed.
 * In your suite configuration, exclude unnecessary files and directories such as `node_modules` and `vendor`.
 * Don't require a clean database for each test. Set `disable_clean_db` to false in your suite configuration.
 * Remember, using `--local` will create a new snapshot on each run which is slow.
@@ -305,11 +305,11 @@ Here are some tips for writing tests locally:
 
 ## Continuous Integration
 
-WP Assure is a great addition to your CI process.
+WP Acceptance is a great addition to your CI process.
 
 ### Travis CI
 
-Here is an example `.travis.yml` that includes WP Assure:
+Here is an example `.travis.yml` that includes WP Acceptance:
 ```yaml
 language: php
 php:
@@ -322,17 +322,17 @@ before_script:
   - composer install
 script:
   - if [ -n "$AWS_ACCESS_KEY" ]; then ./vendor/bin/wpsnapshots configure 10up --aws_key=$AWS_ACCESS_KEY --aws_secret=$SECRET_ACCESS_KEY --user_name=Travis --user_email=travis@10up.com; fi
-  - if [ -n "$AWS_ACCESS_KEY" ]; then bash run-wpassure.sh; fi
+  - if [ -n "$AWS_ACCESS_KEY" ]; then bash run-wpacceptance.sh; fi
 sudo: required
 services: docker
 ```
 
 Make sure you replace `REPO_NAME` with your WP Snapshots repository name. You will also need to define `AWS_ACCESS_KEY` and `SECRET_ACCESS_KEY` as hidden Travis environmental variables in your Travis project settings.
 
-Here is `run-wpassure.sh` which will retry WP Assure up to 3 times if environment errors occur:
+Here is `run-wpacceptance.sh` which will retry WP Acceptance up to 3 times if environment errors occur:
 ```bash
 for i in 1 2 3; do
-	./vendor/bin/wpassure run
+	./vendor/bin/wpacceptance run
 
 	EXIT_CODE=$?
 
@@ -349,4 +349,4 @@ exit $EXIT_CODE
 
 ### GitLab
 
-WP Assure works well with GitLab as well. The only difference is when running `wpsnapshots configure`, you need to prefix the command with an environmental variable `WPSNAPSHOTS_DIR`: `WPSNAPSHOTS_DIR=/builds/${CI_PROJECT_NAMESPACE}/.wpsnapshots/ wpsnapshots configure`.
+WP Acceptance works well with GitLab as well. The only difference is when running `wpsnapshots configure`, you need to prefix the command with an environmental variable `WPSNAPSHOTS_DIR`: `WPSNAPSHOTS_DIR=/builds/${CI_PROJECT_NAMESPACE}/.wpsnapshots/ wpsnapshots configure`.

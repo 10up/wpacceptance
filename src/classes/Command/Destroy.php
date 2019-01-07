@@ -1,11 +1,11 @@
 <?php
 /**
- * Stops and destroys a running WP Assure environment
+ * Stops and destroys a running WP Acceptance environment
  *
- * @package wpassure
+ * @package wpacceptance
  */
 
-namespace WPAssure\Command;
+namespace WPAcceptance\Command;
 
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Question\Question;
@@ -15,8 +15,8 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 
-use WPAssure\Log;
-use WPAssure\EnvironmentFactory;
+use WPAcceptance\Log;
+use WPAcceptance\EnvironmentFactory;
 
 /**
  * Destroy command class
@@ -28,7 +28,7 @@ class Destroy extends Command {
 	 */
 	protected function configure() {
 		$this->setName( 'destroy' );
-		$this->setDescription( 'Stops and destroys a running WP Assure environment' );
+		$this->setDescription( 'Stops and destroys a running WP Acceptance environment' );
 
 		$this->addArgument( 'environment_id', InputArgument::OPTIONAL, 'Environment ID.' );
 		$this->addOption( 'all', false, InputOption::VALUE_NONE, 'Destroy all environments.' );

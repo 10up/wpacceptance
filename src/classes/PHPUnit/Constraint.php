@@ -1,11 +1,11 @@
 <?php
 /**
- * Base constraint abstract class for WPAssure contraints to extend
+ * Base constraint abstract class for WPAcceptance contraints to extend
  *
- * @package wpassure
+ * @package wpacceptance
  */
 
-namespace WPAssure\PHPUnit;
+namespace WPAcceptance\PHPUnit;
 
 /**
  * Constract abstract
@@ -40,13 +40,13 @@ abstract class Constraint extends \PHPUnit\Framework\Constraint\Constraint {
 	 * Return an instance of the actor class.
 	 *
 	 * @access protected
-	 * @throws \WPAssure\Exception when the constrain is used with not an instance of the Actor class.
-	 * @param \WPAssure\PHPUnit\Actor $other Incoming argument that used for this constrain.
-	 * @return \WPAssure\PHPUnit\Actor An instance of the Actor class.
+	 * @throws \WPAcceptance\Exception when the constrain is used with not an instance of the Actor class.
+	 * @param \WPAcceptance\PHPUnit\Actor $other Incoming argument that used for this constrain.
+	 * @return \WPAcceptance\PHPUnit\Actor An instance of the Actor class.
 	 */
 	protected function getActor( $other ) {
-		if ( ! ( $other instanceof \WPAssure\PHPUnit\Actor ) ) {
-			throw new \WPAssure\Exception( 'The constrain must be used only with an instance of the Actor class.' );
+		if ( ! ( $other instanceof \WPAcceptance\PHPUnit\Actor ) ) {
+			throw new \WPAcceptance\Exception( 'The constrain must be used only with an instance of the Actor class.' );
 		}
 
 		return $other;

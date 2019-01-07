@@ -2,13 +2,13 @@
 /**
  * Example test class
  *
- * @package wpassure
+ * @package wpacceptance
  */
 
 /**
  * PHPUnit test class
  */
-class ExampleTest extends \WPAssure\PHPUnit\TestCase {
+class ExampleTest extends \WPAcceptance\PHPUnit\TestCase {
 
 	/**
 	 * Example test

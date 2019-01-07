@@ -1,5 +1,5 @@
 {
-  "name": "10up/wpassure",
+  "name": "10up/wpacceptance",
   "description": "Test code using acceptance tests and sharable, defined file and database snapshots.",
   "keywords": ["wordpress", "testing", "acceptance tests"],
   "license": ["MIT"],
@@ -18,14 +18,14 @@
     "php": ">=7.0"
   },
   "bin": [
-    "bin/wpassure"
+    "bin/wpacceptance"
   ],
   "autoload": {
     "files": [
       "src/utils.php"
     ],
     "psr-4": {
-      "WPAssure\\": "./src/classes"
+      "WPAcceptance\\": "./src/classes"
     }
   },
   "repositories": [

@@ -2,13 +2,13 @@
 /**
  * Test that admins can manage media
  *
- * @package wpassure
+ * @package wpacceptance
  */
 
 /**
  * PHPUnit test class
  */
-class AdminMediaTest extends \WPAssure\PHPUnit\TestCase {
+class AdminMediaTest extends \WPAcceptance\PHPUnit\TestCase {
 
 	/**
 	 * Check that we can add a featured image

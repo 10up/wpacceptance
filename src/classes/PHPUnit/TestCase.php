@@ -1,14 +1,14 @@
 <?php
 /**
- * Base test class for WP Assure tests to extend
+ * Base test class for WP Acceptance tests to extend
  *
- * @package  wpassure
+ * @package  wpacceptance
  */
 
-namespace WPAssure\PHPUnit;
+namespace WPAcceptance\PHPUnit;
 
-use WPAssure\Log;
-use WPAssure\EnvironmentFactory;
+use WPAcceptance\Log;
+use WPAcceptance\EnvironmentFactory;
 use PHPUnit\Runner\BaseTestRunner;
 
 /**

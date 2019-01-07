@@ -1,15 +1,15 @@
 <?php
 /**
- * Handle suite config file wpassure.json
+ * Handle suite config file wpacceptance.json
  *
  * @package  wpsnapshots
  */
 
-namespace WPAssure;
+namespace WPAcceptance;
 
-use WPAssure\Log;
+use WPAcceptance\Log;
 use \ArrayAccess;
-use WPAssure\Utils;
+use WPAcceptance\Utils;
 
 /**
  * Handle suite config files
@@ -17,7 +17,7 @@ use WPAssure\Utils;
 class Config implements ArrayAccess {
 
 	/**
-	 * Store WPAssure suite config
+	 * Store WPAcceptance suite config
 	 *
 	 * @var array
 	 */
@@ -35,7 +35,7 @@ class Config implements ArrayAccess {
 	/**
 	 * Config factory method
 	 *
-	 * @param  string $path Path to a directory with wpassure.json file or config file itself.
+	 * @param  string $path Path to a directory with wpacceptance.json file or config file itself.
 	 * @return Config|bool
 	 */
 	public static function create( $path = '' ) {
@@ -47,24 +47,24 @@ class Config implements ArrayAccess {
 			$path = Utils\normalize_path( $path );
 		}
 
-		$file_path = $path . 'wpassure.json';
+		$file_path = $path . 'wpacceptance.json';
 
 		if ( file_exists( $file_path ) ) {
 			$raw_file = file_get_contents( $file_path );
 			$config   = json_decode( $raw_file, true );
 		} else {
-			Log::instance()->write( 'wpassure.json not found in ' . dirname( $file_path ), 0, 'error' );
+			Log::instance()->write( 'wpacceptance.json not found in ' . dirname( $file_path ), 0, 'error' );
 
 			return false;
 		}
 
 		if ( empty( $config['name'] ) ) {
-			Log::instance()->write( '`name` not set in wpassure.json', 0, 'error' );
+			Log::instance()->write( '`name` not set in wpacceptance.json', 0, 'error' );
 
 			return false;
 		}
 
-		// $config['path'] === path to wpassure.json direcfory in host machine
+		// $config['path'] === path to wpacceptance.json direcfory in host machine
 		$config['path'] = Utils\trailingslash( dirname( $file_path ) );
 
 		if ( empty( $config['repo_path'] ) ) {
@@ -99,7 +99,7 @@ class Config implements ArrayAccess {
 	}
 
 	/**
-	 * Write config to current wpassure.json file
+	 * Write config to current wpacceptance.json file
 	 */
 	public function write() {
 		Log::instance()->write( 'Writing config.', 1 );
@@ -111,7 +111,7 @@ class Config implements ArrayAccess {
 			unset( $file_config['snapshot_id'] );
 		}
 
-		file_put_contents( Utils\trailingslash( $this->config['path'] ) . 'wpassure.json', json_encode( $file_config, JSON_PRETTY_PRINT ) );
+		file_put_contents( Utils\trailingslash( $this->config['path'] ) . 'wpacceptance.json', json_encode( $file_config, JSON_PRETTY_PRINT ) );
 	}
 
 	/**

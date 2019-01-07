@@ -2,13 +2,13 @@
 /**
  * Test that admins can manage posts
  *
- * @package wpassure
+ * @package wpacceptance
  */
 
 /**
  * PHPUnit test class
  */
-class AdminPostTest extends \WPAssure\PHPUnit\TestCase {
+class AdminPostTest extends \WPAcceptance\PHPUnit\TestCase {
 
 	/**
 	 * Test that post publishes

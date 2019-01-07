@@ -1,11 +1,11 @@
 <?php
 /**
- * Init command - creates wpassure.json
+ * Init command - creates wpacceptance.json
  *
- * @package wpassure
+ * @package wpacceptance
  */
 
-namespace WPAssure\Command;
+namespace WPAcceptance\Command;
 
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Question\Question;
@@ -15,9 +15,9 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 
-use WPAssure\Log;
-use WPAssure\Utils;
-use WPAssure\Config;
+use WPAcceptance\Log;
+use WPAcceptance\Utils;
+use WPAcceptance\Config;
 
 /**
  * Init command class
@@ -29,9 +29,9 @@ class Init extends Command {
 	 */
 	protected function configure() {
 		$this->setName( 'init' );
-		$this->setDescription( 'Initialize WP Assure on a project.' );
+		$this->setDescription( 'Initialize WP Acceptance on a project.' );
 
-		$this->addOption( 'path', null, InputOption::VALUE_REQUIRED, 'Path to location to initialize WP Assure.' );
+		$this->addOption( 'path', null, InputOption::VALUE_REQUIRED, 'Path to location to initialize WP Acceptance.' );
 	}
 
 	/**
@@ -56,7 +56,7 @@ class Init extends Command {
 		$helper = $this->getHelper( 'question' );
 
 		$name_question = new Question( 'Project Slug (letters, numbers, _, and - only): ' );
-		$name_question->setValidator( '\WPAssure\Utils\slug_validator' );
+		$name_question->setValidator( '\WPAcceptance\Utils\slug_validator' );
 		$config_array['name'] = $helper->ask( $input, $output, $name_question );
 
 		$tests = $helper->ask( $input, $output, new Question( 'Tests location (defaults to ./tests/*.php): ', './tests/*.php' ) );
@@ -72,7 +72,7 @@ class Init extends Command {
 		$config = new Config( $config_array );
 		$config->write();
 
-		Log::instance()->write( $config['path'] . 'wpassure.json created.', 0, 'success' );
+		Log::instance()->write( $config['path'] . 'wpacceptance.json created.', 0, 'success' );
 
 		$test_dir = rtrim( Utils\normalize_path( $tests ), '/' );
 
@@ -87,7 +87,7 @@ class Init extends Command {
 		}
 
 		if ( file_exists( $test_dir ) && ! file_exists( $test_dir . 'ExampleTest.php' ) ) {
-			if ( @copy( WPASSURE_DIR . '/example/ExampleTest.php', $test_dir . 'ExampleTest.php' ) ) {
+			if ( @copy( WPACCEPTANCE_DIR . '/example/ExampleTest.php', $test_dir . 'ExampleTest.php' ) ) {
 				Log::instance()->write( $test_dir . 'ExampleTest.php created.', 0, 'success' );
 			}
 		}

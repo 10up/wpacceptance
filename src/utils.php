@@ -2,10 +2,10 @@
 /**
  * Utility functions
  *
- * @package  wpassure
+ * @package  wpacceptance
  */
 
-namespace WPAssure\Utils;
+namespace WPAcceptance\Utils;
 
 /**
  * Check if content contains a substring or matches a pattern.

@@ -2,17 +2,17 @@
 /**
  * URL contains constraint
  *
- * @package wpassure
+ * @package wpacceptance
  */
 
-namespace WPAssure\PHPUnit\Constraints;
+namespace WPAcceptance\PHPUnit\Constraints;
 
-use WPAssure\Utils;
+use WPAcceptance\Utils;
 
 /**
  * Constraint class
  */
-class UrlContains extends \WPAssure\PHPUnit\Constraint {
+class UrlContains extends \WPAcceptance\PHPUnit\Constraint {
 
 	/**
 	 * The text to look for.
@@ -39,7 +39,7 @@ class UrlContains extends \WPAssure\PHPUnit\Constraint {
 	 * Evaluate if the actor can or can't see a text in the current URL.
 	 *
 	 * @access protected
-	 * @param \WPAssure\PHPUnit\Actor $other The actor instance.
+	 * @param \WPAcceptance\PHPUnit\Actor $other The actor instance.
 	 * @return boolean TRUE if the constrain is met, otherwise FALSE.
 	 */
 	protected function matches( $other ): bool {

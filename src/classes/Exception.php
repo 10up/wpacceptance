@@ -2,10 +2,10 @@
 /**
  * Generic exception
  *
- * @package  wpassure
+ * @package  wpacceptance
  */
 
-namespace WPAssure;
+namespace WPAcceptance;
 
 /**
  * Exception class

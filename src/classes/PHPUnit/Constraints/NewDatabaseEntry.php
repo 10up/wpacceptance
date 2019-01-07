@@ -2,17 +2,17 @@
 /**
  * Test DB entries
  *
- * @package  wpassure
+ * @package  wpacceptance
  */
 
-namespace WPAssure\PHPUnit\Constraints;
+namespace WPAcceptance\PHPUnit\Constraints;
 
-use WPAssure\EnvironmentFactory;
+use WPAcceptance\EnvironmentFactory;
 
 /**
  * Constraint class
  */
-class NewDatabaseEntry extends \WPAssure\PHPUnit\Constraint {
+class NewDatabaseEntry extends \WPAcceptance\PHPUnit\Constraint {
 
 	/**
 	 * Old newest DB entry ID
@@ -49,7 +49,7 @@ class NewDatabaseEntry extends \WPAssure\PHPUnit\Constraint {
 	 * Evaluate if there is a newer DB entry
 	 *
 	 * @access protected
-	 * @param \WPAssure\PHPUnit\Actor $other The actor instance.
+	 * @param \WPAcceptance\PHPUnit\Actor $other The actor instance.
 	 * @return boolean TRUE if the constrain is met, otherwise FALSE.
 	 */
 	protected function matches( $other ): bool {
