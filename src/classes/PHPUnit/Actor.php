@@ -789,45 +789,19 @@ class Actor {
 	 * @param  string $password Password
 	 */
 	public function loginAs( $username, $password = 'password' ) {
-		static $cookies_by_username = [];
+		$this->moveTo( 'wp-login.php' );
 
-		$web_driver = $this->getWebDriver();
+		$this->setElementAttribute( '#user_login', 'value', $username );
 
-		if ( empty( $cookies_by_username[ $username ] ) ) {
-			Log::instance()->write( 'Login not cached for ' . $username, 2 );
+		usleep( 100 );
 
-			$this->moveTo( 'wp-login.php' );
+		$this->setElementAttribute( '#user_pass', 'value', $password );
 
-			$this->setElementAttribute( '#user_login', 'value', $username );
+		usleep( 100 );
 
-			usleep( 100 );
+		$this->click( '#wp-submit', true );
 
-			$this->setElementAttribute( '#user_pass', 'value', $password );
-
-			usleep( 100 );
-
-			$this->click( '#wp-submit', true );
-
-			$this->waitUntilElementVisible( '#wpadminbar' );
-
-			$cookies_by_username[ $username ] = [];
-
-			$cookies = $this->getCookies();
-
-			foreach ( $cookies as $cookie ) {
-				if ( preg_match( '#^(wordpress\_|wp\-)#', $cookie['name'] ) ) {
-					$cookies_by_username[ $username ][] = $cookie;
-				}
-			}
-		} else {
-			Log::instance()->write( 'Login cached for ' . $username, 2 );
-
-			foreach ( $cookies_by_username[ $username ] as $cookie ) {
-				var_dump( $web_driver->manage()->addCookie( $cookie ) );
-			}
-
-			$this->moveTo( 'wp-admin' );
-		}
+		$this->waitUntilElementVisible( '#wpadminbar' );
 	}
 
 	/**
