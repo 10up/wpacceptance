@@ -15,7 +15,7 @@
     "facebook/webdriver": "^1.6",
     "docker-php/docker-php": "^2.0",
     "phpunit/phpunit": "^6.5",
-    "php": ">=7.0"
+    "php": ">=7.1"
   },
   "bin": [
     "bin/wpacceptance"
