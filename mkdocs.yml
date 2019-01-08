@@ -4,7 +4,7 @@ site_description: Test code using acceptance tests and sharable, defined file an
 repo_url: https://github.com/10up/wpacceptance
 
 nav:
-	- Home: index.md
-	- Cookbook: cookbook.md
+- Home: index.md
+- Cookbook: cookbook.md
 
 theme: mkdocs
