@@ -104,14 +104,17 @@ class Config implements ArrayAccess {
 	public function write() {
 		Log::instance()->write( 'Writing config.', 1 );
 
-		$file_config = $this->config;
-		unset( $file_config['path'] );
+		// Get current config and merge
+		$raw_config_file = file_get_contents( Utils\trailingslash( $this->config['path'] ) . 'wpacceptance.json' );
+		$file_config     = json_decode( $raw_config_file, true );
 
-		if ( isset( $file_config['snapshot_id'] ) && empty( $file_config['snapshot_id'] ) ) {
-			unset( $file_config['snapshot_id'] );
+		foreach ( $file_config as $key => $value ) {
+			if ( ! empty( $this->config[ $key ] ) ) {
+				$file_config[ $key ] = $this->config[ $key ];
+			}
 		}
 
-		file_put_contents( Utils\trailingslash( $this->config['path'] ) . 'wpacceptance.json', json_encode( $file_config, JSON_PRETTY_PRINT ) );
+		file_put_contents( Utils\trailingslash( $this->config['path'] ) . 'wpacceptance.json', json_encode( $file_config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) );
 	}
 
 	/**
