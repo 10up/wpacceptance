@@ -1,6 +1,6 @@
 <?php
 /**
- * Bootstrap WPAcceptance
+ * Bootstrap WP Acceptance
  *
  * @package  wpacceptance
  */
@@ -14,7 +14,7 @@ $app = new Application( 'WPAcceptance', '0.10.1' );
 define( 'WPACCEPTANCE_DIR', dirname( __DIR__ ) );
 
 /**
- * Attempt to set this as WPAcceptance can consume a lot of memory.
+ * Attempt to set this as WP Acceptance can consume a lot of memory.
  */
 ini_set( 'memory_limit', '-1' );
 

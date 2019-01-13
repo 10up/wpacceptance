@@ -35,7 +35,7 @@ class Run extends Command {
 	 */
 	protected function configure() {
 		$this->setName( 'run' );
-		$this->setDescription( 'Run an WPAcceptance test suite.' );
+		$this->setDescription( 'Run a WP Acceptance test suite.' );
 
 		$this->addArgument( 'suite_config_directory', InputArgument::OPTIONAL, 'Path to a directory that contains wpacceptance.json.' );
 
