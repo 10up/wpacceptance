@@ -151,12 +151,12 @@ trait Database {
 						$condition_string = sprintf( '`%s` ' . $compare . ' ', $mysql->escape( $condition['key'] ) );
 
 						if ( 'like' === $compare ) {
-							$condition .= '"%' . $mysql->escape( $condition['value'] ) . '%"';
+							$condition_string .= '"%' . $mysql->escape( $condition['value'] ) . '%"';
 						} elseif ( 'in' === $compare ) {
-							$values     = array_map( array( $mysql, 'escape' ), (array) $condition['value'] );
-							$condition .= '("' . implode( '", "', $values ) . '")';
+							$values            = array_map( array( $mysql, 'escape' ), (array) $condition['value'] );
+							$condition_string .= '("' . implode( '", "', $values ) . '")';
 						} else {
-							$condition .= '"' . $mysql->escape( $condition['value'] ) . '"';
+							$condition_string .= '"' . $mysql->escape( $condition['value'] ) . '"';
 						}
 					}
 				} else {
@@ -228,12 +228,25 @@ trait Database {
 	public static function assertPostFieldContains( $post_id, $field, $value ) {
 		$table = static::getTableName( 'posts' );
 
+		$where = static::parseWhereClauses(
+			[
+				[
+					'key'   => 'ID',
+					'value' => $post_id,
+				],
+				[
+					'key'   => $field,
+					'value' => $value,
+				],
+			]
+		);
+
 		$results = self::query( "SELECT * FROM {$table}{$where} ORDER BY `ID` DESC LIMIT 1" )->fetch_assoc();
 
 		if ( empty( $results ) ) {
 			static::fail( 'Post not found.' );
 		} else {
-			static::assertTrue( preg_match( '#' . $value . '#i', $results[ $field ] ) );
+			static::assertTrue( (bool) preg_match( '#' . $value . '#i', $results[ $field ] ) );
 		}
 	}
 
