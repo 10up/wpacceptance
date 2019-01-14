@@ -20,6 +20,8 @@ class GalleryTest extends \WPAcceptance\PHPUnit\TestCase {
 
 		$I->seeElement( '#metaslider_39 .slides li:nth-child(1)' );
 
+		$I->moveMouse( '#metaslider_39' );
+
 		$I->click( '#metaslider_39 .flex-control-nav li:nth-child(2) a' );
 
 		sleep( 1 ); // Best to just sleep when dealing with fading
@@ -36,6 +38,8 @@ class GalleryTest extends \WPAcceptance\PHPUnit\TestCase {
 		$I->moveTo( '/' );
 
 		$I->seeElement( '#metaslider_39 .slides li:nth-child(1)' );
+
+		$I->moveMouse( '#metaslider_39' );
 
 		$I->click( '#metaslider_39 .flex-next' );
 
@@ -55,6 +59,8 @@ class GalleryTest extends \WPAcceptance\PHPUnit\TestCase {
 		$I->moveTo( '/' );
 
 		$I->seeElement( '#metaslider_39 .slides li:nth-child(1)' );
+
+		$I->moveMouse( '#metaslider_39' );
 
 		$I->click( '#metaslider_39 .flex-prev' );
 

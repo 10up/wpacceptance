@@ -13,7 +13,7 @@ class AdminPostTest extends \WPAcceptance\PHPUnit\TestCase {
 	/**
 	 * Test that post publishes
 	 */
-	public function testPostPublish() {
+	/*public function testPostPublish() {
 		$I = $this->getAnonymousUser();
 
 		$I->loginAs( 'wpsnapshots' );
@@ -29,6 +29,6 @@ class AdminPostTest extends \WPAcceptance\PHPUnit\TestCase {
 		$I->waitUntilElementVisible( '.notice-success' );
 
 		$I->seeText( 'Post published', '.notice-success' );
-	}
+	}*/
 
 }

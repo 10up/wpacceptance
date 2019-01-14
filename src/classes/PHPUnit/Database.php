@@ -96,45 +96,84 @@ trait Database {
 	}
 
 	/**
-	 * Parse arguments and return WHERE statements for a query.
+	 * Parse clauses and return WHERE statements for a query.
 	 *
-	 * Valid arguments:
-	 *   post_title  - (array|string) a post title or array of titles.
-	 *   post_type   - (array|string) a post type or array of types.
-	 *   post_status - (array|string) a post status or array of statuses.
+	 * Clauses should look something like this:
+	 * [
+	 *   [
+	 *     'key'   => 'column_name',
+	 *     'value' => 'col value',
+	 *   ],
+	 *   [
+	 *     'key'   => 'column_name2',
+	 *     'value' => 'col value2',
+	 *   ],
+	 *   [
+	 *     'key'        => 'column_name3',
+	 *     'value'      => 'col value3',
+	 *     'compare' => 'like'
+	 *   ],
+	 *   [
+	 *     [
+	 *       'key'   => 'column_name4',
+	 *       'value' => 'col value4',
+	 *     ],
+	 *     [
+	 *       'key'        => 'column_name5',
+	 *       'value'      => 'col value5',
+	 *     ],
+	 *     'relation' => 'or',
+	 *   ]
+	 *   'relation' => 'and',
+	 * ]
 	 *
 	 * @static
 	 * @access protected
-	 * @param array $args Array of arguments.
-	 * @return string Query conditions without "WHERE" keyword.
+	 * @param array $clauses Array of clauses.
+	 * @return string
 	 */
-	protected static function parsePostsWhere( array $args = array() ) {
-		$defaults = array(
-			'post_type'   => 'post',
-			'post_status' => 'publish',
-		);
+	protected static function parseWhereClauses( array $clauses ) {
+		$mysql    = EnvironmentFactory::get()->getMySQLClient();
+		$relation = ! empty( $clauses['relation'] ) ? strtolower( $clauses['relation'] ) : 'and';
 
-		$params = array_merge( $defaults, $args );
+		$prepared_clause = '';
 
-		$conditions = array();
-		$mysql      = EnvironmentFactory::get()->getMySQLClient();
-
-		$keys = array( 'ID', 'post_title', 'post_status', 'post_type' );
-		foreach ( $keys as $key ) {
-			if ( ! empty( $params[ $key ] ) ) {
-				$condition = sprintf( '`%s` = ', $mysql->escape( $key ) );
-				if ( is_array( $params[ $key ] ) ) {
-					$values     = array_map( array( $mysql, 'escape' ), $params[ $key ] );
-					$condition .= sprintf( 'IN ("%s")', implode( '", "', $values ) );
-				} else {
-					$condition .= sprintf( '"%s"', $mysql->escape( $params[ $key ] ) );
+		foreach ( $clauses as $condition ) {
+			if ( is_array( $condition ) ) {
+				if ( ! empty( $prepared_clause ) ) {
+					$prepared_clause .= " $relation ";
 				}
 
-				$conditions[] = $condition;
+				if ( ! empty( $condition['key'] ) ) {
+					if ( isset( $condition['value'] ) ) {
+						$compare = ( ! empty( $condition['compare'] ) ) ? strtolower( $condition['compare'] ) : '=';
+
+						$condition_string = sprintf( '`%s` ' . $compare . ' ', $mysql->escape( $condition['key'] ) );
+
+						if ( 'like' === $compare ) {
+							$condition .= '"%' . $mysql->escape( $condition['value'] ) . '%"';
+						} elseif ( 'in' === $compare ) {
+							$values     = array_map( array( $mysql, 'escape' ), (array) $condition['value'] );
+							$condition .= '("' . implode( '", "', $values ) . '")';
+						} else {
+							$condition .= '"' . $mysql->escape( $condition['value'] ) . '"';
+						}
+					}
+				} else {
+					reset( $condition );
+
+					if ( is_array( $condition[ key( $condition ) ] ) ) {
+						$prepared_clause .= ' ( ' . static::parseWhereClauses( $condition[ key( $condition ) ] ) . ' ) ';
+					}
+				}
 			}
 		}
 
-		return implode( ' AND ', $conditions );
+		if ( empty( $prepared_clause ) ) {
+			return '';
+		}
+
+		return '(' . $prepared_clause . ')';
 	}
 
 	/**
@@ -150,7 +189,22 @@ trait Database {
 	 */
 	public static function getLastPostId( array $args = array() ) {
 		$table = static::getTableName( 'posts' );
-		$where = static::parsePostsWhere( $args );
+
+		if ( empty( $args ) ) {
+			$args = [
+				[
+					'key'   => 'post_type',
+					'value' => 'post',
+				],
+				[
+					'key'   => 'post_status',
+					'value' => 'publish',
+				],
+			];
+		}
+
+		$where = static::parseWhereClauses( $args );
+
 		if ( ! empty( $where ) ) {
 			$where = ' WHERE ' . $where;
 		}
@@ -162,6 +216,25 @@ trait Database {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Assert post field contains a string
+	 *
+	 * @param  int    $post_id Post id
+	 * @param  string $field   Post field name
+	 * @param  mixed  $value   Value to compare against field
+	 */
+	public static function assertPostFieldContains( $post_id, $field, $value ) {
+		$table = static::getTableName( 'posts' );
+
+		$results = self::query( "SELECT * FROM {$table}{$where} ORDER BY `ID` DESC LIMIT 1" )->fetch_assoc();
+
+		if ( empty( $results ) ) {
+			static::fail( 'Post not found.' );
+		} else {
+			static::assertTrue( preg_match( '#' . $value . '#i', $results[ $field ] ) );
+		}
 	}
 
 	/**
