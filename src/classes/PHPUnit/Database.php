@@ -158,6 +158,8 @@ trait Database {
 						} else {
 							$condition_string .= '"' . $mysql->escape( $condition['value'] ) . '"';
 						}
+
+						$prepared_clause .= $condition_string;
 					}
 				} else {
 					reset( $condition );
@@ -240,6 +242,10 @@ trait Database {
 				],
 			]
 		);
+
+		if ( ! empty( $where ) ) {
+			$where = ' WHERE ' . $where;
+		}
 
 		$results = self::query( "SELECT * FROM {$table}{$where} ORDER BY `ID` DESC LIMIT 1" )->fetch_assoc();
 
