@@ -11,7 +11,7 @@
 class GalleryTest extends \WPAcceptance\PHPUnit\TestCase {
 
 	/**
-	 * Test gallery dots
+	 * @testdox Clicking gallery dots works.
 	 */
 	public function testGalleryNav() {
 		$I = $this->getAnonymousUser();
@@ -30,7 +30,7 @@ class GalleryTest extends \WPAcceptance\PHPUnit\TestCase {
 	}
 
 	/**
-	 * Click next arrow, slide changes
+	 * @testdox Clicking next arrow, performs a gallery slide to the correct image.
 	 */
 	public function testNextArrow() {
 		$I = $this->getAnonymousUser();
@@ -51,7 +51,7 @@ class GalleryTest extends \WPAcceptance\PHPUnit\TestCase {
 	}
 
 	/**
-	 * Click previous arrow, slide changes
+	 * @testdox Clicking previous arrow, performs a gallery slide to the correct image.
 	 */
 	public function testPreviousArrow() {
 		$I = $this->getAnonymousUser();
@@ -72,7 +72,7 @@ class GalleryTest extends \WPAcceptance\PHPUnit\TestCase {
 	}
 
 	/**
-	 * Make sure next and prev arrows properly appear on hover
+	 * @testdox Next and previous arrows properly appear on hover.
 	 */
 	public function testShowNextPrev() {
 		$I = $this->getAnonymousUser();

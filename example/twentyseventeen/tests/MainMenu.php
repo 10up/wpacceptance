@@ -11,7 +11,7 @@
 class MainMenuTest extends \WPAcceptance\PHPUnit\TestCase {
 
 	/**
-	 * On small screen, menu is hidden initially and opens on click
+	 * @testdox On small screen, menu is hidden initially and opens on click
 	 */
 	public function testSmallScreenOpen() {
 		$I = $this->getAnonymousUser( [ 'screen_size' => 'small' ] );
@@ -26,7 +26,7 @@ class MainMenuTest extends \WPAcceptance\PHPUnit\TestCase {
 	}
 
 	/**
-	 * On large screen, menu items are visible
+	 * @testdox On large screen, I see menu items.
 	 */
 	public function testLargeScreenVisible() {
 		$I = $this->getAnonymousUser();

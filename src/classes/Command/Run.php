@@ -24,6 +24,7 @@ use WPAcceptance\GitLab;
 use WPSnapshots\RepositoryManager;
 use WPSnapshots\Snapshot;
 use WPSnapshots\Log as WPSnapshotsLog;
+use PHPUnit\Util\TestDox\CliTestDoxPrinter;
 
 /**
  * Run test suite
@@ -277,7 +278,12 @@ class Run extends Command {
 		if ( ! empty( $filter_tests ) ) {
 			$suite_args['filter'] = $filter_tests;
 		}
-		$suite_args['printer'] = 'PHPUnit\Util\TestDox\CliTestDoxPrinter';
+
+		$suite_args['testdox'] = true;
+
+		if ( class_exists( CliTestDoxPrinter::class ) ) {
+			$suite_args['printer'] = CliTestDoxPrinter::class;
+		}
 
 		$runner      = new \PHPUnit\TextUI\TestRunner();
 		$test_result = $runner->doRun( $suite, $suite_args, false );

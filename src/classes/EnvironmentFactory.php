@@ -100,6 +100,10 @@ class EnvironmentFactory {
 		if ( $environment->populateEnvironmentFromCache() ) {
 			self::$environments[] = $environment;
 
+			$environment->stopContainers( [ 'selenium' ] );
+
+			$environment->deleteContainers( [ 'selenium' ] );
+
 			if ( ! $environment->createContainers( [ 'selenium' ] ) ) {
 				return false;
 			}

@@ -11,7 +11,7 @@
 class HomePageTest extends \WPAcceptance\PHPUnit\TestCase {
 
 	/**
-	 * Fill out search form, press enter, search page shows with results
+	 * @testdox I fill out search form, press enter, and the search page shows with results.
 	 */
 	public function testSearchForm() {
 		$I = $this->getAnonymousUser();
@@ -28,7 +28,7 @@ class HomePageTest extends \WPAcceptance\PHPUnit\TestCase {
 	}
 
 	/**
-	 * Test that title is showing
+	 * @testdox I see the page title.
 	 */
 	public function testTitleShowing() {
 		$I = $this->getAnonymousUser();
@@ -47,7 +47,7 @@ class HomePageTest extends \WPAcceptance\PHPUnit\TestCase {
 	}
 
 	/**
-	 * Test that main menu is showing
+	 * @testdox I see the main menu.
 	 */
 	public function testMainMenuShowing() {
 		$I = $this->getAnonymousUser();

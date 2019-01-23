@@ -12,7 +12,7 @@
 class ContactFormTest extends \WPAcceptance\PHPUnit\TestCase {
 
 	/**
-	 * When I don't fill out required fields, contact form wont submit
+	 * @testdox When I don't fill out required fields, the contact form wont submit.
 	 */
 	public function testRequiredFieldsFail() {
 		$I = $this->getAnonymousUser();
@@ -24,7 +24,7 @@ class ContactFormTest extends \WPAcceptance\PHPUnit\TestCase {
 	}
 
 	/**
-	 * When I fill out the form and submit, a new entry of the proper post type appears in the database
+	 * @testdox When I fill out the form and submit, a new entry of the proper post type appears in the database.
 	 */
 	public function testSubmit() {
 		$last_id = self::getLastPostId( [ 'post_type' => 'nf_sub' ] );
