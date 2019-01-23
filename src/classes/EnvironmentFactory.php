@@ -100,6 +100,18 @@ class EnvironmentFactory {
 		if ( $environment->populateEnvironmentFromCache() ) {
 			self::$environments[] = $environment;
 
+			if ( ! $environment->createContainers( [ 'selenium' ] ) ) {
+				return false;
+			}
+
+			if ( ! $environment->startContainers( [ 'selenium' ] ) ) {
+				return false;
+			}
+
+			if ( ! $environment->setupHosts( false, true ) ) {
+				return false;
+			}
+
 			if ( ! $environment->insertRepo() ) {
 				return false;
 			}

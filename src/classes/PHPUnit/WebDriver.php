@@ -32,7 +32,7 @@ trait WebDriver {
 	 *
 	 * @var Actor
 	 */
-	private $last_actore;
+	private $last_actor;
 
 	/**
 	 * Returns web driver instance.
@@ -44,6 +44,7 @@ trait WebDriver {
 	protected function createWebDriver( $browser_options ) {
 		if ( ! empty( $this->web_driver ) ) {
 			$this->web_driver->close();
+			$this->web_driver->quit();
 		}
 
 		$chrome_options = new ChromeOptions();

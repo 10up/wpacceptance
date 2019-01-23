@@ -248,15 +248,15 @@ class Environment {
 
 		$environment_meta = json_decode( $environment_meta, true );
 
-		$this->suite_config           = $environment_meta['suite_config'];
-		$this->wordpress_port         = $environment_meta['wordpress_port'];
-		$this->selenium_port          = $environment_meta['selenium_port'];
-		$this->mysql_port             = $environment_meta['mysql_port'];
-		$this->gateway_ip             = $environment_meta['gateway_ip'];
+		$this->suite_config               = $environment_meta['suite_config'];
+		$this->wordpress_port             = $environment_meta['wordpress_port'];
+		$this->selenium_port              = $environment_meta['selenium_port'];
+		$this->mysql_port                 = $environment_meta['mysql_port'];
+		$this->gateway_ip                 = $environment_meta['gateway_ip'];
 		$this->snapshot_wpacceptance_path = $environment_meta['snapshot_wpacceptance_path'];
-		$this->snapshot_repo_path     = $environment_meta['snapshot_repo_path'];
-		$this->sites                  = $environment_meta['sites'];
-		$this->snapshot               = Snapshot::get( $this->suite_config['snapshot_id'] );
+		$this->snapshot_repo_path         = $environment_meta['snapshot_repo_path'];
+		$this->sites                      = $environment_meta['sites'];
+		$this->snapshot                   = Snapshot::get( $this->suite_config['snapshot_id'] );
 
 		return true;
 	}
@@ -432,10 +432,22 @@ class Environment {
 	/**
 	 * Setup internal hosts for WP and Selenium
 	 *
+	 * @param  boolean $mysql_setup Setup hosts on mysql
+	 * @param  boolean $selenium_setup Setup hosts on selenium
 	 * @return bool
 	 */
-	public function setupHosts() {
-		Log::instance()->write( 'Setting up hosts...', 1 );
+	public function setupHosts( $mysql_setup = true, $selenium_setup = true ) {
+		Log::instance()->write( 'Setting up host(s)...', 1 );
+
+		$containers = [];
+
+		if ( $mysql_setup ) {
+			$containers[] = 'wordpress';
+		}
+
+		if ( $selenium_setup ) {
+			$containers[] = 'selenium';
+		}
 
 		$host_line = $this->gateway_ip . ' ';
 
@@ -449,7 +461,7 @@ class Environment {
 
 		Log::instance()->write( 'Hosts insert: ' . $host_line, 2 );
 
-		foreach ( [ 'wordpress', 'selenium' ] as $container ) {
+		foreach ( $containers as $container ) {
 			$command = "echo '" . $host_line . "' >> /etc/hosts";
 
 			if ( 'selenium' === $container ) {
@@ -876,16 +888,20 @@ class Environment {
 	public function destroy() {
 		if ( $this->cache_environment && ! $this->skip_environment_cache ) {
 			Log::instance()->write( 'Caching environment.' );
+
+			$this->stopContainers( [ 'selenium' ] );
+			$this->deleteContainers( [ 'selenium' ] );
+
 			return false;
+		} else {
+			Log::instance()->write( 'Destroying environment...', 1 );
+
+			$this->stopContainers();
+			$this->deleteContainers();
+			$this->deleteNetwork();
+
+			return true;
 		}
-
-		Log::instance()->write( 'Destroying environment...', 1 );
-
-		$this->stopContainers();
-		$this->deleteContainers();
-		$this->deleteNetwork();
-
-		return true;
 	}
 
 	/**
@@ -957,159 +973,176 @@ class Environment {
 	/**
 	 * Create Docker containers
 	 *
+	 * @param  array $containers List of containers to start. Null means all.
 	 * @return  bool
 	 */
-	public function createContainers() {
-		Log::instance()->write( 'Creating containers...' );
+	public function createContainers( array $containers = null ) {
+		if ( null === $containers ) {
+			$containers = $this->containers;
+		}
+
+		Log::instance()->write( 'Creating container(s)...' );
 
 		$stream_factory = \Http\Discovery\StreamFactoryDiscovery::find();
 		$serializer     = new \Symfony\Component\Serializer\Serializer( \Docker\API\Normalizer\NormalizerFactory::create(), [ new \Symfony\Component\Serializer\Encoder\JsonEncoder( new \Symfony\Component\Serializer\Encoder\JsonEncode(), new \Symfony\Component\Serializer\Encoder\JsonDecode() ) ] );
 
-		/**
-		 * Create MySQL
-		 */
+		if ( in_array( 'mysql', $containers, true ) ) {
+			/**
+			 * Create MySQL
+			 */
 
-		$this->mysql_port = $this->getOpenPort();
+			if ( empty( $this->mysql_port ) ) {
+				$this->mysql_port = $this->getOpenPort();
+			}
 
-		$host_config = new HostConfig();
-		$host_config->setNetworkMode( $this->environment_id );
-		$host_config->setBinds(
-			[
-				WPACCEPTANCE_DIR . '/docker/mysql:/etc/mysql/conf.d',
-			]
-		);
+			$host_config = new HostConfig();
+			$host_config->setNetworkMode( $this->environment_id );
+			$host_config->setBinds(
+				[
+					WPACCEPTANCE_DIR . '/docker/mysql:/etc/mysql/conf.d',
+				]
+			);
 
-		$port_binding = new PortBinding();
-		$port_binding->setHostPort( $this->mysql_port );
-		$port_binding->setHostIp( '0.0.0.0' );
+			$port_binding = new PortBinding();
+			$port_binding->setHostPort( $this->mysql_port );
+			$port_binding->setHostIp( '0.0.0.0' );
 
-		$host_port_map             = new \ArrayObject();
-		$host_port_map['3306/tcp'] = [ $port_binding ];
+			$host_port_map             = new \ArrayObject();
+			$host_port_map['3306/tcp'] = [ $port_binding ];
 
-		$host_config->setPortBindings( $host_port_map );
+			$host_config->setPortBindings( $host_port_map );
 
-		$container_config = new ContainersCreatePostBody();
-		$container_config->setImage( 'mysql:5.7' );
-		$container_config->setAttachStdin( true );
-		$container_config->setAttachStdout( true );
-		$container_config->setAttachStderr( true );
-		$container_config->setEnv(
-			[
-				'MYSQL_ROOT_PASSWORD=password',
-				'MYSQL_DATABASE=wordpress_clean',
-			]
-		);
-		$container_config->setHostConfig( $host_config );
+			$container_config = new ContainersCreatePostBody();
+			$container_config->setImage( 'mysql:5.7' );
+			$container_config->setAttachStdin( true );
+			$container_config->setAttachStdout( true );
+			$container_config->setAttachStderr( true );
+			$container_config->setEnv(
+				[
+					'MYSQL_ROOT_PASSWORD=password',
+					'MYSQL_DATABASE=wordpress_clean',
+				]
+			);
+			$container_config->setHostConfig( $host_config );
 
-		$container_create = new ContainerCreate( $container_config );
+			$container_create = new ContainerCreate( $container_config );
 
-		$container_body = $container_create->getBody( $serializer, $stream_factory );
+			$container_body = $container_create->getBody( $serializer, $stream_factory );
 
-		Log::instance()->write( 'Container Request Body (MySQL):', 2 );
-		Log::instance()->write( $container_body[1], 2 );
+			Log::instance()->write( 'Container Request Body (MySQL):', 2 );
+			Log::instance()->write( $container_body[1], 2 );
 
-		$this->docker->containerCreate( $container_config, [ 'name' => $this->environment_id . '-mysql' ] );
+			$this->docker->containerCreate( $container_config, [ 'name' => $this->environment_id . '-mysql' ] );
 
-		$this->mysql_stream = $this->docker->containerAttach(
-			$this->environment_id . '-mysql',
-			[
-				'stream' => true,
-				'stdin'  => true,
-				'stdout' => true,
-				'stderr' => true,
-			]
-		);
-
-		/**
-		 * Create WP container
-		 */
-
-		$this->wordpress_port = $this->getOpenPort();
-
-		$host_config = new HostConfig();
-
-		$host_config->setNetworkMode( $this->environment_id );
-
-		$container_config = new ContainersCreatePostBody();
-
-		if ( GitLab::get()->isGitLab() ) {
-			$container_config->setEnv( [ 'WPSNAPSHOTS_DIR=/gitlab/.wpsnapshots/' ] );
-
-			$binds = [
-				GitLab::get()->getVolumeName() . ':/gitlab',
-			];
-		} else {
-			$binds = [
-				\WPSnapshots\Utils\get_snapshot_directory() . $this->suite_config['snapshot_id'] . ':/root/.wpsnapshots/' . $this->suite_config['snapshot_id'],
-				\WPSnapshots\Utils\get_snapshot_directory() . 'config.json:/root/.wpsnapshots/config.json',
-				$this->suite_config['host_repo_path'] . ':/root/repo',
-			];
+			$this->mysql_stream = $this->docker->containerAttach(
+				$this->environment_id . '-mysql',
+				[
+					'stream' => true,
+					'stdin'  => true,
+					'stdout' => true,
+					'stderr' => true,
+				]
+			);
 		}
 
-		$host_config->setBinds( $binds );
+		if ( in_array( 'wordpress', $containers, true ) ) {
+			/**
+			 * Create WP container
+			 */
 
-		Log::instance()->write( 'Mapping ' . $this->suite_config['host_repo_path'] . ' to ' . $this->getWPContainerRepoRoot(), 2 );
+			if ( empty( $this->wordpress_port ) ) {
+				$this->wordpress_port = $this->getOpenPort();
+			}
 
-		$container_port_map           = new \ArrayObject();
-		$container_port_map['80/tcp'] = new \stdClass();
+			$host_config = new HostConfig();
 
-		$container_config->setImage( '10up/wpacceptance-wordpress' );
-		$container_config->setAttachStdin( true );
-		$container_config->setAttachStdout( true );
-		$container_config->setExposedPorts( $container_port_map );
-		$container_config->setAttachStderr( true );
-		$container_config->setTty( true );
+			$host_config->setNetworkMode( $this->environment_id );
 
-		$port_binding = new PortBinding();
-		$port_binding->setHostPort( $this->wordpress_port );
-		$port_binding->setHostIp( '0.0.0.0' );
+			$container_config = new ContainersCreatePostBody();
 
-		$host_port_map           = new \ArrayObject();
-		$host_port_map['80/tcp'] = [ $port_binding ];
+			if ( GitLab::get()->isGitLab() ) {
+				$container_config->setEnv( [ 'WPSNAPSHOTS_DIR=/gitlab/.wpsnapshots/' ] );
 
-		$host_config->setPortBindings( $host_port_map );
-		$container_config->setHostConfig( $host_config );
+				$binds = [
+					GitLab::get()->getVolumeName() . ':/gitlab',
+				];
+			} else {
+				$binds = [
+					\WPSnapshots\Utils\get_snapshot_directory() . $this->suite_config['snapshot_id'] . ':/root/.wpsnapshots/' . $this->suite_config['snapshot_id'],
+					\WPSnapshots\Utils\get_snapshot_directory() . 'config.json:/root/.wpsnapshots/config.json',
+					$this->suite_config['host_repo_path'] . ':/root/repo',
+				];
+			}
 
-		$container_create = new ContainerCreate( $container_config );
+			$host_config->setBinds( $binds );
 
-		$container_body = $container_create->getBody( $serializer, $stream_factory );
+			Log::instance()->write( 'Mapping ' . $this->suite_config['host_repo_path'] . ' to ' . $this->getWPContainerRepoRoot(), 2 );
 
-		Log::instance()->write( 'Container Request Body (WordPress):', 2 );
-		Log::instance()->write( $container_body[1], 2 );
+			$container_port_map           = new \ArrayObject();
+			$container_port_map['80/tcp'] = new \stdClass();
 
-		$this->docker->containerCreate( $container_config, [ 'name' => $this->environment_id . '-wordpress' ] );
+			$container_config->setImage( '10up/wpacceptance-wordpress' );
+			$container_config->setAttachStdin( true );
+			$container_config->setAttachStdout( true );
+			$container_config->setExposedPorts( $container_port_map );
+			$container_config->setAttachStderr( true );
+			$container_config->setTty( true );
 
-		/**
-		 * Create selenium container
-		 */
+			$port_binding = new PortBinding();
+			$port_binding->setHostPort( $this->wordpress_port );
+			$port_binding->setHostIp( '0.0.0.0' );
 
-		$this->selenium_port = $this->getOpenPort();
+			$host_port_map           = new \ArrayObject();
+			$host_port_map['80/tcp'] = [ $port_binding ];
 
-		$host_config = new HostConfig();
-		$host_config->setNetworkMode( $this->environment_id );
-		$host_config->setShmSize( ( 1000 * 1000 * 1000 ) ); // 1GB in bytes
+			$host_config->setPortBindings( $host_port_map );
+			$container_config->setHostConfig( $host_config );
 
-		$container_config = new ContainersCreatePostBody();
-		$container_config->setImage( 'selenium/standalone-chrome:3.4.0' );
+			$container_create = new ContainerCreate( $container_config );
 
-		$port_binding = new PortBinding();
-		$port_binding->setHostPort( $this->selenium_port );
-		$port_binding->setHostIp( '0.0.0.0' );
+			$container_body = $container_create->getBody( $serializer, $stream_factory );
 
-		$host_port_map             = new \ArrayObject();
-		$host_port_map['4444/tcp'] = [ $port_binding ];
-		$host_config->setPortBindings( $host_port_map );
+			Log::instance()->write( 'Container Request Body (WordPress):', 2 );
+			Log::instance()->write( $container_body[1], 2 );
 
-		$container_config->setHostConfig( $host_config );
+			$this->docker->containerCreate( $container_config, [ 'name' => $this->environment_id . '-wordpress' ] );
+		}
 
-		$container_create = new ContainerCreate( $container_config );
+		if ( in_array( 'selenium', $containers, true ) ) {
+			/**
+			 * Create selenium container
+			 */
 
-		$container_body = $container_create->getBody( $serializer, $stream_factory );
+			if ( empty( $this->selenium_port ) ) {
+				$this->selenium_port = $this->getOpenPort();
+			}
 
-		Log::instance()->write( 'Container Request Body (Selenium):', 2 );
-		Log::instance()->write( $container_body[1], 2 );
+			$host_config = new HostConfig();
+			$host_config->setNetworkMode( $this->environment_id );
+			$host_config->setShmSize( ( 1000 * 1000 * 1000 ) ); // 1GB in bytes
 
-		$this->docker->containerCreate( $container_config, [ 'name' => $this->environment_id . '-selenium' ] );
+			$container_config = new ContainersCreatePostBody();
+			$container_config->setImage( 'selenium/standalone-chrome:3.4.0' );
+
+			$port_binding = new PortBinding();
+			$port_binding->setHostPort( $this->selenium_port );
+			$port_binding->setHostIp( '0.0.0.0' );
+
+			$host_port_map             = new \ArrayObject();
+			$host_port_map['4444/tcp'] = [ $port_binding ];
+			$host_config->setPortBindings( $host_port_map );
+
+			$container_config->setHostConfig( $host_config );
+
+			$container_create = new ContainerCreate( $container_config );
+
+			$container_body = $container_create->getBody( $serializer, $stream_factory );
+
+			Log::instance()->write( 'Container Request Body (Selenium):', 2 );
+			Log::instance()->write( $container_body[1], 2 );
+
+			$this->docker->containerCreate( $container_config, [ 'name' => $this->environment_id . '-selenium' ] );
+		}
 
 		return true;
 	}
@@ -1166,12 +1199,17 @@ class Environment {
 	/**
 	 * Start containers
 	 *
+	 * @param  array $containers List of containers to start. Null means all of them.
 	 * @return  bool
 	 */
-	public function startContainers() {
+	public function startContainers( array $containers = null ) {
+		if ( null === $containers ) {
+			$containers = $this->containers;
+		}
+
 		Log::instance()->write( 'Starting containers...', 1 );
 
-		foreach ( $this->containers as $container ) {
+		foreach ( $containers as $container ) {
 			$response = $this->docker->containerStart( $this->environment_id . '-' . $container );
 		}
 
@@ -1181,12 +1219,17 @@ class Environment {
 	/**
 	 * Stop Docker containers
 	 *
+	 * @param  array $containers List of containers to stop. Null means all of them
 	 * @return  bool
 	 */
-	public function stopContainers() {
+	public function stopContainers( array $containers = null ) {
 		Log::instance()->write( 'Stopping containers...', 1 );
 
-		foreach ( $this->containers as $container ) {
+		if ( null === $containers ) {
+			$containers = $this->containers;
+		}
+
+		foreach ( $containers as $container ) {
 			try {
 				$this->docker->containerStop( $this->environment_id . '-' . $container );
 			} catch ( \Exception $exception ) {
@@ -1200,12 +1243,17 @@ class Environment {
 	/**
 	 * Delete Docker containers
 	 *
-	 * @return  bool
+	 * @param  array $containers List of containers to delete. Null means all of them
+	 * @return bool
 	 */
-	public function deleteContainers() {
+	public function deleteContainers( array $containers = null ) {
 		Log::instance()->write( 'Deleting containers...', 1 );
 
-		foreach ( $this->containers as $container ) {
+		if ( null === $containers ) {
+			$containers = $this->containers;
+		}
+
+		foreach ( $containers as $container ) {
 			try {
 				$this->docker->containerDelete(
 					$this->environment_id . '-' . $container,
@@ -1388,16 +1436,16 @@ class Environment {
 	 */
 	public function getEnvironmentMeta() {
 		return [
-			'suite_config'           => $this->suite_config->toArray(),
-			'wordpress_port'         => $this->wordpress_port,
-			'selenium_port'          => $this->selenium_port,
-			'mysql_port'             => $this->mysql_port,
-			'snapshot_id'            => $this->suite_config['snapshot_id'],
-			'environment_id'         => $this->environment_id,
-			'gateway_ip'             => $this->gateway_ip,
+			'suite_config'               => $this->suite_config->toArray(),
+			'wordpress_port'             => $this->wordpress_port,
+			'selenium_port'              => $this->selenium_port,
+			'mysql_port'                 => $this->mysql_port,
+			'snapshot_id'                => $this->suite_config['snapshot_id'],
+			'environment_id'             => $this->environment_id,
+			'gateway_ip'                 => $this->gateway_ip,
 			'snapshot_wpacceptance_path' => $this->snapshot_wpacceptance_path,
-			'snapshot_repo_path'     => $this->snapshot_repo_path,
-			'sites'                  => $this->sites,
+			'snapshot_repo_path'         => $this->snapshot_repo_path,
+			'sites'                      => $this->sites,
 		];
 	}
 
