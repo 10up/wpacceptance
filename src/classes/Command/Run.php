@@ -277,6 +277,7 @@ class Run extends Command {
 		if ( ! empty( $filter_tests ) ) {
 			$suite_args['filter'] = $filter_tests;
 		}
+		$suite_args['printer'] = 'PHPUnit\Util\TestDox\CliTestDoxPrinter';
 
 		$runner      = new \PHPUnit\TextUI\TestRunner();
 		$test_result = $runner->doRun( $suite, $suite_args, false );

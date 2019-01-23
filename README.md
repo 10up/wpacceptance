@@ -6,7 +6,7 @@ WP Acceptance is a toolkit that empowers developers and CI pipelines to test cod
 
 ## Requirements
 
-* PHP 7.1+
+* PHP 7.2+
 * mysqli PHP extension
 * Docker
 

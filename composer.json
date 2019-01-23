@@ -14,8 +14,8 @@
     "10up/wpsnapshots": "~1.5",
     "facebook/webdriver": "^1.6",
     "docker-php/docker-php": "^2.0",
-    "phpunit/phpunit": "^6.5",
-    "php": ">=7.1"
+    "phpunit/phpunit": "^7.5",
+    "php": ">=7.2"
   },
   "bin": [
     "bin/wpacceptance"

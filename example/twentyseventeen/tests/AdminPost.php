@@ -12,6 +12,8 @@ class AdminPostTest extends \WPAcceptance\PHPUnit\TestCase {
 
 	/**
 	 * Test that post publishes in Gutenberg
+	 *
+	 * @testdox This is a test
 	 */
 	public function testPostPublish() {
 		$I = $this->getAnonymousUser();
