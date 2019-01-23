@@ -11,24 +11,35 @@
 class AdminPostTest extends \WPAcceptance\PHPUnit\TestCase {
 
 	/**
-	 * Test that post publishes
+	 * Test that post publishes in Gutenberg
 	 */
-	/*public function testPostPublish() {
+	public function testPostPublish() {
 		$I = $this->getAnonymousUser();
 
 		$I->loginAs( 'wpsnapshots' );
 
 		$I->moveTo( 'wp-admin/post-new.php' );
 
-		$I->fillField( '#title', 'Test Post' );
+		$I->fillField( '#post-title-0', 'Test Post' );
 
-		$I->setElementAttribute( '#content', 'value', 'Test content' );
+		$I->click( '.editor-block-list__layout .wp-block' );
 
-		$I->click( '#publish' );
+		$I->fillField( '.editor-block-list__layout .wp-block:first-child p', 'Test content' );
 
-		$I->waitUntilElementVisible( '.notice-success' );
+		$I->click( '.editor-post-publish-panel__toggle' );
 
-		$I->seeText( 'Post published', '.notice-success' );
-	}*/
+		$I->waitUntilElementVisible( '.editor-post-publish-button' );
+
+		$I->click( '.editor-post-publish-button' );
+
+		$I->waitUntilElementVisible( '.components-notice' );
+
+		$I->seeText( 'Post published', '.components-notice__content' );
+
+		// Make sure data is in DB correctly
+		$post_id = (int) $I->getElement( '#post_ID' )->getAttribute( 'value' );
+
+		self::assertPostFieldContains( $post_id, 'post_title', 'Test Post' );
+	}
 
 }
