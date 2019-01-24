@@ -5,6 +5,9 @@
 This test creates a post and makes sure it's published.
 
 ```php
+/**
+ * @testdox I am able to publish a post.
+ */
 function testPostPublish() {
 	$I = $this->getAnonymousUser();
 
@@ -29,6 +32,9 @@ Note that the `wpsnapshots` user is always available as a super admin.
 This test tests adding media to a post and setting it as the featured image:
 
 ```php
+/**
+ * @testdox I am able to attach a featured image to a post.
+ */
 function testFeaturedImage() {
 	$I = $this->getAnonymousUser();
 
