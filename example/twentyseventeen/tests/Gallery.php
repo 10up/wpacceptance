@@ -30,7 +30,7 @@ class GalleryTest extends \WPAcceptance\PHPUnit\TestCase {
 	}
 
 	/**
-	 * @testdox Clicking next arrow, performs a gallery slide to the correct image.
+	 * @testdox Clicking the next arrow performs a gallery slide to the correct image.
 	 */
 	public function testNextArrow() {
 		$I = $this->getAnonymousUser();
@@ -51,7 +51,7 @@ class GalleryTest extends \WPAcceptance\PHPUnit\TestCase {
 	}
 
 	/**
-	 * @testdox Clicking previous arrow, performs a gallery slide to the correct image.
+	 * @testdox Clicking the previous arrow performs a gallery slide to the correct image.
 	 */
 	public function testPreviousArrow() {
 		$I = $this->getAnonymousUser();
