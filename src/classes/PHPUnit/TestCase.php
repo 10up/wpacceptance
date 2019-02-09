@@ -16,7 +16,7 @@ use PHPUnit\Runner\BaseTestRunner;
  */
 abstract class TestCase extends \PHPUnit\Framework\TestCase {
 
-	use WebDriver, Database;
+	use Puppeteer, Database;
 
 	/**
 	 * Store the last modifying query in the DB. We do this to determine if the DB is dirty (has changed)

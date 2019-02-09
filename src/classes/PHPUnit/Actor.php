@@ -7,15 +7,6 @@
 
 namespace WPAcceptance\PHPUnit;
 
-use Facebook\WebDriver\Exception\NoSuchElementException;
-use Facebook\WebDriver\Remote\RemoteWebElement;
-use Facebook\WebDriver\WebDriverBy;
-use Facebook\WebDriver\WebDriverSelect;
-use Facebook\WebDriver\WebDriverKeys;
-use Facebook\WebDriver\WebDriverExpectedCondition;
-use Facebook\WebDriver\Exception\InvalidElementStateException;
-use Facebook\WebDriver\Exception\UnknownServerException;
-
 use PHPUnit\Framework\ExpectationFailedException;
 use PHPUnit\Framework\TestCase;
 
@@ -36,6 +27,9 @@ use WPAcceptance\PHPUnit\Constraints\FieldInteractable as FieldInteractableConst
 use WPAcceptance\PHPUnit\Constraints\AttributeContains as AttributeContainsConstrain;
 use WPAcceptance\PHPUnit\Constraints\NewDatabaseEntry as NewDatabaseEntry;
 
+use Nesk\Rialto\Data\JsFunction;
+use Nesk\Puphpeteer\Resources\ElementHandle;
+
 /**
  * Actor class
  */
@@ -55,7 +49,14 @@ class Actor {
 	 * @access private
 	 * @var \Facebook\WebDriver\Remote\RemoteWebDriver
 	 */
-	private $web_driver = null;
+	private $browser = null;
+
+	/**
+	 * Current page
+	 */
+	private $page;
+
+	private $page_response;
 
 	/**
 	 * Test case instance.
@@ -71,7 +72,7 @@ class Actor {
 	 * @access public
 	 * @param string $name Actor name.
 	 */
-	public function __construct( $name = 'user' ) {
+	public function __construct( string $name = 'user' ) {
 		$this->name = $name;
 	}
 
@@ -81,7 +82,7 @@ class Actor {
 	 * @access public
 	 * @param string $name Actor name.
 	 */
-	public function setActorName( $name ) {
+	public function setActorName( string $name ) {
 		$this->name = $name;
 	}
 
@@ -99,10 +100,9 @@ class Actor {
 	 * Set a new instance of a web driver.
 	 *
 	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebDriver $web_driver A web driver instance.
 	 */
-	public function setWebDriver( $web_driver ) {
-		$this->web_driver = $web_driver;
+	public function setBrowser( $browser ) {
+		$this->browser = $browser;
 	}
 
 	/**
@@ -112,12 +112,20 @@ class Actor {
 	 * @throws Exception if a web driver is not assigned.
 	 * @return \Facebook\WebDriver\Remote\RemoteWebDriver An instance of a web driver.
 	 */
-	public function getWebDriver() {
-		if ( ! $this->web_driver ) {
-			throw new Exception( 'WebDriver is not provided.' );
+	public function getBrowser() {
+		if ( ! $this->browser ) {
+			throw new Exception( 'Puppeteer Browser is not provided.' );
 		}
 
-		return $this->web_driver;
+		return $this->browser;
+	}
+
+	public function getPage() {
+		if ( ! $this->page ) {
+			throw new Exception( 'Page is not set.' );
+		}
+
+		return $this->page;
 	}
 
 	/**
@@ -152,7 +160,7 @@ class Actor {
 	 * @param \WPAcceptance\PHPUnit\Constraint $constraint An instance of constraint class.
 	 * @param string                       $message Optional. A message for a failure.
 	 */
-	protected function assertThat( $constraint, $message = '' ) {
+	protected function assertThat( $constraint, string $message = '' ) {
 		TestCase::assertThat( $this, $constraint, $message );
 	}
 
@@ -163,18 +171,11 @@ class Actor {
 	 * @return string A page source.
 	 */
 	public function getPageSource() {
-		return $this->getWebDriver()->getPageSource();
-	}
+		if ( ! empty( $this->page_response ) ) {
+			return $this->page_response->text();
+		}
 
-	/**
-	 * Accept the current native popup window created by window.alert, window.confirm,
-	 * window.prompt fucntions.
-	 *
-	 * @access public
-	 */
-	public function acceptPopup() {
-		$this->getWebDriver()->switchTo()->alert()->accept();
-		Log::instance()->write( 'Accepted the current popup.', 1 );
+		return '';
 	}
 
 	/**
@@ -184,18 +185,7 @@ class Actor {
 	 * @return  string
 	 */
 	public function getPageTitle() {
-		return $this->getWebDriver()->getTitle();
-	}
-
-	/**
-	 * Dismiss the current native popup window created by window.alert, window.confirm,
-	 * window.prompt fucntions.
-	 *
-	 * @access public
-	 */
-	public function cancelPopup() {
-		$this->getWebDriver()->switchTo()->alert()->dismiss();
-		Log::instance()->write( 'Dismissed the current popup.', 1 );
+		return $this->getPage()->title();
 	}
 
 	/**
@@ -204,19 +194,15 @@ class Actor {
 	 * @param  int $x X browser coordinate
 	 * @param  int $y Y browser coordinate
 	 */
-	public function scrollTo( $x, $y ) {
-		$this->executeJavaScript( 'window.scrollTo(' . (int) $x . ', ' . (int) $y . ')' );
+	public function scrollTo( int $x, int $y ) {
+		$this->executeJavaScript( 'window.scrollTo(' . $x . ', ' . $y . ')' );
 	}
 
 	/**
 	 * Scroll to element
-	 *
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
 	 */
-	public function scrollToElement( $element ) {
-		$element = $this->getElement( $element );
-
-		$this->getWebDriver()->action()->moveToElement( $element )->perform();
+	public function scrollToElement( string $element_path ) {
+		$this->executeJavaScript( 'document.querySelector("' . $element_path . '").scrollIntoView();' );
 	}
 
 	/**
@@ -225,8 +211,8 @@ class Actor {
 	 * @param  string $script JS code
 	 * @return  mixed Can be whatever JS returns
 	 */
-	public function executeJavaScript( $script ) {
-		return $this->getWebDriver()->executeScript( $script );
+	public function executeJavaScript( string $script ) {
+		return $this->getPage()->evaluate( JsFunction::createWithBody( $script ) );
 	}
 
 	/**
@@ -236,7 +222,7 @@ class Actor {
 	 * @param string $attribute_name  Attribute name
 	 * @param string $attribute_value Attribute value
 	 */
-	public function setElementAttribute( $element_path, $attribute_name, $attribute_value ) {
+	public function setElementAttribute( string $element_path, string $attribute_name, $attribute_value ) {
 		$this->executeJavaScript( 'window.document.querySelector("' . addcslashes( $element_path, '"' ) . '").setAttribute("' . addcslashes( $attribute_name, '"' ) . '", "' . addcslashes( $attribute_value, '"' ) . '")' );
 	}
 
@@ -246,13 +232,13 @@ class Actor {
 	 * @access public
 	 * @param string $name A filename without extension.
 	 */
-	public function takeScreenshot( $name = null ) {
+	public function takeScreenshot( string $name = null ) {
 		if ( empty( $name ) ) {
 			$name = uniqid( date( 'Y-m-d_H-i-s_' ) );
 		}
 
 		$filename = $name . '.jpg';
-		$this->getWebDriver()->takeScreenshot( $filename );
+		$this->getPage()->$page->screenshot( [ 'path' => $filename ] );
 		Log::instance()->write( 'Screenshot saved to ' . $filename, 1 );
 	}
 
@@ -262,8 +248,7 @@ class Actor {
 	 * @access public
 	 */
 	public function moveBack() {
-		$web_driver = $this->getWebDriver();
-		$web_driver->navigate()->back();
+		$this->getPage()->goBack();
 		Log::instance()->write( 'Back to ' . $web_driver->getCurrentURL(), 1 );
 	}
 
@@ -273,8 +258,7 @@ class Actor {
 	 * @access public
 	 */
 	public function moveForward() {
-		$web_driver = $this->getWebDriver();
-		$web_driver->navigate()->forward();
+		$this->getPage()->goForward();
 		Log::instance()->write( 'Forward to ' . $web_driver->getCurrentURL(), 1 );
 	}
 
@@ -284,17 +268,23 @@ class Actor {
 	 * @access public
 	 */
 	public function refresh() {
-		$this->getWebDriver()->navigate()->refresh();
+		$this->getPage()->reload();
 		Log::instance()->write( 'Refreshed the current page', 1 );
 	}
 
 	/**
 	 * Move mouse to element
-	 *
-	 * @param  string $element_path Path to element
 	 */
-	public function moveMouse( $element_path ) {
-		$this->getWebDriver()->getMouse()->mouseMove( $this->getElement( $element_path )->getCoordinates() );
+	public function moveMouse( $element ) {
+		$element = $this->getElement( $element );
+
+		if ( empty( $element ) ) {
+			return false;
+		}
+
+		$bounding_box = $element->boundingBox();
+
+		$this->getPage()->mouse->move( $bounding_box['x'], $bounding_box['y'] );
 	}
 
 	/**
@@ -304,7 +294,7 @@ class Actor {
 	 * @param string $url_or_path Path (relative to main site in network) or full url
 	 * @param int    $blog_id Optional blog id
 	 */
-	public function moveTo( $url_or_path, $blog_id = null ) {
+	public function moveTo( string $url_or_path, int $blog_id = null ) {
 
 		$url_parts = parse_url( $url_or_path );
 
@@ -323,8 +313,9 @@ class Actor {
 			$url .= '?' . $url_parts['query'];
 		}
 
-		$web_driver = $this->getWebDriver();
-		$web_driver->get( $url );
+		$this->page = $this->getBrowser()->newPage();
+
+		$this->page_response = $this->page->goto( $url );
 
 		Log::instance()->write( 'Navigating to URL: ' . $url, 1 );
 	}
@@ -339,7 +330,7 @@ class Actor {
 	public function resizeWindow( $width, $height ) {
 		$dimension = new \Facebook\WebDriver\WebDriverDimension( $width, $height );
 
-		$web_driver = $this->getWebDriver();
+		$web_driver = $this->getBrowser();
 		$web_driver->manage()->window()->setSize( $dimension );
 	}
 
@@ -365,7 +356,7 @@ class Actor {
 	 * @param  integer $max_wait  Max wait time in seconds
 	 */
 	public function waitUntilElementClickable( $element_path, $max_wait = 10 ) {
-		$web_driver = $this->getWebDriver();
+		$web_driver = $this->getBrowser();
 
 		$web_driver->wait( $max_wait )->until( WebDriverExpectedCondition::elementToBeClickable( WebDriverBy::cssSelector( $element_path ) ) );
 	}
@@ -375,28 +366,20 @@ class Actor {
 	 *
 	 * @param  string  $text     Title string
 	 * @param  string  $element_path Path to element to check
-	 * @param  integer $max_wait  Max wait time in seconds
 	 */
-	public function waitUntilElementContainsText( $text, $element_path, $max_wait = 10 ) {
-		$web_driver = $this->getWebDriver();
+	public function waitUntilElementContainsText( $text, string $element_path ) {
+		// Wait for element to exist
+		$this->getPage()->waitForSelector( $element_path );
 
-		// First wait for element to exist
-		$web_driver->wait( $max_wait )->until( WebDriverExpectedCondition::presenceOfElementLocated( WebDriverBy::cssSelector( $element_path ) ) );
-
-		// Now wait for element to contain text
-		$web_driver->wait( $max_wait )->until( WebDriverExpectedCondition::textToBePresentInElement( WebDriverBy::cssSelector( $element_path ), $text ) );
+		// Wait for element to contain text
+		$this->getPage()->waitForFunction( JsFunction::createWithBody( 'document.querySelector("' . addcslashes( $element_path, '"' ) . '").innerText.includes("' . addcslashes( $text, '"' ) . '")' ) );
 	}
 
 	/**
 	 * Wait until title contains
-	 *
-	 * @param  string  $title     Title string
-	 * @param  integer $max_wait  Max wait time in seconds
 	 */
-	public function waitUntilTitleContains( $title, $max_wait = 10 ) {
-		$web_driver = $this->getWebDriver();
-
-		$web_driver->wait( $max_wait )->until( WebDriverExpectedCondition::titleContains( $title ) );
+	public function waitUntilTitleContains( $title ) {
+		$this->getPage()->waitForFunction( JsFunction::createWithBody( 'document.title.includes("' . addcslashes( $title, '"' ) . '")' ) );
 	}
 
 	/**
@@ -405,10 +388,8 @@ class Actor {
 	 * @param  string  $element_path Path to element to check
 	 * @param  integer $max_wait  Max wait time in seconds
 	 */
-	public function waitUntilElementVisible( $element_path, $max_wait = 10 ) {
-		$web_driver = $this->getWebDriver();
-
-		$web_driver->wait( $max_wait )->until( WebDriverExpectedCondition::visibilityOfElementLocated( WebDriverBy::cssSelector( $element_path ) ) );
+	public function waitUntilElementVisible( string $element_path, $max_wait = 10 ) {
+		$this->getPage()->waitForSelector( $element_path, [ 'visible' => true ] );
 	}
 
 	/**
@@ -418,7 +399,7 @@ class Actor {
 	 * @param  integer $max_wait  Max wait time in seconds
 	 */
 	public function waitUntilPageSourceContains( $text, $max_wait = 10 ) {
-		$web_driver = $this->getWebDriver();
+		$web_driver = $this->getBrowser();
 
 		$web_driver->wait( $max_wait )->until(
 			function() use ( $text ) {
@@ -437,7 +418,7 @@ class Actor {
 	 * @param  integer $max_wait  Max wait time in seconds
 	 */
 	public function waitUntilElementEnabled( $element_path, $max_wait = 10 ) {
-		$web_driver = $this->getWebDriver();
+		$web_driver = $this->getBrowser();
 
 		$web_driver->wait( $max_wait )->until(
 			function() use ( $element_path ) {
@@ -473,7 +454,7 @@ class Actor {
 	 * @param array  $params Additional parameters for a cookie.
 	 */
 	public function setCookie( $name, $value, array $params = array() ) {
-		$web_driver = $this->getWebDriver();
+		$web_driver = $this->getBrowser();
 
 		$params['name']  = (string) $name;
 		$params['value'] = (string) $value;
@@ -493,7 +474,7 @@ class Actor {
 	 * @return mixed A cookie value.
 	 */
 	public function getCookie( $name ) {
-		$web_driver = $this->getWebDriver();
+		$web_driver = $this->getBrowser();
 		$cookies    = $web_driver->manage()->getCookies();
 		foreach ( $cookies as $cookie ) {
 			if ( $cookie['name'] === $name ) {
@@ -521,7 +502,7 @@ class Actor {
 	 * @return  array
 	 */
 	public function getCookies() {
-		$web_driver = $this->getWebDriver();
+		$web_driver = $this->getBrowser();
 		return $web_driver->manage()->getCookies();
 	}
 
@@ -532,7 +513,7 @@ class Actor {
 	 * @param string $name A cookie name to reset.
 	 */
 	public function resetCookie( $name ) {
-		$web_driver = $this->getWebDriver();
+		$web_driver = $this->getBrowser();
 		$web_driver->manage()->deleteCookieNamed( $name );
 	}
 
@@ -543,7 +524,7 @@ class Actor {
 	 * @return \Facebook\WebDriver\Remote\RemoteWebElement An element instance.
 	 */
 	public function getElementContaining( $text ) {
-		$web_driver = $this->getWebDriver();
+		$web_driver = $this->getBrowser();
 		return $web_driver->findElement( WebDriverBy::xpath( "//*[contains(text(), '" . $text . "')]" ) );
 	}
 
@@ -551,40 +532,26 @@ class Actor {
 	 * Return an element based on CSS selector.
 	 *
 	 * @access public
-	 * @throws ExpectationFailedException When the element is not found on the page.
-	 * @param  \Facebook\WebDriver\Remote\RemoteWebElement|\Facebook\WebDriver\WebDriverBy|string $element A CSS selector for the element.
-	 * @return \Facebook\WebDriver\Remote\RemoteWebElement An element instance.
 	 */
 	public function getElement( $element ) {
-		if ( $element instanceof RemoteWebElement ) {
+		if ( $element instanceof ElementHandle ) {
 			return $element;
 		}
 
-		$web_driver = $this->getWebDriver();
-		$by         = $element instanceof WebDriverBy ? $element : WebDriverBy::cssSelector( $element );
-
-		try {
-			return $web_driver->findElement( $by );
-		} catch ( NoSuchElementException $e ) {
-			$message = sprintf( 'No element found using %s "%s"', $by->getMechanism(), $by->getValue() );
-			throw new ExpectationFailedException( $message );
-		}
+		return $this->getPage()->querySelector( $element );
 	}
 
 	/**
 	 * Return elements based on CSS selector.
 	 *
 	 * @access public
-	 * @throws ExpectationFailedException When elements are not found on the page.
-	 * @param \Facebook\WebDriver\WebDriverBy|array|string $elements A CSS selector for elements.
-	 * @return array Array of elements.
 	 */
 	public function getElements( $elements ) {
 		if ( is_array( $elements ) ) {
 			$items = [];
 
 			foreach ( $elements as $element ) {
-				if ( $element instanceof RemoteWebElement ) {
+				if ( $element instanceof ElementHandle ) {
 					$items[] = $element;
 				} else {
 					$items[] = $this->getElement( $lement );
@@ -594,75 +561,18 @@ class Actor {
 			return $items;
 		}
 
-		$web_driver = $this->getWebDriver();
-		$by         = $elements instanceof WebDriverBy ? $elements : WebDriverBy::cssSelector( $elements );
-
-		try {
-			return $web_driver->findElements( $by );
-		} catch ( NoSuchElementException $e ) {
-			$message = sprintf( 'No elements found using %s "%s"', $by->getMechanism(), $by->getValue() );
-			throw new ExpectationFailedException( $message );
-		}
+		return $this->getPage()->querySelectorAll( $element );
 	}
 
 	/**
-	 * Click an element with JS.
+	 * Click an element.
 	 *
 	 * @access public
-	 * @param string $element_path Path to element in DOM to click
 	 */
-	public function jsClick( $element_path ) {
-		$element = $this->getElement( $element_path );
+	public function click( $element ) {
+		$element = $this->getElement( $element );
 
-		$this->waitUntilElementClickable( $element_path );
-
-		$this->waitUntilElementVisible( $element_path );
-
-		$this->executeJavaScript( 'window.document.querySelector( "' . addcslashes( $element_path, '"' ) . '" ).click();' );
-	}
-
-	/**
-	 * Click an element. Click can be buggy. Try jsClick as well.
-	 *
-	 * @access public
-	 * @param string  $element_path Path to element in DOM to click
-	 * @param boolean $expect_navigate If true, will try harder to ensure navigation occurs circumventing
-	 *                                  buggy Selenium.
-	 */
-	public function click( $element_path, $expect_navigate = false ) {
-		if ( $expect_navigate ) {
-			$this->executeJavaScript( 'window.' . __FUNCTION__ . ' = 1;' );
-		}
-
-		$element = $this->getElement( $element_path );
-
-		$this->waitUntilElementClickable( $element_path );
-
-		$this->waitUntilElementVisible( $element_path );
-
-		try {
-			$element->sendKeys( '' );
-			$this->executeJavaScript( 'window.document.querySelector( "' . $element_path . '" ).focus(); ' );
-		} catch ( \Exception $e ) {
-			// Just continue
-		}
-
-		try {
-			$element->click();
-		} catch ( UnknownServerException $e ) {
-			// Weird hack to get around inconsistent click behavior
-			$this->executeJavaScript( 'window.scrollTo( 0, ( window.document.documentElement.scrollTop + 100 ) )' );
-
-			$element->click();
-		}
-
-		if ( $expect_navigate && ! empty( $this->executeJavaScript( 'return window.' . __FUNCTION__ . ' || false;' ) ) ) {
-			$this->pressKey( $element, WebDriverKeys::ENTER );
-		}
-
-		if ( $expect_navigate && ! empty( $this->executeJavaScript( 'return window.' . __FUNCTION__ . ' || false;' ) ) ) {
-			$element->click();
-		}
+		$element->click();
 	}
 
 	/**
@@ -808,13 +718,13 @@ class Actor {
 	 * Check a checkbox or radio input.
 	 *
 	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|array $elements A remote elements or CSS selector.
 	 */
 	public function checkOptions( $elements ) {
 		$elements = $this->getElements( $elements );
 		foreach ( $elements as $element ) {
-			$type = $element->getAttribute( 'type' );
-			if ( in_array( $type, array( 'checkbox', 'radio' ), true ) && ! $element->isSelected() ) {
+			$type = $element->attribute( 'type' );
+
+			if ( in_array( $type, array( 'checkbox', 'radio' ), true ) && empty( $element->getProperty( 'checked' ) ) && empty( $element->getProperty( 'selected' ) ) ) {
 				$element->click();
 			}
 		}
@@ -824,15 +734,14 @@ class Actor {
 	 * Uncheck a checkbox.
 	 *
 	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|array $elements A remote element or CSS selector.
 	 */
 	public function uncheckOptions( $elements ) {
 		$elements = $this->getElements( $elements );
 
 		foreach ( $elements as $element ) {
-			$type = $element->getAttribute( 'type' );
+			$type = $element->attribute( 'type' );
 
-			if ( 'checkbox' === $type && $element->isSelected() ) {
+			if ( 'checkbox' === $type && ! empty( $element->getProperty( 'checked' ) ) ) {
 				$element->click();
 			}
 		}
@@ -870,28 +779,18 @@ class Actor {
 	 * Set a value for a field.
 	 *
 	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
-	 * @param string                                             $value A new value.
 	 */
-	public function fillField( $element, $value ) {
-		$element = $this->getElement( $element );
-		$element->clear();
-		$element->sendKeys( (string) $value );
-
-		return $element;
+	public function fillField( string $element_path, string $value ) {
+		$this->getPage()->querySelectorEval( $element_path, JsFunction::createWithParameters( [ 'el' ] )->body( 'el.value="' . $value . '"' ) );
 	}
 
 	/**
 	 * Clear the value of a textarea or an input fields.
 	 *
 	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|array $elements A remote elements or CSS selector.
 	 */
-	public function clearFields( $elements ) {
-		$elements = $this->getElements( $elements );
-		foreach ( $elements as $element ) {
-			$element->clear();
-		}
+	public function clearField( string $element_path ) {
+		$this->fillField( $element_path, '' );
 	}
 
 	/**
@@ -1001,24 +900,24 @@ class Actor {
 	/**
 	 * Press a key on an element.
 	 *
-	 * @see \Facebook\WebDriver\WebDriverKeys
-	 *
 	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
-	 * @param string                                             $key A key to press.
+	 * @param string $key A key to press.
 	 */
 	public function pressKey( $element, $key ) {
-		$this->getElement( $element )->sendKeys( $key );
+		$element = $this->getElement( $element );
+
+		if ( ! empty( $element ) ) {
+			$element->press( $key );
+		}
 	}
 
 	/**
 	 * Press "enter" key on an element.
 	 *
 	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
 	 */
 	public function pressEnterKey( $element ) {
-		$this->pressKey( $element, WebDriverKeys::ENTER );
+		$this->pressKey( $element, 'Enter' );
 	}
 
 	/**
@@ -1028,7 +927,7 @@ class Actor {
 	 * @return \Facebook\WebDriver\Remote\RemoteWebElement An instance of web elmeent.
 	 */
 	public function getActiveElement() {
-		return $this->getWebDriver()->switchTo()->activeElement();
+		return $this->getPage()->evaluate( JsFunction::createWithBody( 'return document.activeElement;' ) );
 	}
 
 	/**
@@ -1102,7 +1001,7 @@ class Actor {
 	 * @return string The current URL.
 	 */
 	public function getCurrentUrl() {
-		return $this->getWebDriver()->getCurrentURL();
+		return $this->getPage()->url();
 	}
 
 	/**

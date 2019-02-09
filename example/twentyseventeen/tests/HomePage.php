@@ -27,41 +27,4 @@ class HomePageTest extends \WPAcceptance\PHPUnit\TestCase {
 		$this->assertTrue( true );
 	}
 
-	/**
-	 * @testdox I see the page title.
-	 */
-	public function testTitleShowing() {
-		$I = $this->getAnonymousUser();
-
-		$I->moveTo( '/' );
-
-		$element = false;
-
-		try {
-			$element = $I->getElement( '.site-title' );
-		} catch ( \Exception $e ) {
-			// Continue to assertion
-		}
-
-		$this->assertNotEquals( $element, false );
-	}
-
-	/**
-	 * @testdox I see the main menu.
-	 */
-	public function testMainMenuShowing() {
-		$I = $this->getAnonymousUser();
-
-		$I->moveTo( '/' );
-
-		$element = false;
-
-		try {
-			$element = $I->getElement( '#site-navigation' );
-		} catch ( \Exception $e ) {
-			// Continue to assertion
-		}
-
-		$this->assertNotEquals( $element, false );
-	}
 }
