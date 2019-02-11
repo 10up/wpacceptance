@@ -238,7 +238,7 @@ class Actor {
 		}
 
 		$filename = $name . '.jpg';
-		$this->getPage()->$page->screenshot( [ 'path' => $filename ] );
+		$this->getPage()->screenshot( [ 'path' => $filename ] );
 		Log::instance()->write( 'Screenshot saved to ' . $filename, 1 );
 	}
 
@@ -321,17 +321,14 @@ class Actor {
 	}
 
 	/**
-	 * Resize window to a new dimension.
+	 * Resize viewport to a new dimension.
 	 *
 	 * @access public
 	 * @param int $width A new width.
 	 * @param int $height A new height.
 	 */
-	public function resizeWindow( $width, $height ) {
-		$dimension = new \Facebook\WebDriver\WebDriverDimension( $width, $height );
-
-		$web_driver = $this->getBrowser();
-		$web_driver->manage()->window()->setSize( $dimension );
+	public function resizeViewport( int $width, int $height ) {
+		$this->getPage()->setViewport( [ 'width' => $width, 'height' => $height ] );
 	}
 
 	/**
@@ -342,7 +339,7 @@ class Actor {
 	 * @param mixed  $value Optional. The cookie value. If it's empty, value check will be ignored.
 	 * @param string $message Optional. The message to use on a failure.
 	 */
-	public function seeCookie( $name, $value = null, $message = '' ) {
+	public function seeCookie( string $name, $value = null, $message = '' ) {
 		$this->assertThat(
 			new CookieConstrain( Constraint::ACTION_SEE, $name, $value ),
 			$message
@@ -350,15 +347,12 @@ class Actor {
 	}
 
 	/**
-	 * Wait until element is clickable
+	 * Wait until element is enabled
 	 *
-	 * @param  string  $element_path Path to element to check
-	 * @param  integer $max_wait  Max wait time in seconds
+	 * @param  string $element_path Path to element to check
 	 */
-	public function waitUntilElementClickable( $element_path, $max_wait = 10 ) {
-		$web_driver = $this->getBrowser();
-
-		$web_driver->wait( $max_wait )->until( WebDriverExpectedCondition::elementToBeClickable( WebDriverBy::cssSelector( $element_path ) ) );
+	public function waitUntilElementEnabled( string $element_path ) {
+		$this->getPage()->waitForFunction( JsFunction::createWithBody( 'return ! document.querySelector("' . addcslashes( $element_path, '"' ) . '").disabled' ) );
 	}
 
 	/**
@@ -372,14 +366,14 @@ class Actor {
 		$this->getPage()->waitForSelector( $element_path );
 
 		// Wait for element to contain text
-		$this->getPage()->waitForFunction( JsFunction::createWithBody( 'document.querySelector("' . addcslashes( $element_path, '"' ) . '").innerText.includes("' . addcslashes( $text, '"' ) . '")' ) );
+		$this->getPage()->waitForFunction( JsFunction::createWithBody( 'return document.querySelector("' . addcslashes( $element_path, '"' ) . '").innerText.includes("' . addcslashes( $text, '"' ) . '")' ) );
 	}
 
 	/**
 	 * Wait until title contains
 	 */
 	public function waitUntilTitleContains( $title ) {
-		$this->getPage()->waitForFunction( JsFunction::createWithBody( 'document.title.includes("' . addcslashes( $title, '"' ) . '")' ) );
+		$this->getPage()->waitForFunction( JsFunction::createWithBody( 'return document.title.includes("' . addcslashes( $title, '"' ) . '")' ) );
 	}
 
 	/**
@@ -388,46 +382,15 @@ class Actor {
 	 * @param  string  $element_path Path to element to check
 	 * @param  integer $max_wait  Max wait time in seconds
 	 */
-	public function waitUntilElementVisible( string $element_path, $max_wait = 10 ) {
+	public function waitUntilElementVisible( string $element_path ) {
 		$this->getPage()->waitForSelector( $element_path, [ 'visible' => true ] );
 	}
 
 	/**
-	 * Wait until page source contains text/regex
-	 *
-	 * @param  string  $text Text or regex to look for
-	 * @param  integer $max_wait  Max wait time in seconds
+	 * Wait until page source contains text
 	 */
-	public function waitUntilPageSourceContains( $text, $max_wait = 10 ) {
-		$web_driver = $this->getBrowser();
-
-		$web_driver->wait( $max_wait )->until(
-			function() use ( $text ) {
-				$source = $this->getPageSource();
-
-				return Utils\find_match( $source, $text );
-			},
-			'Error waiting for page source to contain text.'
-		);
-	}
-
-	/**
-	 * Wait until element is not disabled
-	 *
-	 * @param  string  $element_path Path to element to check
-	 * @param  integer $max_wait  Max wait time in seconds
-	 */
-	public function waitUntilElementEnabled( $element_path, $max_wait = 10 ) {
-		$web_driver = $this->getBrowser();
-
-		$web_driver->wait( $max_wait )->until(
-			function() use ( $element_path ) {
-				$element = $this->getElement( $element_path );
-
-				return $element->isEnabled();
-			},
-			'Error waiting for element to be enabled.'
-		);
+	public function waitUntilPageSourceContains( $text ) {
+		$this->getPage()->waitForFunction( JsFunction::createWithBody( 'return document.documentElement.outerHTML.includes("' . addcslashes( $text, '"' ) . '")' ) );
 	}
 
 	/**
@@ -454,8 +417,6 @@ class Actor {
 	 * @param array  $params Additional parameters for a cookie.
 	 */
 	public function setCookie( $name, $value, array $params = array() ) {
-		$web_driver = $this->getBrowser();
-
 		$params['name']  = (string) $name;
 		$params['value'] = (string) $value;
 
@@ -463,7 +424,7 @@ class Actor {
 			$params['domain'] = '.' . parse_url( $this->test->getWPHomeUrl(), PHP_URL_HOST );
 		}
 
-		$web_driver->manage()->addCookie( $params );
+		$this->getPage()->setCookie( $params );
 	}
 
 	/**
@@ -474,8 +435,8 @@ class Actor {
 	 * @return mixed A cookie value.
 	 */
 	public function getCookie( $name ) {
-		$web_driver = $this->getBrowser();
-		$cookies    = $web_driver->manage()->getCookies();
+		$cookies = $this->getCookies();
+
 		foreach ( $cookies as $cookie ) {
 			if ( $cookie['name'] === $name ) {
 				return $cookie['value'];
@@ -502,8 +463,7 @@ class Actor {
 	 * @return  array
 	 */
 	public function getCookies() {
-		$web_driver = $this->getBrowser();
-		return $web_driver->manage()->getCookies();
+		return $this->getPage()->cookies();
 	}
 
 	/**
@@ -512,20 +472,17 @@ class Actor {
 	 * @access public
 	 * @param string $name A cookie name to reset.
 	 */
-	public function resetCookie( $name ) {
-		$web_driver = $this->getBrowser();
-		$web_driver->manage()->deleteCookieNamed( $name );
+	public function deleteCookie( $name ) {
+		$this->getPage()->deleteCookies( [ 'name' => $name ] );
 	}
 
 	/**
 	 * Get element containing text
 	 *
 	 * @param  string $text Text to search for
-	 * @return \Facebook\WebDriver\Remote\RemoteWebElement An element instance.
 	 */
 	public function getElementContaining( $text ) {
-		$web_driver = $this->getBrowser();
-		return $web_driver->findElement( WebDriverBy::xpath( "//*[contains(text(), '" . $text . "')]" ) );
+		return $this->getPage()->querySelectorXPath( "//*[contains(text(), '" . $text . "')]" );
 	}
 
 	/**
@@ -576,115 +533,20 @@ class Actor {
 	}
 
 	/**
-	 * Select options of a dropdown element.
+	 * Select option by value of a dropdown element.
 	 *
 	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
-	 * @param string|array                                       $options Single or multiple options to select.
 	 */
-	public function selectOptions( $element, $options ) {
-		$element = $this->getElement( $element );
-		if ( $element->getTagName() === 'select' ) {
-			$select = new WebDriverSelect( $element );
-			if ( $select->isMultiple() ) {
-				$select->deselectAll();
-			}
+	public function selectOptionByValue( string $element_path, $option_value ) {
+		$element = $this->getElement( $element_path );
 
-			if ( ! is_array( $options ) ) {
-				$options = array( $options );
-			}
-
-			foreach ( $options as $option ) {
-				// try to select an option by value
-				try {
-					$select->selectByValue( $option );
-					continue;
-				} catch ( NoSuchElementException $e ) {
-					// Do nothing
-				}
-
-				// try to select an option by visible text
-				try {
-					$select->selectByVisibleText( $option );
-					continue;
-				} catch ( NoSuchElementException $e ) {
-					// Do nothing
-				}
-
-				// try to select an option by visible partial text
-				try {
-					$select->selectByVisiblePartialText( $option );
-					continue;
-				} catch ( NoSuchElementException $e ) {
-					// Do nothing
-				}
-
-				// fallback to select by index
-				try {
-					$select->selectByIndex( $option );
-				} catch ( NoSuchElementException $e ) {
-					// Do nothing
-				}
-			}
-		}
-	}
-
-	/**
-	 * Unselect options of a dropdown element.
-	 *
-	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
-	 * @param string|array                                       $options Single or multiple options to deselect.
-	 */
-	public function deselectOptions( $element, $options ) {
-		$element = $this->getElement( $element );
-		if ( $element->getTagName() === 'select' ) {
-			$select = new WebDriverSelect( $element );
-
-			if ( ! is_array( $options ) ) {
-				$options = array( $options );
-			}
-
-			foreach ( $options as $option ) {
-				// try to deselect an option by value
-				try {
-					$select->deselectByValue( $option );
-					continue;
-				} catch ( NoSuchElementException $e ) {
-					// Do nothing
-				}
-
-				// try to deselect an option by visible text
-				try {
-					$select->deselectByVisibleText( $option );
-					continue;
-				} catch ( NoSuchElementException $e ) {
-					// Do nothing
-				}
-
-				// try to deselect an option by visible partial text
-				try {
-					$select->deselectByVisiblePartialText( $option );
-					continue;
-				} catch ( NoSuchElementException $e ) {
-					// Do nothing
-				}
-
-				// fallback to deselect by index
-				try {
-					$select->deselectByIndex( $option );
-				} catch ( NoSuchElementException $e ) {
-					// Do nothing
-				}
-			}
-		}
+		$this->getPage()->select( $element_path, $option_value );
 	}
 
 	/**
 	 * Submit a form from an element.
 	 *
 	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
 	 */
 	public function submitForm( $element ) {
 		$element = $this->getElement( $element );
