@@ -7,14 +7,14 @@
 
 namespace WPAcceptance\PHPUnit\Constraints;
 
-use Facebook\WebDriver\Exception\InvalidElementStateException;
+use WPAcceptance\PHPUnit\Traits\ElementUtilities;
 
 /**
  * Constraint class
  */
 class FieldInteractable extends \WPAcceptance\PHPUnit\Constraint {
 
-	use Traits\ElementToMessage;
+	use ElementUtilities;
 
 	/**
 	 * Element to look for

@@ -14,19 +14,17 @@ class AdminPostTest extends \WPAcceptance\PHPUnit\TestCase {
 	 * @testdox I can successfully publish a post in Gutenberg.
 	 */
 	public function testPostPublish() {
-		$I = $this->getAnonymousUser();
+		$I = $this->openBrowserPage();
 
 		$I->loginAs( 'wpsnapshots' );
 
 		$I->moveTo( 'wp-admin/post-new.php' );
 
+		$I->waitUntilElementVisible( '.nux-dot-tip__disable' );
+
+		$I->click( '.nux-dot-tip__disable' );
+
 		$I->fillField( '#post-title-0', 'Test Post' );
-
-		$I->click( '.editor-block-list__layout .wp-block' );
-
-		$I->fillField( '.editor-block-list__layout .wp-block:first-child p', 'Test content' );
-
-		$I->click( '.editor-post-publish-panel__toggle' );
 
 		$I->waitUntilElementVisible( '.editor-post-publish-button' );
 

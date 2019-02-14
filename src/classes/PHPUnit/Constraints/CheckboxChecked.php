@@ -7,12 +7,14 @@
 
 namespace WPAcceptance\PHPUnit\Constraints;
 
+use WPAcceptance\PHPUnit\Traits\ElementUtilities;
+
 /**
  * Constraint class
  */
 class CheckboxChecked extends \WPAcceptance\PHPUnit\Constraint {
 
-	use Traits\ElementToMessage;
+	use ElementUtilities;
 
 	/**
 	 * The checkbox element to look for.

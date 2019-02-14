@@ -181,11 +181,11 @@ The most poweful WP Acceptance functionality is provided by the `Actor` class an
 A new Actor must be initialized for each test and is done like so:
 ```php
 public function testExample() {
-	$I = $this->getAnonymousUser();
+	$I = $this->openBrowserPage();
 }
 ```
 
-`getAnonymousUser` does take an optional array of arguments. In particular, you can choose the browser size: `getAnonymousUser( [ 'screen_size' => 'small' ] )`.
+`openBrowserPage` does take an optional array of arguments. In particular, you can choose the browser size: `openBrowserPage( [ 'screen_size' => 'small' ] )`.
 
 With `$I` we can navigate to sections of our website:
 ```php

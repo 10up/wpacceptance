@@ -9,7 +9,7 @@ This test creates a post and makes sure it's published.
  * @testdox I am able to publish a post.
  */
 function testPostPublish() {
-	$I = $this->getAnonymousUser();
+	$I = $this->openBrowserPage();
 
 	$I->loginAs( 'wpsnapshots' );
 
@@ -36,7 +36,7 @@ This test tests adding media to a post and setting it as the featured image:
  * @testdox I am able to attach a featured image to a post.
  */
 function testFeaturedImage() {
-	$I = $this->getAnonymousUser();
+	$I = $this->openBrowserPage();
 
 	$I->loginAs( 'wpsnapshots' );
 

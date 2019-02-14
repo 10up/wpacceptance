@@ -7,7 +7,7 @@
 
 namespace WPAcceptance\PHPUnit\Constraints;
 
-use PHPUnit\Framework\ExpectationFailedException;
+use WPAcceptance\PHPUnit\Traits\ElementUtilities;
 use WPAcceptance\Utils;
 
 /**
@@ -15,7 +15,7 @@ use WPAcceptance\Utils;
  */
 class PageContains extends \WPAcceptance\PHPUnit\Constraint {
 
-	use Traits\ElementToMessage;
+	use ElementUtilities;
 
 	/**
 	 * The text to look for.
@@ -88,9 +88,6 @@ class PageContains extends \WPAcceptance\PHPUnit\Constraint {
 	 */
 	public function toString(): string {
 		$message = sprintf( ' "%s" text', $this->text );
-		if ( ! empty( $this->element ) ) {
-			$message .= ' in the scope of ' . $this->elementToMessage( $this->element );
-		}
 
 		return $message;
 	}

@@ -49,6 +49,7 @@ class Run extends Command {
 		$this->addOption( 'enforce_clean_db', false, InputOption::VALUE_NONE, 'Ensure each test has a clean version of the snapshot database.' );
 		$this->addOption( 'save', false, InputOption::VALUE_NONE, 'If tests are successful, save snapshot ID to wpacceptance.json and push it to the remote repository.' );
 		$this->addOption( 'force_save', false, InputOption::VALUE_NONE, 'No matter the outcome of the tests, save snapshot ID to wpacceptance.json and push it to the remote repository.' );
+		$this->addOption( 'show_browser', false, InputOption::VALUE_NONE, 'Show the browser where testing is occuring.' );
 
 		$this->addOption( 'snapshot_id', null, InputOption::VALUE_REQUIRED, 'WP Snapshot ID.' );
 		$this->addOption( 'environment_id', null, InputOption::VALUE_REQUIRED, 'Manually set environment ID.' );
@@ -115,6 +116,8 @@ class Run extends Command {
 		}
 
 		$suite_config['repository'] = $repository->getName();
+
+		$suite_config['show_browser'] = $input->getOption( 'show_browser' );
 
 		$local = $input->getOption( 'local' );
 

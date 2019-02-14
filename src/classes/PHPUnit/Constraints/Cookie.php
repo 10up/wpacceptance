@@ -7,12 +7,14 @@
 
 namespace WPAcceptance\PHPUnit\Constraints;
 
+use WPAcceptance\PHPUnit\Traits\ElementUtilities;
+
 /**
  * Constraint class
  */
 class Cookie extends \WPAcceptance\PHPUnit\Constraint {
 
-	use Traits\SeeableAction;
+	use ElementUtilities;
 
 	/**
 	 * The cookie name.

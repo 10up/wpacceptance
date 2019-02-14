@@ -41,10 +41,15 @@ trait Puppeteer {
 	}
 
 	protected function setupBrowser() {
-		$this->setupPuppeteer();
-
 		if ( empty( $this->browser ) ) {
-			$this->browser = $this->puppeteer->launch();
+			$browser_args   = [];
+			$config = EnvironmentFactory::get()->getSuiteConfig();
+
+			if ( ! empty( $config['show_browser'] ) ) {
+				$browser_args['headless'] = false;
+			}
+
+			$this->browser = $this->puppeteer->launch( $browser_args );
 		}
 
 		return $this->browser;
@@ -70,11 +75,19 @@ trait Puppeteer {
 		return EnvironmentFactory::get()->getWPHomeUrl( $id_or_url );
 	}
 
-	public function getAnonymousUser( $options = [] ) {
-		$browser = $this->setupBrowser();
+	public function openBrowserPage( $options = [] ) {
+		$this->setupPuppeteer();
+		$this->setupBrowser();
+
+		$page_args = [
+			'--start-maximized',
+		];
+
+		$page = $this->browser->newPage( $page_args );
 
 		$actor = new Actor( 'Anonymous User' );
-		$actor->setBrowser( $browser );
+		$actor->setPage( $page );
+		$actor->resizeViewport( 0, 0);
 		$actor->setTest( $this );
 
 		$this->last_actor = $actor;

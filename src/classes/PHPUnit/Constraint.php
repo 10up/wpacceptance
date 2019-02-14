@@ -82,7 +82,7 @@ abstract class Constraint extends \PHPUnit\Framework\Constraint\Constraint {
 	 */
 	protected function failureDescription( $other ): string {
 		$actor = $this->getActor( $other );
-		return $actor->getActorName() . $this->getActionDescription() . $this->toString();
+		return $actor->getActorName() . $this->getActionDescription() . ' ' . $this->toString();
 	}
 
 }

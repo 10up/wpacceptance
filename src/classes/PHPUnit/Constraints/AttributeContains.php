@@ -7,12 +7,14 @@
 
 namespace WPAcceptance\PHPUnit\Constraints;
 
+use WPAcceptance\PHPUnit\Traits\ElementUtilities;
+
 /**
  * Constraint class
  */
 class AttributeContains extends \WPAcceptance\PHPUnit\Constraint {
 
-	use Traits\ElementToMessage;
+	use ElementUtilities;
 
 	/**
 	 * The element to look for.

@@ -7,7 +7,7 @@
 
 namespace WPAcceptance\PHPUnit\Constraints;
 
-use Facebook\WebDriver\WebDriverSelect;
+use WPAcceptance\PHPUnit\Traits\ElementUtilities;
 use WPAcceptance\Utils;
 
 /**
@@ -15,7 +15,7 @@ use WPAcceptance\Utils;
  */
 class FieldValueContains extends \WPAcceptance\PHPUnit\Constraint {
 
-	use Traits\ElementToMessage;
+	use ElementUtilities;
 
 	/**
 	 * The element to look for.

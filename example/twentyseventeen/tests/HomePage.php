@@ -14,7 +14,7 @@ class HomePageTest extends \WPAcceptance\PHPUnit\TestCase {
 	 * @testdox I fill out search form, press enter, and the search page shows with results.
 	 */
 	public function testSearchForm() {
-		$I = $this->getAnonymousUser();
+		$I = $this->openBrowserPage();
 
 		$I->moveTo( '/' );
 

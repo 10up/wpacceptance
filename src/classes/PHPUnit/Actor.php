@@ -13,6 +13,8 @@ use PHPUnit\Framework\TestCase;
 use WPAcceptance\Exception;
 use WPAcceptance\Log;
 use WPAcceptance\Utils;
+use WPAcceptance\Exception\PageNotSet;
+use WPAcceptance\Exception\ElementNotFound;
 use WPAcceptance\EnvironmentFactory;
 use WPAcceptance\PHPUnit\Constraint;
 use WPAcceptance\PHPUnit\Constraints\Cookie as CookieConstrain;
@@ -49,7 +51,6 @@ class Actor {
 	 * @access private
 	 * @var \Facebook\WebDriver\Remote\RemoteWebDriver
 	 */
-	private $browser = null;
 
 	/**
 	 * Current page
@@ -76,6 +77,10 @@ class Actor {
 		$this->name = $name;
 	}
 
+	public function setPage( $page ) {
+		$this->page = $page;
+	}
+
 	/**
 	 * Set actor name.
 	 *
@@ -96,33 +101,9 @@ class Actor {
 		return $this->name;
 	}
 
-	/**
-	 * Set a new instance of a web driver.
-	 *
-	 * @access public
-	 */
-	public function setBrowser( $browser ) {
-		$this->browser = $browser;
-	}
-
-	/**
-	 * Return a web driver instance associated with the actor.
-	 *
-	 * @access public
-	 * @throws Exception if a web driver is not assigned.
-	 * @return \Facebook\WebDriver\Remote\RemoteWebDriver An instance of a web driver.
-	 */
-	public function getBrowser() {
-		if ( ! $this->browser ) {
-			throw new Exception( 'Puppeteer Browser is not provided.' );
-		}
-
-		return $this->browser;
-	}
-
 	public function getPage() {
 		if ( ! $this->page ) {
-			throw new Exception( 'Page is not set.' );
+			throw new PageNotSet( 'Page is not set.' );
 		}
 
 		return $this->page;
@@ -171,11 +152,11 @@ class Actor {
 	 * @return string A page source.
 	 */
 	public function getPageSource() {
-		if ( ! empty( $this->page_response ) ) {
-			return $this->page_response->text();
+		if ( empty( $this->page_response ) ) {
+			throw new PageNotSet( 'Page is not set.' );
 		}
 
-		return '';
+		return $this->page_response->text();
 	}
 
 	/**
@@ -313,8 +294,6 @@ class Actor {
 			$url .= '?' . $url_parts['query'];
 		}
 
-		$this->page = $this->getBrowser()->newPage();
-
 		$this->page_response = $this->page->goto( $url );
 
 		Log::instance()->write( 'Navigating to URL: ' . $url, 1 );
@@ -328,7 +307,12 @@ class Actor {
 	 * @param int $height A new height.
 	 */
 	public function resizeViewport( int $width, int $height ) {
-		$this->getPage()->setViewport( [ 'width' => $width, 'height' => $height ] );
+		$this->getPage()->setViewport(
+			[
+				'width'  => $width,
+				'height' => $height,
+			]
+		);
 	}
 
 	/**
@@ -495,7 +479,13 @@ class Actor {
 			return $element;
 		}
 
-		return $this->getPage()->querySelector( $element );
+		$element = $this->getPage()->querySelector( $element );
+
+		if ( empty( $element ) ) {
+			throw ElementNotFound( 'Element not found.' );
+		}
+
+		return $element;
 	}
 
 	/**
@@ -518,7 +508,7 @@ class Actor {
 			return $items;
 		}
 
-		return $this->getPage()->querySelectorAll( $element );
+		return $this->getPage()->querySelectorAll( $elements );
 	}
 
 	/**
@@ -560,7 +550,7 @@ class Actor {
 	 * @param  string $username Username
 	 * @param  string $password Password
 	 */
-	public function loginAs( $username, $password = 'password' ) {
+	public function loginAs( string $username, string $password = 'password' ) {
 		$this->moveTo( 'wp-login.php' );
 
 		$this->setElementAttribute( '#user_login', 'value', $username );
@@ -583,6 +573,7 @@ class Actor {
 	 */
 	public function checkOptions( $elements ) {
 		$elements = $this->getElements( $elements );
+
 		foreach ( $elements as $element ) {
 			$type = $element->attribute( 'type' );
 
@@ -643,7 +634,7 @@ class Actor {
 	 * @access public
 	 */
 	public function fillField( string $element_path, string $value ) {
-		$this->getPage()->querySelectorEval( $element_path, JsFunction::createWithParameters( [ 'el' ] )->body( 'el.value="' . $value . '"' ) );
+		$this->getPage()->type( $element_path, $value, [ 'delay' => 20 ] );
 	}
 
 	/**
@@ -673,28 +664,18 @@ class Actor {
 	 * Check if the actor sees an element on the current page. Element must be visible to human eye.
 	 *
 	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A CSS selector for the element.
-	 * @param string                                             $message Optional. The message to use on a failure.
 	 */
-	public function seeElement( $element, $message = '' ) {
-		$this->assertThat(
-			new ElementVisibleConstrain( Constraint::ACTION_SEE, $element ),
-			$message
-		);
+	public function seeElement( $element ) {
+		TestCase::assertTrue( $this->elementIsVisible( $element ), $this->elementToString( $element ) . ' is not visible.' );
 	}
 
 	/**
 	 * Check if the actor doesnt see an element on the current page. Element must not be visible to human eye.
 	 *
 	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A CSS selector for the element.
-	 * @param string                                             $message Optional. The message to use on a failure.
 	 */
 	public function dontSeeElement( $element, $message = '' ) {
-		$this->assertThat(
-			new ElementVisibleConstrain( Constraint::ACTION_DONTSEE, $element ),
-			$message
-		);
+		TestCase::assertFalse( $this->elementIsVisible( $element ), $this->elementToString( $element ) . ' is visible.' );
 	}
 
 	/**
@@ -702,15 +683,19 @@ class Actor {
 	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: "/test/i".
 	 *
 	 * @access public
-	 * @param string                                             $text A text to look for or a regular expression.
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A CSS selector for the element.
-	 * @param string                                             $message Optional. The message to use on a failure.
 	 */
-	public function seeText( $text, $element = null, $message = '' ) {
-		$this->assertThat(
-			new PageContainsConstrain( Constraint::ACTION_SEE, $text, $element ),
-			$message
-		);
+	public function seeText( $text, $element = null ) {
+		if ( empty( $element ) ) {
+			$element = $this->getElement( 'body' );
+		}
+
+		$content = trim( $this->getElementInnerText( $element ) );
+
+		if ( empty( $content ) ) {
+			return false;
+		}
+
+		TestCase::assertTrue( Utils\find_match( $content, $text ), $text . ' not found.' );
 	}
 
 	/**
@@ -718,15 +703,19 @@ class Actor {
 	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: "/test/i".
 	 *
 	 * @access public
-	 * @param string                                             $text A text to look for or a regular expression.
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A CSS selector for the element.
-	 * @param string                                             $message Optional. The message to use on a failure.
 	 */
-	public function dontSeeText( $text, $element = null, $message = '' ) {
-		$this->assertThat(
-			new PageContainsConstrain( Constraint::ACTION_DONTSEE, $text, $element ),
-			$message
-		);
+	public function dontSeeText( $text, $element = null ) {
+		if ( empty( $element ) ) {
+			$element = $this->getElement( 'body' );
+		}
+
+		$content = trim( $this->getElementInnerText( $element ) );
+
+		if ( empty( $content ) ) {
+			return true;
+		}
+
+		TestCase::assertFalse( Utils\find_match( $content, $text ), $text . ' found.' );
 	}
 
 	/**
@@ -955,6 +944,93 @@ class Actor {
 		$this->assertThat(
 			new FieldValueContainsConstrain( Constraint::ACTION_DONTSEE, $element, $value ),
 			$message
+		);
+	}
+
+	/**
+	 * Convert an element to a piece of a failure message.
+	 *
+	 * @access protected
+	 * @param ElementHandle|string $element An element to convert.
+	 * @return string A message.
+	 */
+	public function elementToString( $element ) {
+		$element = $this->getElement( $element );
+
+		$message = $this->getElementTagName( $element );
+
+		$id = trim( $this->getElementAttribute( $element, 'id' ) );
+		if ( ! empty( $id ) ) {
+			$message .= '#' . $id;
+		}
+
+		$class = trim( $this->getElementAttribute( $element, 'class' ) );
+
+		if ( ! empty( $class ) ) {
+			$classes = array_filter( array_map( 'trim', explode( ' ', $class ) ) );
+			if ( ! empty( $classes ) ) {
+				$message .= '.' . implode( '.', $classes );
+			}
+		}
+
+		return $message;
+	}
+
+	public function elementIsVisible( $element ) {
+		$element = $this->getElement( $element );
+
+		return $this->getPage()->evaluate(
+			JsFunction::createWithParameters( [ 'element' ] )
+			->body(
+				"
+			    var style = window.getComputedStyle( element );
+			    return style && style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0';
+				"
+			),
+			$element
+		);
+	}
+
+	public function getElementTagName( $element ) {
+		$element = $this->getElement( $element );
+
+		return $this->getPage()->evaluate(
+			JsFunction::createWithParameters( [ 'element' ] )
+			->body(
+				'
+			    return element.tagName;
+				'
+			),
+			$element
+		);
+	}
+
+	public function getElementAttribute( $element, string $attribute ) {
+		$element = $this->getElement( $element );
+
+		return $this->getPage()->evaluate(
+			JsFunction::createWithParameters( [ 'element', 'attribute' ] )
+			->body(
+				'
+			    return element.getAttribute( attribute );
+				'
+			),
+			$element,
+			$attribute
+		);
+	}
+
+	public function getElementInnerText( $element ) {
+		$element = $this->getElement( $element );
+
+		return $this->getPage()->evaluate(
+			JsFunction::createWithParameters( [ 'element' ] )
+			->body(
+				'
+			    return element.innerText;
+				'
+			),
+			$element
 		);
 	}
 

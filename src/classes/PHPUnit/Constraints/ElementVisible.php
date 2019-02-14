@@ -7,14 +7,13 @@
 
 namespace WPAcceptance\PHPUnit\Constraints;
 
-use PHPUnit\Framework\ExpectationFailedException;
+use WPAcceptance\Exception\ElementNotFound;
 
 /**
  * Constraint class
  */
-class ElementVisible extends \WPAcceptance\PHPUnit\Constraint {
 
-	use Traits\ElementToMessage;
+class ElementVisible extends \WPAcceptance\PHPUnit\Constraint {
 
 	/**
 	 * Element to look for
@@ -49,12 +48,12 @@ class ElementVisible extends \WPAcceptance\PHPUnit\Constraint {
 
 		try {
 			$element = $actor->getElement( ! empty( $this->element ) ? $this->element : 'body' );
-		} catch ( ExpectationFailedException $e ) {
+		} catch ( ElementNotFound $e ) {
 			return self::ACTION_DONTSEE === $this->action;
 		}
 
 		if ( $element ) {
-			$found = $element->isDisplayed();
+			$found = $actor->elementIsVisible( $element );
 
 			return ( $found && self::ACTION_SEE === $this->action ) || ( ! $found && self::ACTION_DONTSEE === $this->action );
 		}
@@ -69,7 +68,7 @@ class ElementVisible extends \WPAcceptance\PHPUnit\Constraint {
 	 * @return string The description text.
 	 */
 	public function toString(): string {
-		return $this->elementToMessage( $this->element );
+		return 'is a visible element';
 	}
 
 }

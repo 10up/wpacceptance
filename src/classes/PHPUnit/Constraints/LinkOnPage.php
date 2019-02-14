@@ -7,8 +7,7 @@
 
 namespace WPAcceptance\PHPUnit\Constraints;
 
-use Facebook\WebDriver\Exception\NoSuchElementException;
-use Facebook\WebDriver\WebDriverBy;
+use WPAcceptance\PHPUnit\Traits\ElementUtilities;
 use WPAcceptance\Utils;
 
 /**
