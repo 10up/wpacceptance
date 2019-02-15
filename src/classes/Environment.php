@@ -46,13 +46,6 @@ class Environment {
 	protected $environment_id;
 
 	/**
-	 * Docker instance
-	 *
-	 * @var Docker\Docker
-	 */
-	protected $docker;
-
-	/**
 	 * WordPress port
 	 *
 	 * @var int
@@ -160,7 +153,6 @@ class Environment {
 	 * @param  int     $mysql_wait_time How long should we wait for MySQL to become available (seconds)
 	 */
 	public function __construct( $suite_config = null, $cache_environment = false, $skip_environment_cache = false, $environment_id = null, $mysql_wait_time = null ) {
-		$this->docker                 = Docker::create();
 		$this->suite_config           = $suite_config;
 		$this->cache_environment      = $cache_environment;
 		$this->skip_environment_cache = $skip_environment_cache;
@@ -215,12 +207,12 @@ class Environment {
 		$exec_config->setCmd( [ '/bin/sh', '-c', $command ] );
 
 		try {
-			$exec_command      = $this->docker->containerExec( $this->environment_id . '-wordpress', $exec_config );
+			$exec_command      = EnvironmentFactory::$docker->containerExec( $this->environment_id . '-wordpress', $exec_config );
 			$exec_id           = $exec_command->getId();
 			$exec_start_config = new ExecIdStartPostBody();
 			$exec_start_config->setDetach( false );
 
-			$stream = $this->docker->execStart( $exec_id, $exec_start_config );
+			$stream = EnvironmentFactory::$docker->execStart( $exec_id, $exec_start_config );
 		} catch ( \Exception $e ) {
 			Log::instance()->write( 'Environment NOT found in cache.', 1 );
 			return false;
@@ -285,12 +277,12 @@ class Environment {
 		$exec_config->setAttachStderr( true );
 		$exec_config->setCmd( [ '/bin/sh', '-c', $command ] );
 
-		$exec_command      = $this->docker->containerExec( $this->environment_id . '-wordpress', $exec_config );
+		$exec_command      = EnvironmentFactory::$docker->containerExec( $this->environment_id . '-wordpress', $exec_config );
 		$exec_id           = $exec_command->getId();
 		$exec_start_config = new ExecIdStartPostBody();
 		$exec_start_config->setDetach( false );
 
-		$stream = $this->docker->execStart( $exec_id, $exec_start_config );
+		$stream = EnvironmentFactory::$docker->execStart( $exec_id, $exec_start_config );
 
 		$stream->onStdout(
 			function( $stdout ) {
@@ -306,7 +298,7 @@ class Environment {
 
 		$stream->wait();
 
-		$exit_code = $this->docker->execInspect( $exec_id )->getExitCode();
+		$exit_code = EnvironmentFactory::$docker->execInspect( $exec_id )->getExitCode();
 
 		if ( 0 !== $exit_code ) {
 			Log::instance()->write( 'Could not modify database in wp-config.php.', 0, 'error' );
@@ -335,12 +327,12 @@ class Environment {
 		$exec_config->setAttachStderr( true );
 		$exec_config->setCmd( [ '/bin/sh', '-c', $command ] );
 
-		$exec_command      = $this->docker->containerExec( $this->environment_id . '-mysql', $exec_config );
+		$exec_command      = EnvironmentFactory::$docker->containerExec( $this->environment_id . '-mysql', $exec_config );
 		$exec_id           = $exec_command->getId();
 		$exec_start_config = new ExecIdStartPostBody();
 		$exec_start_config->setDetach( false );
 
-		$stream = $this->docker->execStart( $exec_id, $exec_start_config );
+		$stream = EnvironmentFactory::$docker->execStart( $exec_id, $exec_start_config );
 
 		$stream->onStdout(
 			function( $stdout ) {
@@ -356,7 +348,7 @@ class Environment {
 
 		$stream->wait();
 
-		$exit_code = $this->docker->execInspect( $exec_id )->getExitCode();
+		$exit_code = EnvironmentFactory::$docker->execInspect( $exec_id )->getExitCode();
 
 		if ( 0 !== $exit_code ) {
 			Log::instance()->write( 'Could not duplicate MySQL database.', 0, 'error' );
@@ -389,12 +381,12 @@ class Environment {
 			$exec_config->setAttachStderr( true );
 			$exec_config->setCmd( [ '/bin/bash', '-c', $command ] );
 
-			$exec_command      = $this->docker->containerExec( $this->environment_id . '-wordpress', $exec_config );
+			$exec_command      = EnvironmentFactory::$docker->containerExec( $this->environment_id . '-wordpress', $exec_config );
 			$exec_id           = $exec_command->getId();
 			$exec_start_config = new ExecIdStartPostBody();
 			$exec_start_config->setDetach( false );
 
-			$stream = $this->docker->execStart( $exec_id, $exec_start_config );
+			$stream = EnvironmentFactory::$docker->execStart( $exec_id, $exec_start_config );
 
 			$stream->onStdout(
 				function( $stdout ) {
@@ -410,7 +402,7 @@ class Environment {
 
 			$stream->wait();
 
-			$exit_code = $this->docker->execInspect( $exec_id )->getExitCode();
+			$exit_code = EnvironmentFactory::$docker->execInspect( $exec_id )->getExitCode();
 
 			if ( 0 !== $exit_code ) {
 				Log::instance()->write( 'Before script returned a non-zero exit code: ' . $script, 0, 'warning' );
@@ -450,11 +442,11 @@ class Environment {
 		$exec_config->setAttachStderr( true );
 		$exec_config->setCmd( [ '/bin/bash', '-c', $command ] );
 
-		$exec_id           = $this->docker->containerExec( $this->environment_id . '-mysql', $exec_config )->getId();
+		$exec_id           = EnvironmentFactory::$docker->containerExec( $this->environment_id . '-mysql', $exec_config )->getId();
 		$exec_start_config = new ExecIdStartPostBody();
 		$exec_start_config->setDetach( false );
 
-		$stream = $this->docker->execStart( $exec_id, $exec_start_config );
+		$stream = EnvironmentFactory::$docker->execStart( $exec_id, $exec_start_config );
 
 		$stream->onStdout(
 			function( $stdout ) {
@@ -470,7 +462,7 @@ class Environment {
 
 		$stream->wait();
 
-		$exit_code = $this->docker->execInspect( $exec_id )->getExitCode();
+		$exit_code = EnvironmentFactory::$docker->execInspect( $exec_id )->getExitCode();
 
 		if ( 0 !== $exit_code ) {
 			Log::instance()->write( 'Failed to setup hosts in MySQL container.', 0, 'error' );
@@ -583,12 +575,12 @@ class Environment {
 		$exec_config->setAttachStderr( true );
 		$exec_config->setCmd( [ '/bin/sh', '-c', $command ] );
 
-		$exec_command      = $this->docker->containerExec( $this->environment_id . '-wordpress', $exec_config );
+		$exec_command      = EnvironmentFactory::$docker->containerExec( $this->environment_id . '-wordpress', $exec_config );
 		$exec_id           = $exec_command->getId();
 		$exec_start_config = new ExecIdStartPostBody();
 		$exec_start_config->setDetach( false );
 
-		$stream = $this->docker->execStart( $exec_id, $exec_start_config );
+		$stream = EnvironmentFactory::$docker->execStart( $exec_id, $exec_start_config );
 
 		$stream->onStdout(
 			function( $stdout ) {
@@ -604,7 +596,7 @@ class Environment {
 
 		$stream->wait();
 
-		$exit_code = $this->docker->execInspect( $exec_id )->getExitCode();
+		$exit_code = EnvironmentFactory::$docker->execInspect( $exec_id )->getExitCode();
 
 		if ( 0 !== $exit_code ) {
 			Log::instance()->write( 'Failed to pull snapshot into WordPress container.', 0, 'error' );
@@ -653,11 +645,11 @@ class Environment {
 		$exec_config->setAttachStderr( true );
 		$exec_config->setCmd( [ '/bin/sh', '-c', 'find /var/www/html -name "wpacceptance.json" -not -path "/var/www/html/wp-includes/*" -not -path "/var/www/html/wp-admin/*"' ] );
 
-		$exec_id           = $this->docker->containerExec( $this->environment_id . '-wordpress', $exec_config )->getId();
+		$exec_id           = EnvironmentFactory::$docker->containerExec( $this->environment_id . '-wordpress', $exec_config )->getId();
 		$exec_start_config = new ExecIdStartPostBody();
 		$exec_start_config->setDetach( false );
 
-		$stream = $this->docker->execStart( $exec_id, $exec_start_config );
+		$stream = EnvironmentFactory::$docker->execStart( $exec_id, $exec_start_config );
 
 		$suite_config_files = [];
 
@@ -683,7 +675,7 @@ class Environment {
 
 		$stream->wait();
 
-		$exit_code = $this->docker->execInspect( $exec_id )->getExitCode();
+		$exit_code = EnvironmentFactory::$docker->execInspect( $exec_id )->getExitCode();
 
 		if ( 0 !== $exit_code ) {
 			Log::instance()->write( 'Failed to find codebase in snapshot.', 0, 'error' );
@@ -697,11 +689,11 @@ class Environment {
 			$exec_config->setAttachStderr( true );
 			$exec_config->setCmd( [ '/bin/sh', '-c', 'php -r "\$config = json_decode(file_get_contents(\"' . $suite_config_file . '\"), true); echo \$config[\"name\"];"' ] );
 
-			$exec_id           = $this->docker->containerExec( $this->environment_id . '-wordpress', $exec_config )->getId();
+			$exec_id           = EnvironmentFactory::$docker->containerExec( $this->environment_id . '-wordpress', $exec_config )->getId();
 			$exec_start_config = new ExecIdStartPostBody();
 			$exec_start_config->setDetach( false );
 
-			$stream = $this->docker->execStart( $exec_id, $exec_start_config );
+			$stream = EnvironmentFactory::$docker->execStart( $exec_id, $exec_start_config );
 
 			$suite_config_files = [];
 			$suite_config_name  = '';
@@ -781,11 +773,11 @@ class Environment {
 		$exec_config->setAttachStderr( true );
 		$exec_config->setCmd( [ '/bin/sh', '-c', $rsync_command ] );
 
-		$exec_id           = $this->docker->containerExec( $this->environment_id . '-wordpress', $exec_config )->getId();
+		$exec_id           = EnvironmentFactory::$docker->containerExec( $this->environment_id . '-wordpress', $exec_config )->getId();
 		$exec_start_config = new ExecIdStartPostBody();
 		$exec_start_config->setDetach( false );
 
-		$stream = $this->docker->execStart( $exec_id, $exec_start_config );
+		$stream = EnvironmentFactory::$docker->execStart( $exec_id, $exec_start_config );
 
 		$stream->onStdout(
 			function( $stdout ) {
@@ -801,7 +793,7 @@ class Environment {
 
 		$stream->wait();
 
-		$exit_code = $this->docker->execInspect( $exec_id )->getExitCode();
+		$exit_code = EnvironmentFactory::$docker->execInspect( $exec_id )->getExitCode();
 
 		if ( 0 !== $exit_code ) {
 			Log::instance()->write( 'Failed to copy codebase into WordPress container.', 0, 'error' );
@@ -820,11 +812,11 @@ class Environment {
 		$exec_config->setAttachStderr( true );
 		$exec_config->setCmd( [ '/bin/sh', '-c', 'chmod -R 0777 /var/www/html/wp-content/uploads' ] );
 
-		$exec_id           = $this->docker->containerExec( $this->environment_id . '-wordpress', $exec_config )->getId();
+		$exec_id           = EnvironmentFactory::$docker->containerExec( $this->environment_id . '-wordpress', $exec_config )->getId();
 		$exec_start_config = new ExecIdStartPostBody();
 		$exec_start_config->setDetach( false );
 
-		$stream = $this->docker->execStart( $exec_id, $exec_start_config );
+		$stream = EnvironmentFactory::$docker->execStart( $exec_id, $exec_start_config );
 
 		$suite_config_files = [];
 
@@ -842,7 +834,7 @@ class Environment {
 
 		$stream->wait();
 
-		$exit_code = $this->docker->execInspect( $exec_id )->getExitCode();
+		$exit_code = EnvironmentFactory::$docker->execInspect( $exec_id )->getExitCode();
 
 		if ( 0 !== $exit_code ) {
 			Log::instance()->write( 'Failed to chmod uploads directory.', 0, 'error' );
@@ -891,7 +883,7 @@ class Environment {
 		];
 
 		foreach ( $images as $image ) {
-			$create_image = $this->docker->imageCreate(
+			$create_image = EnvironmentFactory::$docker->imageCreate(
 				'',
 				[
 					'fromImage' => $image['name'],
@@ -987,9 +979,9 @@ class Environment {
 		Log::instance()->write( 'Container Request Body (MySQL):', 2 );
 		Log::instance()->write( $container_body[1], 2 );
 
-		$this->docker->containerCreate( $container_config, [ 'name' => $this->environment_id . '-mysql' ] );
+		EnvironmentFactory::$docker->containerCreate( $container_config, [ 'name' => $this->environment_id . '-mysql' ] );
 
-		$this->mysql_stream = $this->docker->containerAttach(
+		$this->mysql_stream = EnvironmentFactory::$docker->containerAttach(
 			$this->environment_id . '-mysql',
 			[
 				'stream' => true,
@@ -1056,7 +1048,7 @@ class Environment {
 		Log::instance()->write( 'Container Request Body (WordPress):', 2 );
 		Log::instance()->write( $container_body[1], 2 );
 
-		$this->docker->containerCreate( $container_config, [ 'name' => $this->environment_id . '-wordpress' ] );
+		EnvironmentFactory::$docker->containerCreate( $container_config, [ 'name' => $this->environment_id . '-wordpress' ] );
 
 		return true;
 	}
@@ -1082,15 +1074,15 @@ class Environment {
 			$exec_config->setAttachStderr( true );
 			$exec_config->setCmd( [ '/bin/sh', '-c', 'mysqladmin ping -h"' . $mysql_creds['DB_HOST'] . '" -u ' . $mysql_creds['DB_USER'] . ' -p' . $mysql_creds['DB_PASSWORD'] ] );
 
-			$exec_id           = $this->docker->containerExec( $this->environment_id . '-wordpress', $exec_config )->getId();
+			$exec_id           = EnvironmentFactory::$docker->containerExec( $this->environment_id . '-wordpress', $exec_config )->getId();
 			$exec_start_config = new ExecIdStartPostBody();
 			$exec_start_config->setDetach( false );
 
-			$stream = $this->docker->execStart( $exec_id, $exec_start_config );
+			$stream = EnvironmentFactory::$docker->execStart( $exec_id, $exec_start_config );
 
 			$stream->wait();
 
-			$exit_code = $this->docker->execInspect( $exec_id )->getExitCode();
+			$exit_code = EnvironmentFactory::$docker->execInspect( $exec_id )->getExitCode();
 
 			if ( 0 === $exit_code ) {
 				Log::instance()->write( 'MySQL connection available after ' . ( $i + 2 ) . ' seconds.', 2 );
@@ -1124,7 +1116,7 @@ class Environment {
 		Log::instance()->write( 'Starting containers...', 1 );
 
 		foreach ( $containers as $container ) {
-			$response = $this->docker->containerStart( $this->environment_id . '-' . $container );
+			$response = EnvironmentFactory::$docker->containerStart( $this->environment_id . '-' . $container );
 		}
 
 		return $this->waitForMySQL();
@@ -1145,7 +1137,7 @@ class Environment {
 
 		foreach ( $containers as $container ) {
 			try {
-				$this->docker->containerStop( $this->environment_id . '-' . $container );
+				EnvironmentFactory::$docker->containerStop( $this->environment_id . '-' . $container );
 			} catch ( \Exception $exception ) {
 				Log::instance()->write( 'Could not stop container: ' . $this->environment_id . '-' . $container, 1 );
 			}
@@ -1169,7 +1161,7 @@ class Environment {
 
 		foreach ( $containers as $container ) {
 			try {
-				$this->docker->containerDelete(
+				EnvironmentFactory::$docker->containerDelete(
 					$this->environment_id . '-' . $container,
 					[
 						'v'     => true,
@@ -1196,14 +1188,14 @@ class Environment {
 		$network_config->setName( $this->environment_id );
 
 		try {
-			$this->docker->networkCreate( $network_config );
+			EnvironmentFactory::$docker->networkCreate( $network_config );
 		} catch ( \Exception $e ) {
 			Log::instance()->write( 'Could not create network.', 0, 'error' );
 
 			return false;
 		}
 
-		$network = $this->docker->networkInspect( $this->environment_id );
+		$network = EnvironmentFactory::$docker->networkInspect( $this->environment_id );
 		if ( empty( $network ) ) {
 			Log::instance()->write( 'Could not create network. This network address might already exist. Try `docker network prune`.', 0, 'error' );
 
@@ -1229,7 +1221,7 @@ class Environment {
 		Log::instance()->write( 'Deleting network...', 1 );
 
 		try {
-			$this->docker->networkDelete( $this->environment_id );
+			EnvironmentFactory::$docker->networkDelete( $this->environment_id );
 		} catch ( \Exception $exception ) {
 			// Proceed no matter what
 		}
@@ -1378,12 +1370,12 @@ class Environment {
 		$exec_config->setAttachStderr( true );
 		$exec_config->setCmd( [ '/bin/sh', '-c', $command ] );
 
-		$exec_command      = $this->docker->containerExec( $this->environment_id . '-wordpress', $exec_config );
+		$exec_command      = EnvironmentFactory::$docker->containerExec( $this->environment_id . '-wordpress', $exec_config );
 		$exec_id           = $exec_command->getId();
 		$exec_start_config = new ExecIdStartPostBody();
 		$exec_start_config->setDetach( false );
 
-		$stream = $this->docker->execStart( $exec_id, $exec_start_config );
+		$stream = EnvironmentFactory::$docker->execStart( $exec_id, $exec_start_config );
 
 		$stream->onStdout(
 			function( $stdout ) {

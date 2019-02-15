@@ -22,6 +22,8 @@ if ( GitLab::get()->isGitLab() ) {
 	putenv( 'WPSNAPSHOTS_DIR=' . GitLab::get()->getSnapshotsDirectory() );
 }
 
+EnvironmentFactory::init();
+
 /**
  * Register commands
  */

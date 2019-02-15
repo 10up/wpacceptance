@@ -42,11 +42,15 @@ trait Puppeteer {
 
 	protected function setupBrowser() {
 		if ( empty( $this->browser ) ) {
-			$browser_args   = [];
-			$config = EnvironmentFactory::get()->getSuiteConfig();
+			$browser_args = [];
+			$config       = EnvironmentFactory::get()->getSuiteConfig();
 
 			if ( ! empty( $config['show_browser'] ) ) {
 				$browser_args['headless'] = false;
+			}
+
+			if ( ! empty( $config['slowmo'] ) ) {
+				$browser_args['slowMo'] = (int) $config['slowmo'];
 			}
 
 			$this->browser = $this->puppeteer->launch( $browser_args );
