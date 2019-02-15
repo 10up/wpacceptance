@@ -294,7 +294,7 @@ class Actor {
 			$url .= '?' . $url_parts['query'];
 		}
 
-		$this->page_response = $this->page->goto( $url );
+		$this->page_response = $this->page->goto( $url, [ 'waitUntil' => 'domcontentloaded' ] );
 
 		Log::instance()->write( 'Navigating to URL: ' . $url, 1 );
 	}
@@ -328,6 +328,10 @@ class Actor {
 			new CookieConstrain( Constraint::ACTION_SEE, $name, $value ),
 			$message
 		);
+	}
+
+	public function waitUntilNavigation( $condition = 'networkidle0' ) {
+		return $this->getPage()->waitForNavigation( [ 'waitUntil' => $condition ] );
 	}
 
 	/**
