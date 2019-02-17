@@ -26,7 +26,14 @@ class AdminPostTest extends \WPAcceptance\PHPUnit\TestCase {
 
 		$I->fillField( '#post-title-0', 'Test Post' );
 
+		$I->waitUntilElementVisible( '.editor-post-publish-panel__toggle' );
+
+		$I->click( '.editor-post-publish-panel__toggle' );
+
 		$I->waitUntilElementVisible( '.editor-post-publish-button' );
+		$I->waitUntilElementEnabled( '.editor-post-publish-button' );
+
+		sleep( 5 );
 
 		$I->click( '.editor-post-publish-button' );
 
@@ -35,7 +42,7 @@ class AdminPostTest extends \WPAcceptance\PHPUnit\TestCase {
 		$I->seeText( 'Post published', '.components-notice__content' );
 
 		// Make sure data is in DB correctly
-		$post_id = (int) $I->getElement( '#post_ID' )->getAttribute( 'value' );
+		$post_id = (int) $I->getElementAttribute( '#post_ID', 'value' );
 
 		self::assertPostFieldContains( $post_id, 'post_title', 'Test Post' );
 	}

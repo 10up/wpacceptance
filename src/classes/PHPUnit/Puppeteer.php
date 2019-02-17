@@ -59,14 +59,6 @@ trait Puppeteer {
 		return $this->browser;
 	}
 
-	protected function getPuppeteer() {
-		return $this->puppeteer;
-	}
-
-	protected function getBrowser() {
-		return $this->browser;
-	}
-
 	/**
 	 * Get WordPress home URL
 	 *
@@ -95,10 +87,10 @@ trait Puppeteer {
 
 		$height = 0;
 
-		$this->page = $this->browser->newPage( $page_args );
+		$page = $this->browser->newPage( $page_args );
 
 		$actor = new Actor( 'Anonymous User' );
-		$actor->setPage( $this->page );
+		$actor->setPage( $page );
 		$actor->resizeViewport( $width, $height );
 		$actor->setTest( $this );
 

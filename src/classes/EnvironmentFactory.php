@@ -36,8 +36,6 @@ class EnvironmentFactory {
 
 	/**
 	 * Clean up unused Docker networks
-	 *
-	 * @return boolean
 	 */
 	public static function pruneNetworks() {
 		self::$docker->networkPrune();

@@ -78,8 +78,10 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase {
 
 		$this->last_modifying_query = $new_last_modifying_query;
 
-		if ( ! empty( $this->page ) ) {
-			$this->page->close();
+		$page = $this->last_actor->getPage();
+
+		if ( ! empty( $page ) ) {
+			$page->close();
 		}
 
 		if ( ! empty( $this->browser ) ) {
