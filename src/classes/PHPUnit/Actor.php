@@ -10,24 +10,11 @@ namespace WPAcceptance\PHPUnit;
 use PHPUnit\Framework\ExpectationFailedException;
 use PHPUnit\Framework\TestCase;
 
-use WPAcceptance\Exception;
 use WPAcceptance\Log;
 use WPAcceptance\Utils;
-use WPAcceptance\Exception\PageNotSet;
-use WPAcceptance\Exception\ElementNotFound;
+use WPAcceptance\Exception\PageNotSet as PageNotSet;
+use WPAcceptance\Exception\ElementNotFound as ElementNotFound;
 use WPAcceptance\EnvironmentFactory;
-use WPAcceptance\PHPUnit\Constraint;
-use WPAcceptance\PHPUnit\Constraints\Cookie as CookieConstrain;
-use WPAcceptance\PHPUnit\Constraints\PageContains as PageContainsConstrain;
-use WPAcceptance\PHPUnit\Constraints\PageSourceContains as PageSourceContainsConstrain;
-use WPAcceptance\PHPUnit\Constraints\LinkOnPage as LinkOnPageConstrain;
-use WPAcceptance\PHPUnit\Constraints\ElementVisible as ElementVisibleConstrain;
-use WPAcceptance\PHPUnit\Constraints\UrlContains as UrlContainsConstrain;
-use WPAcceptance\PHPUnit\Constraints\CheckboxChecked as CheckboxCheckedConstrain;
-use WPAcceptance\PHPUnit\Constraints\FieldValueContains as FieldValueContainsConstrain;
-use WPAcceptance\PHPUnit\Constraints\FieldInteractable as FieldInteractableConstrain;
-use WPAcceptance\PHPUnit\Constraints\AttributeContains as AttributeContainsConstrain;
-use WPAcceptance\PHPUnit\Constraints\NewDatabaseEntry as NewDatabaseEntry;
 
 use Nesk\Rialto\Data\JsFunction;
 use Nesk\Puphpeteer\Resources\ElementHandle;
@@ -251,6 +238,13 @@ class Actor {
 	public function refresh() {
 		$this->getPage()->reload();
 		Log::instance()->write( 'Refreshed the current page', 1 );
+	}
+
+	/**
+	 * Move mouse to element
+	 */
+	public function hover( string $element_path ) {
+		$this->getPage()->hover( $element_path );
 	}
 
 	/**
@@ -486,7 +480,7 @@ class Actor {
 		$element = $this->getPage()->querySelector( $element );
 
 		if ( empty( $element ) ) {
-			throw ElementNotFound( 'Element not found.' );
+			throw new ElementNotFound( 'Element not found.' );
 		}
 
 		return $element;

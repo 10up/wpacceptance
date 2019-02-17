@@ -87,11 +87,19 @@ trait Puppeteer {
 			'--start-maximized',
 		];
 
-		$page = $this->browser->newPage( $page_args );
+		$width = 0;
+
+		if ( ! empty( $options['screen_size'] ) && 'small' === $options['screen_size'] ) {
+			$width = 400;
+		}
+
+		$height = 0;
+
+		$this->page = $this->browser->newPage( $page_args );
 
 		$actor = new Actor( 'Anonymous User' );
-		$actor->setPage( $page );
-		$actor->resizeViewport( 0, 0);
+		$actor->setPage( $this->page );
+		$actor->resizeViewport( $width, $height );
 		$actor->setTest( $this );
 
 		$this->last_actor = $actor;

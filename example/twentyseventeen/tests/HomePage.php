@@ -18,9 +18,9 @@ class HomePageTest extends \WPAcceptance\PHPUnit\TestCase {
 
 		$I->moveTo( '/' );
 
-		$element = $I->fillField( '.search-form input[type=search]', 'test search' );
+		$I->fillField( '.search-form input[type=search]', 'test search' );
 
-		$I->pressEnterKey( $element );
+		$I->pressEnterKey( '.search-form input[type=search]' );
 
 		$I->waitUntilTitleContains( 'Search Results' );
 

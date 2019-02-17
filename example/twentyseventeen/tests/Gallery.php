@@ -82,9 +82,11 @@ class GalleryTest extends \WPAcceptance\PHPUnit\TestCase {
 		$I->dontSeeElement( '#metaslider_39 .flex-prev' );
 		$I->dontSeeElement( '#metaslider_39 .flex-next' );
 
-		sleep( 5 );
+		$I->scrollToElement( '#metaslider_39' );
 
-		$I->moveMouse( '#metaslider_39' );
+		$I->hover( '#metaslider_39' );
+
+		sleep( 2 );
 
 		$I->seeElement( '#metaslider_39 .flex-prev' );
 		$I->seeElement( '#metaslider_39 .flex-next' );
