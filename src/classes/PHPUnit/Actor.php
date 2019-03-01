@@ -573,7 +573,7 @@ class Actor {
 		$elements = $this->getElements( $elements );
 
 		foreach ( $elements as $element ) {
-			$type = $element->attribute( 'type' );
+			$type = $this->getElementAttribute( $element, 'type' );
 
 			if ( in_array( $type, array( 'checkbox', 'radio' ), true ) && empty( $element->getProperty( 'checked' ) ) && empty( $element->getProperty( 'selected' ) ) ) {
 				$element->click();
@@ -590,7 +590,7 @@ class Actor {
 		$elements = $this->getElements( $elements );
 
 		foreach ( $elements as $element ) {
-			$type = $element->attribute( 'type' );
+			$type = $this->getElementAttribute( $element, 'type' );
 
 			if ( 'checkbox' === $type && ! empty( $element->getProperty( 'checked' ) ) ) {
 				$element->click();
