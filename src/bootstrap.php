@@ -9,7 +9,7 @@ namespace WPAcceptance;
 
 use \Symfony\Component\Console\Application;
 
-$app = new Application( 'WPAcceptance', '0.11' );
+$app = new Application( 'WPAcceptance', '0.12' );
 
 define( 'WPACCEPTANCE_DIR', dirname( __DIR__ ) );
 

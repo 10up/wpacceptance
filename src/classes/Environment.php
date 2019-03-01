@@ -144,6 +144,13 @@ class Environment {
 	protected $mysql_wait_time = 30;
 
 	/**
+	 * Host file manager
+	 *
+	 * @var HostFile
+	 */
+	protected $host_file;
+
+	/**
 	 * Environment constructor
 	 *
 	 * @param  Config  $suite_config Config array
@@ -165,6 +172,17 @@ class Environment {
 		$id = ( $skip_environment_cache ) ? md5( time() . '' . rand( 0, 10000 ) ) : self::generateEnvironmentId( $suite_config );
 
 		$this->environment_id = ( ! empty( $environment_id ) ) ? $environment_id . '-wpa' : $id . '-wpa';
+	}
+
+	/**
+	 * Setup host file adding entry if needed
+	 */
+	public function setupHostFile() {
+		$this->host_file = new HostFile();
+
+		if ( empty( $this->host_file->getIPByHost( 'wpacceptance.test' ) ) ) {
+			$this->host_file->add( '127.0.0.1', 'wpacceptance.test' );
+		}
 	}
 
 	/**

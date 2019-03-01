@@ -6,5 +6,7 @@
 		<exclude name="WordPress.WP.CapitalPDangit.Misspelled" />
 		<exclude name="WordPress.WP.AlternativeFunctions" />
 		<exclude name="Squiz.Commenting.FunctionComment.ThrowsNotCapital" />
+
+		<config name="testVersion" value="7.2-"/>
 	</rule>
 </ruleset>

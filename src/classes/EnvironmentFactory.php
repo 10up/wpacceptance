@@ -121,6 +121,8 @@ class EnvironmentFactory {
 		if ( $environment->populateEnvironmentFromCache() ) {
 			self::$environments[] = $environment;
 
+			$environment->setupHostFile();
+
 			if ( ! $environment->insertRepo() ) {
 				return false;
 			}
@@ -133,6 +135,8 @@ class EnvironmentFactory {
 				return false;
 			}
 		} else {
+			$environment->setupHostFile();
+
 			if ( ! $environment->createNetwork() ) {
 				return false;
 			}
