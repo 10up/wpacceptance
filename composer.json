@@ -41,6 +41,9 @@
     ],
     "lint-fix": [
       "phpcbf ."
+    ],
+    "post-install-cmd": [
+      "npm install"
     ]
   },
   "require-dev": {
