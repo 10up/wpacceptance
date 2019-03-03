@@ -575,7 +575,7 @@ class Actor {
 		foreach ( $elements as $element ) {
 			$type = $this->getElementAttribute( $element, 'type' );
 
-			if ( in_array( $type, array( 'checkbox', 'radio' ), true ) && empty( $element->getProperty( 'checked' ) ) && empty( $element->getProperty( 'selected' ) ) ) {
+			if ( in_array( $type, array( 'checkbox', 'radio' ), true ) && empty( $element->getProperty( 'checked' )->jsonValue() ) ) {
 				$element->click();
 			}
 		}
@@ -592,7 +592,7 @@ class Actor {
 		foreach ( $elements as $element ) {
 			$type = $this->getElementAttribute( $element, 'type' );
 
-			if ( 'checkbox' === $type && ! empty( $element->getProperty( 'checked' ) ) ) {
+			if ( 'checkbox' === $type && ! empty( $element->getProperty( 'checked' )->jsonValue() ) ) {
 				$element->click();
 			}
 		}
@@ -876,13 +876,7 @@ class Actor {
 	public function seeCheckboxIsChecked( $element ) {
 		$element = $this->getElement( $element );
 
-		$type = $this->getElementAttribute( $element, 'type' );
-
-		if ( 'checkbox' === $type ) {
-			TestCase::assertTrue( $element->getProperty( 'checked' ), 'Checkbox not checked.' );
-		} else {
-			TestCase::assertTrue( $element->getProperty( 'selected' ), 'Radio not selected.' );
-		}
+		TestCase::assertTrue( $element->getProperty( 'checked' )->jsonValue(), 'Element not checked.' );
 	}
 
 	/**
@@ -892,13 +886,7 @@ class Actor {
 	public function dontSeeCheckboxIsChecked( $element, $message = '' ) {
 		$element = $this->getElement( $element );
 
-		$type = $this->getElementAttribute( $element, 'type' );
-
-		if ( 'checkbox' === $type ) {
-			TestCase::assertFalse( $element->getProperty( 'checked' ), 'Checkbox checked.' );
-		} else {
-			TestCase::assertFalse( $element->getProperty( 'selected' ), 'Radio selected.' );
-		}
+		TestCase::assertFalse( $element->getProperty( 'checked' )->jsonValue(), 'Element checked.' );
 	}
 
 	/**

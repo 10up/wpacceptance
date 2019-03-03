@@ -85,6 +85,10 @@ class HostFile {
 			}
 		}
 
+		if ( empty( $prepared_hosts ) ) {
+			return;
+		}
+
 		if ( empty( $this->entries[ $ip ] ) ) {
 			$this->entries[ $ip ] = [];
 		}
