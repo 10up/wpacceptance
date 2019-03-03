@@ -722,13 +722,9 @@ class Actor {
 	 *
 	 * @access public
 	 * @param string $text A text to look for or a regular expression.
-	 * @param string $message Optional. The message to use on a failure.
 	 */
-	public function seeTextInSource( $text, $message = '' ) {
-		$this->assertThat(
-			new PageSourceContainsConstrain( Constraint::ACTION_SEE, $text ),
-			$message
-		);
+	public function seeTextInSource( $text ) {
+		TestCase::assertTrue( Utils\find_match( $this->getPageSource(), $text ), $text . ' not found in source.' );
 	}
 
 	/**
@@ -737,13 +733,9 @@ class Actor {
 	 *
 	 * @access public
 	 * @param string $text A text to look for or a regular expression.
-	 * @param string $message Optional. The message to use on a failure.
 	 */
 	public function dontSeeTextInSource( $text, $message = '' ) {
-		$this->assertThat(
-			new PageSourceContainsConstrain( Constraint::ACTION_DONTSEE, $text ),
-			$message
-		);
+		TestCase::assertFalse( Utils\find_match( $this->getPageSource(), $text ), $text . ' found in source.' );
 	}
 
 	/**
@@ -787,13 +779,29 @@ class Actor {
 	 * @access public
 	 * @param string $text A text to find a link.
 	 * @param string $url Optional. The url of the link.
-	 * @param string $message Optional. The message to use on a failure.
 	 */
-	public function seeLink( $text, $url = '', $message = '' ) {
-		$this->assertThat(
-			new LinkOnPageConstrain( Constraint::ACTION_SEE, $text, $url ),
-			$message
-		);
+	public function seeLink( $text, $url = '' ) {
+		$selector = 'a';
+
+		if ( ! empty( $url ) ) {
+			$selector = 'a[href="' . $url . '"]';
+		}
+
+		$links = $this->getPage()->querySelector( $selector );
+
+		$found_link = false;
+
+		foreach ( $links as $link ) {
+			$content = trim( $this->getElementInnerText( $link ) );
+
+			$found_link = Utils\find_match( $content, $text );
+
+			if ( $found_link ) {
+				break;
+			}
+		}
+
+		TestCase::assertTrue( $found_link, $text . ' not found in link.' );
 	}
 
 	/**
@@ -804,13 +812,29 @@ class Actor {
 	 * @access public
 	 * @param string $text A text to find a link.
 	 * @param string $url Optional. The url of the link.
-	 * @param string $message Optional. The message to use on a failure.
 	 */
 	public function dontSeeLink( $text, $url = '', $message = '' ) {
-		$this->assertThat(
-			new LinkOnPageConstrain( Constraint::ACTION_DONTSEE, $text, $url ),
-			$message
-		);
+		$selector = 'a';
+
+		if ( ! empty( $url ) ) {
+			$selector = 'a[href="' . $url . '"]';
+		}
+
+		$links = $this->getPage()->querySelector( $selector );
+
+		$found_link = false;
+
+		foreach ( $links as $link ) {
+			$content = trim( $this->getElementInnerText( $link ) );
+
+			$found_link = Utils\find_match( $content, $text );
+
+			if ( $found_link ) {
+				break;
+			}
+		}
+
+		TestCase::assertFalse( $found_link, $text . ' found in link.' );
 	}
 
 	/**
@@ -819,13 +843,9 @@ class Actor {
 	 *
 	 * @access public
 	 * @param string $text A text to look for in the current URL.
-	 * @param string $message Optional. The message to use on a failure.
 	 */
-	public function seeTextInUrl( $text, $message = '' ) {
-		$this->assertThat(
-			new UrlContainsConstrain( Constraint::ACTION_SEE, $text ),
-			$message
-		);
+	public function seeTextInUrl( $text ) {
+		TestCase::assertTrue( Utils\find_match( $this->getCurrentUrl(), $text ), $text . ' not found.' );
 	}
 
 	/**
@@ -834,13 +854,9 @@ class Actor {
 	 *
 	 * @access public
 	 * @param string $text A text to look for in the current URL.
-	 * @param string $message Optional. The message to use on a failure.
 	 */
-	public function dontSeeTextInUrl( $text, $message = '' ) {
-		$this->assertThat(
-			new UrlContainsConstrain( Constraint::ACTION_DONTSEE, $text ),
-			$message
-		);
+	public function dontSeeTextInUrl( $text ) {
+		TestCase::assertFalse( Utils\find_match( $this->getCurrentUrl(), $text ), $text . ' found.' );
 	}
 
 	/**
@@ -856,93 +872,95 @@ class Actor {
 	/**
 	 * Check if the current user can see a checkbox is checked.
 	 *
-	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A CSS selector for the element.
-	 * @param string                                             $message Optional. The message to use on a failure.
 	 */
-	public function seeCheckboxIsChecked( $element, $message = '' ) {
-		$this->assertThat(
-			new CheckboxCheckedConstrain( Constraint::ACTION_SEE, $element ),
-			$message
-		);
+	public function seeCheckboxIsChecked( $element ) {
+		$element = $this->getElement( $element );
+
+		$type = $this->getElementAttribute( $element, 'type' );
+
+		if ( 'checkbox' === $type ) {
+			TestCase::assertTrue( $element->getProperty( 'checked' ), 'Checkbox not checked.' );
+		} else {
+			TestCase::assertTrue( $element->getProperty( 'selected' ), 'Radio not selected.' );
+		}
 	}
 
 	/**
 	 * Check if the current user cann't see a checkbox is checked.
 	 *
-	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A CSS selector for the element.
-	 * @param string                                             $message Optional. The message to use on a failure.
 	 */
 	public function dontSeeCheckboxIsChecked( $element, $message = '' ) {
-		$this->assertThat(
-			new CheckboxCheckedConstrain( Constraint::ACTION_DONTSEE, $element ),
-			$message
-		);
+		$element = $this->getElement( $element );
+
+		$type = $this->getElementAttribute( $element, 'type' );
+
+		if ( 'checkbox' === $type ) {
+			TestCase::assertFalse( $element->getProperty( 'checked' ), 'Checkbox checked.' );
+		} else {
+			TestCase::assertFalse( $element->getProperty( 'selected' ), 'Radio selected.' );
+		}
 	}
 
 	/**
 	 * Check if the user can see text inside of an attribute
-	 *
-	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A CSS selector for the element.
-	 * @param string                                             $attribute Attribute name
-	 * @param string                                             $value A value to check.
-	 * @param string                                             $message Optional. The message to use on a failure.
 	 */
-	public function seeValueInAttribute( $element, $attribute, $value, $message = '' ) {
-		$this->assertThat(
-			new AttributeContainsConstrain( Constraint::ACTION_SEE, $element, $attribute, $value ),
-			$message
-		);
+	public function seeValueInAttribute( $element, $attribute, $value ) {
+		$element = $this->getElement( $element );
+
+		$attribute_value = $this->getElementAttribute( $element, $attribute );
+
+		if ( empty( $attribute ) ) {
+			return false;
+		}
+
+		TestCase::assertTrue( Utils\find_match( $attribute_value, $value ), $text . ' not found in attribute.' );
 	}
 
 	/**
 	 * Check if the user can not see text inside of an attribute
-	 *
-	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A CSS selector for the element.
-	 * @param string                                             $attribute Attribute name
-	 * @param string                                             $value A value to check.
-	 * @param string                                             $message Optional. The message to use on a failure.
 	 */
 	public function dontSeeValueInAttribute( $element, $attribute, $value, $message = '' ) {
-		$this->assertThat(
-			new AttributeContainsConstrain( Constraint::ACTION_DONTSEE, $element, $attribute, $value ),
-			$message
-		);
+		$element = $this->getElement( $element );
+
+		$attribute_value = $this->getElementAttribute( $element, $attribute );
+
+		if ( empty( $attribute ) ) {
+			return false;
+		}
+
+		TestCase::assertFalse( Utils\find_match( $attribute_value, $value ), $text . ' found in attribute.' );
 	}
 
 	/**
 	 * Check if the current user can see a value in a field. You can use a regular expression to check the value.
 	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: <b>"/test/i"</b>.
-	 *
-	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A CSS selector for the element.
-	 * @param string                                             $value A value to check.
-	 * @param string                                             $message Optional. The message to use on a failure.
 	 */
-	public function seeFieldValue( $element, $value, $message = '' ) {
-		$this->assertThat(
-			new FieldValueContainsConstrain( Constraint::ACTION_SEE, $element, $value ),
-			$message
-		);
+	public function seeFieldValue( $element, $value ) {
+		$element = $this->getElement( $element );
+
+		$attribute_value = $this->getElementAttribute( $element, 'value' );
+
+		if ( empty( $attribute ) ) {
+			return false;
+		}
+
+		TestCase::assertTrue( Utils\find_match( $attribute_value, $value ), $text . ' not found in attribute.' );
 	}
 
 	/**
 	 * Check if the current user can see a value in a field. You can use a regular expression to check the value.
 	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: <b>"/test/i"</b>.
-	 *
-	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A CSS selector for the element.
-	 * @param string                                             $value A value to check.
-	 * @param string                                             $message Optional. The message to use on a failure.
 	 */
-	public function dontSeeFieldValue( $element, $value, $message = '' ) {
-		$this->assertThat(
-			new FieldValueContainsConstrain( Constraint::ACTION_DONTSEE, $element, $value ),
-			$message
-		);
+	public function dontSeeFieldValue( $element, $value ) {
+		$element = $this->getElement( $element );
+
+		$attribute_value = $this->getElementAttribute( $element, 'value' );
+
+		if ( empty( $attribute ) ) {
+			return false;
+		}
+
+		TestCase::assertFalse( Utils\find_match( $attribute_value, $value ), $text . ' found in attribute.' );
 	}
 
 	/**

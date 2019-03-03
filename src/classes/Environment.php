@@ -175,14 +175,73 @@ class Environment {
 	}
 
 	/**
-	 * Setup host file adding entry if needed
+	 * Setup host file adding entries if needed
+	 *
+	 * @return  boolean
 	 */
-	public function setupHostFile() {
+	public function setupHosts() {
+		Log::instance()->write( 'Setting up host(s)...', 1 );
+
 		$this->host_file = new HostFile();
 
-		if ( empty( $this->host_file->getIPByHost( 'wpacceptance.test' ) ) ) {
-			$this->host_file->add( '127.0.0.1', 'wpacceptance.test' );
+		$hosts = [];
+
+		$host_line = $this->gateway_ip . ' ';
+
+		foreach ( $this->sites as $site ) {
+			$home_host = parse_url( $site['home_url'], PHP_URL_HOST );
+			$site_host = parse_url( $site['site_url'], PHP_URL_HOST );
+
+			$hosts[ $home_host ] = true;
+			$hosts[ $site_host ] = true;
 		}
+
+		foreach ( $hosts as $host => $nothing ) {
+			$host_line .= ' ' . $host;
+		}
+
+		$this->host_file->add( '127.0.0.1', array_keys( $hosts ) );
+
+		Log::instance()->write( 'Hosts insert: ' . $host_line, 2 );
+
+		$command = "echo '" . $host_line . "' >> /etc/hosts";
+
+		Log::instance()->write( 'Running `' . $command . '` on wordpress', 2 );
+
+		$exec_config = new ContainersIdExecPostBody();
+		$exec_config->setTty( true );
+		$exec_config->setAttachStdout( true );
+		$exec_config->setAttachStderr( true );
+		$exec_config->setCmd( [ '/bin/bash', '-c', $command ] );
+
+		$exec_id           = EnvironmentFactory::$docker->containerExec( $this->environment_id . '-wordpress', $exec_config )->getId();
+		$exec_start_config = new ExecIdStartPostBody();
+
+		$exec_start_config->setDetach( false );
+		$stream = EnvironmentFactory::$docker->execStart( $exec_id, $exec_start_config );
+
+		$stream->onStdout(
+			function( $stdout ) {
+				Log::instance()->write( $stdout, 1 );
+			}
+		);
+
+		$stream->onStderr(
+			function( $stderr ) {
+				Log::instance()->write( $stderr, 1 );
+			}
+		);
+
+		$stream->wait();
+
+		$exit_code = EnvironmentFactory::$docker->execInspect( $exec_id )->getExitCode();
+
+		if ( 0 !== $exit_code ) {
+			Log::instance()->write( 'Failed to setup hosts in wordpress container.', 0, 'error' );
+			return false;
+		}
+
+		return true;
 	}
 
 	/**
@@ -425,66 +484,6 @@ class Environment {
 			if ( 0 !== $exit_code ) {
 				Log::instance()->write( 'Before script returned a non-zero exit code: ' . $script, 0, 'warning' );
 			}
-		}
-
-		return true;
-	}
-
-	/**
-	 * Setup internal hosts for WP
-	 *
-	 * @return bool
-	 */
-	public function setupHosts() {
-		Log::instance()->write( 'Setting up host(s)...', 1 );
-
-		$host_line = $this->gateway_ip . ' ';
-
-		foreach ( $this->sites as $site ) {
-			$home_host = parse_url( $site['home_url'], PHP_URL_HOST );
-			$site_host = parse_url( $site['site_url'], PHP_URL_HOST );
-
-			// Doesn't matter if the same host gets added more than once
-			$host_line .= ' ' . $home_host . ' ' . $site_host;
-		}
-
-		Log::instance()->write( 'Hosts insert: ' . $host_line, 2 );
-
-		$command = "echo '" . $host_line . "' >> /etc/hosts";
-
-		Log::instance()->write( 'Running `' . $command . '` on MySQL', 2 );
-
-		$exec_config = new ContainersIdExecPostBody();
-		$exec_config->setTty( true );
-		$exec_config->setAttachStdout( true );
-		$exec_config->setAttachStderr( true );
-		$exec_config->setCmd( [ '/bin/bash', '-c', $command ] );
-
-		$exec_id           = EnvironmentFactory::$docker->containerExec( $this->environment_id . '-mysql', $exec_config )->getId();
-		$exec_start_config = new ExecIdStartPostBody();
-		$exec_start_config->setDetach( false );
-
-		$stream = EnvironmentFactory::$docker->execStart( $exec_id, $exec_start_config );
-
-		$stream->onStdout(
-			function( $stdout ) {
-				Log::instance()->write( $stdout, 1 );
-			}
-		);
-
-		$stream->onStderr(
-			function( $stderr ) {
-				Log::instance()->write( $stderr, 1 );
-			}
-		);
-
-		$stream->wait();
-
-		$exit_code = EnvironmentFactory::$docker->execInspect( $exec_id )->getExitCode();
-
-		if ( 0 !== $exit_code ) {
-			Log::instance()->write( 'Failed to setup hosts in MySQL container.', 0, 'error' );
-			return false;
 		}
 
 		return true;

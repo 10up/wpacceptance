@@ -73,16 +73,25 @@ class HostFile {
 	 * Add host file entry
 	 *
 	 * @param string $ip   IP address
-	 * @param string $host Host name
+	 * @param string|array $hosts Host name(s)
 	 */
-	public function add( string $ip, string $host ) {
+	public function add( string $ip, $hosts ) {
+		$hosts          = (array) $hosts;
+		$prepared_hosts = [];
+
+		foreach ( $hosts as $host ) {
+			if ( $ip !== $this->getIpByHost( $host ) ) {
+				$prepared_hosts[] = $host;
+			}
+		}
+
 		if ( empty( $this->entries[ $ip ] ) ) {
 			$this->entries[ $ip ] = [];
 		}
 
-		$this->entries[ $ip ][] = $host;
+		$this->entries[ $ip ][] = $prepared_hosts;
 
-		exec( 'echo "' . $ip . ' ' . $host . '" | sudo tee -a ' . $this->file_path );
+		exec( 'echo "' . $ip . ' ' . implode( ' ', $prepared_hosts ) . '" | sudo tee -a ' . $this->file_path );
 	}
 
 	/**
