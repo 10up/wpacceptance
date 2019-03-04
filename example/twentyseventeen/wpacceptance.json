@@ -3,5 +3,15 @@
     "tests": [
         "tests\/*.php"
     ],
-    "snapshot_id": "4216c0a596b65abfa3ecca974e8e2b18"
+    "snapshot_id": "4216c0a596b65abfa3ecca974e8e2b18",
+    "snapshots": [
+      {
+        "snapshot_name": "WordPress 4.9",
+        "snapshot_id":  "4216c0a596b65abfa3ecca974e8e2b18"
+      },
+      {
+        "snapshot_name": "WordPress 5.0",
+        "snapshot_id":  "7be6f5ee55fdbba5d1173b0198b41e54"
+      }
+    ]
 }
