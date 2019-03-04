@@ -20,6 +20,8 @@ trait Puppeteer {
 
 	/**
 	 * Puppeteer instance
+	 *
+	 * @var  object
 	 */
 	private $puppeteer = null;
 
@@ -37,6 +39,11 @@ trait Puppeteer {
 	 */
 	private $last_actor;
 
+	/**
+	 * Setup and initialize puppeteer
+	 *
+	 * @return object
+	 */
 	protected function setupPuppeteer() {
 		if ( empty( $this->puppeteer ) ) {
 			$this->puppeteer = new Puphpeteer();
@@ -84,7 +91,7 @@ trait Puppeteer {
 	/**
 	 * Open a page in the browser
 	 *
-	 * @param  array  $options New page arguments
+	 * @param  array $options New page arguments
 	 * @return Actor
 	 */
 	public function openBrowserPage( $options = [] ) {

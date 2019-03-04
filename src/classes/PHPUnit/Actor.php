@@ -91,6 +91,7 @@ class Actor {
 	/**
 	 * Get current Puppeteer page
 	 *
+	 * @throws  PageNotSet Puppeteer page not set
 	 * @return object
 	 */
 	public function getPage() {
@@ -127,6 +128,7 @@ class Actor {
 	/**
 	 * Return a page source.
 	 *
+	 * @throws  PageNotSet Page not set exception
 	 * @return string A page source.
 	 */
 	public function getPageSource() {
@@ -187,8 +189,8 @@ class Actor {
 	 * Directly set element attribute via JS
 	 *
 	 * @param  ElementHandle|string $element Either element object or selector string
-	 * @param string $attribute_name  Attribute name
-	 * @param string $attribute_value Attribute value
+	 * @param string               $attribute_name  Attribute name
+	 * @param string               $attribute_value Attribute value
 	 */
 	public function setElementAttribute( $element, string $attribute_name, $attribute_value ) {
 		$element = $this->getElement( $element );
@@ -206,8 +208,8 @@ class Actor {
 	 * Directly set element property via JS
 	 *
 	 * @param  ElementHandle|string $element Either element object or selector string
-	 * @param  string $property_name Property name
-	 * @param  string $property_value Property value
+	 * @param  string               $property_name Property name
+	 * @param  string               $property_value Property value
 	 */
 	public function setElementProperty( $element, string $property_name, $property_value ) {
 		$element = $this->getElement( $element );
@@ -384,8 +386,8 @@ class Actor {
 	/**
 	 * Wait until element contains text
 	 *
-	 * @param  string  $text     Title string
-	 * @param  string  $element_path Path to element to check
+	 * @param  string $text     Title string
+	 * @param  string $element_path Path to element to check
 	 */
 	public function waitUntilElementContainsText( $text, string $element_path ) {
 		// Wait for element to exist
@@ -407,7 +409,7 @@ class Actor {
 	/**
 	 * Wait until element is visible
 	 *
-	 * @param  string  $element_path Path to element to check
+	 * @param  string $element_path Path to element to check
 	 */
 	public function waitUntilElementVisible( string $element_path ) {
 		$this->getPage()->waitForSelector( $element_path, [ 'visible' => true ] );
@@ -463,7 +465,7 @@ class Actor {
 	 *
 	 * @param  ElementHandle|string $element Either element object or selector string
 	 */
-	public function hideElement( $element) {
+	public function hideElement( $element ) {
 		$element = $this->getElement( $element );
 
 		return $this->getPage()->evaluate(
@@ -506,6 +508,7 @@ class Actor {
 	/**
 	 * Return an element based on CSS selector.
 	 *
+	 * @param  ElementHandle|string $element Either element object or selector string
 	 * @throws ElementNotFound Element not found in DOM
 	 * @return  ElementHandle
 	 */
@@ -696,7 +699,7 @@ class Actor {
 	 * Set a value for a field.
 	 *
 	 * @param  string $element_path Path to element
-	 * @param  mixed $value Value to put in field
+	 * @param  mixed  $value Value to put in field
 	 */
 	public function fillField( string $element_path, $value ) {
 		$this->setElementProperty( $element_path, 'value', '' );
@@ -748,7 +751,7 @@ class Actor {
 	 * Check if the actor sees a text on the current page. You can use a regular expression to check a text.
 	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: "/test/i".
 	 *
-	 * @param  string $text Text to check for
+	 * @param  string               $text Text to check for
 	 * @param  ElementHandle|string $element Either element object or selector string
 	 */
 	public function seeText( $text, $element = null ) {
@@ -769,7 +772,7 @@ class Actor {
 	 * Check if the actor can't see a text on the current page. You can use a regular expression to check a text.
 	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: "/test/i".
 	 *
-	 * @param  string $Text to check for
+	 * @param  string               $text to check for
 	 * @param  ElementHandle|string $element Either element object or selector string
 	 */
 	public function dontSeeText( $text, $element = null ) {
@@ -816,7 +819,7 @@ class Actor {
 	 * Press a key on an element.
 	 *
 	 * @param  ElementHandle|string $element Either element object or selector string
-	 * @param string $key A key to press.
+	 * @param string               $key A key to press.
 	 */
 	public function pressKey( $element, $key ) {
 		$element = $this->getElement( $element );
@@ -963,7 +966,8 @@ class Actor {
 	 * Check if the user can see text inside of an attribute
 	 *
 	 * @param  ElementHandle|string $element Either element object or selector string
-	 *
+	 * @param string               $attribute Attribute name
+	 * @param string               $value Attribute value
 	 */
 	public function seeValueInAttribute( $element, $attribute, $value ) {
 		$element = $this->getElement( $element );
@@ -980,7 +984,9 @@ class Actor {
 	/**
 	 * Check if the user can not see text inside of an attribute
 	 *
-	 * @param  ElementHandle|string $element Either element object or selector string
+	 * @param ElementHandle|string $element Either element object or selector string
+	 * @param string               $attribute Attribute name
+	 * @param string               $value Attribute value
 	 */
 	public function dontSeeValueInAttribute( $element, $attribute, $value ) {
 		$element = $this->getElement( $element );
@@ -988,7 +994,7 @@ class Actor {
 		$attribute_value = $this->getElementAttribute( $element, $attribute );
 
 		if ( empty( $attribute ) ) {
-			return false;
+			return;
 		}
 
 		TestCase::assertFalse( Utils\find_match( $attribute_value, $value ), $text . ' found in attribute.' );
@@ -999,6 +1005,7 @@ class Actor {
 	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: <b>"/test/i"</b>.
 	 *
 	 * @param  ElementHandle|string $element Either element object or selector string
+	 * @param  string               $value Field value
 	 */
 	public function seeFieldValue( $element, $value ) {
 		$element = $this->getElement( $element );
@@ -1017,6 +1024,7 @@ class Actor {
 	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: <b>"/test/i"</b>.
 	 *
 	 * @param  ElementHandle|string $element Either element object or selector string
+	 * @param  string               $value Field value
 	 */
 	public function dontSeeFieldValue( $element, $value ) {
 		$element = $this->getElement( $element );
@@ -1127,7 +1135,7 @@ class Actor {
 	 * Get element attribute
 	 *
 	 * @param  ElementHandle|string $element Either element object or selector string
-	 * @param  string $attribute_name Attribute name
+	 * @param  string               $attribute_name Attribute name
 	 * @return string
 	 */
 	public function getElementAttribute( $element, string $attribute_name ) {
@@ -1148,14 +1156,14 @@ class Actor {
 	 * Get element property
 	 *
 	 * @param  ElementHandle|string $element Either element object or selector string
-	 * @param  string $property_name Property name
+	 * @param  string               $property_name Property name
 	 * @return string
 	 */
 	public function getElementProperty( $element, string $property_name ) {
 		$element = $this->getElement( $element );
 
 		return $this->getPage()->evaluate(
-			JsFunction::createWithParameters( [ 'element'] )
+			JsFunction::createWithParameters( [ 'element' ] )
 			->body(
 				'return element.' . $property_name . ';'
 			),

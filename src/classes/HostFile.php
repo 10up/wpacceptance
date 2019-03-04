@@ -72,7 +72,7 @@ class HostFile {
 	/**
 	 * Add host file entry
 	 *
-	 * @param string $ip   IP address
+	 * @param string       $ip   IP address
 	 * @param string|array $hosts Host name(s)
 	 */
 	public function add( string $ip, $hosts ) {
@@ -104,7 +104,7 @@ class HostFile {
 	 * @param  string $ip IP address
 	 * @return string
 	 */
-	public function getHostsByIp( string $ip ) : ?string {
+	public function getHostsByIp( string $ip ) {
 		if ( empty( $this->entries[ $ip ] ) ) {
 			return null;
 		}
@@ -118,7 +118,7 @@ class HostFile {
 	 * @param  string $host Host name
 	 * @return string
 	 */
-	public function getIpByHost( string $host ) : ?string {
+	public function getIpByHost( string $host ) {
 		$return_ip = null;
 
 		foreach ( $this->entries as $ip => $hosts ) {
