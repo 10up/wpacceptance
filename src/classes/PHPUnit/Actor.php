@@ -27,17 +27,9 @@ class Actor {
 	/**
 	 * Actor's name.
 	 *
-	 * @access private
 	 * @var string
 	 */
 	private $name;
-
-	/**
-	 * Facebook WebDrive instance.
-	 *
-	 * @access private
-	 * @var \Facebook\WebDriver\Remote\RemoteWebDriver
-	 */
 
 	/**
 	 * Current page
@@ -49,7 +41,6 @@ class Actor {
 	/**
 	 * Test case instance.
 	 *
-	 * @access private
 	 * @var \PHPUnit\Framework\TestCase
 	 */
 	private $test = null;
@@ -57,7 +48,6 @@ class Actor {
 	/**
 	 * Constructor.
 	 *
-	 * @access public
 	 * @param string $name Actor name.
 	 */
 	public function __construct( string $name = 'user' ) {
@@ -71,7 +61,6 @@ class Actor {
 	/**
 	 * Set actor name.
 	 *
-	 * @access public
 	 * @param string $name Actor name.
 	 */
 	public function setActorName( string $name ) {
@@ -81,7 +70,6 @@ class Actor {
 	/**
 	 * Return actor name.
 	 *
-	 * @access public
 	 * @return string Actor name.
 	 */
 	public function getActorName() {
@@ -99,7 +87,6 @@ class Actor {
 	/**
 	 * Set a new instance of PHPUnit test case.
 	 *
-	 * @access public
 	 * @param \PHPUnit\Framework\TestCase $test A test case instance.
 	 */
 	public function setTest( TestCase $test ) {
@@ -109,7 +96,6 @@ class Actor {
 	/**
 	 * Return an instance of a test case associated with the actor.
 	 *
-	 * @access public
 	 * @throws Exception if a test case is not assigned.
 	 * @return \PHPUnit\Framework\TestCase An instance of a test case.
 	 */
@@ -122,20 +108,8 @@ class Actor {
 	}
 
 	/**
-	 * Perform assertion for a specific constraint.
-	 *
-	 * @access protected
-	 * @param \WPAcceptance\PHPUnit\Constraint $constraint An instance of constraint class.
-	 * @param string                       $message Optional. A message for a failure.
-	 */
-	protected function assertThat( $constraint, string $message = '' ) {
-		TestCase::assertThat( $this, $constraint, $message );
-	}
-
-	/**
 	 * Return a page source.
 	 *
-	 * @access public
 	 * @return string A page source.
 	 */
 	public function getPageSource() {
@@ -149,7 +123,6 @@ class Actor {
 	/**
 	 * Get current page title
 	 *
-	 * @access public
 	 * @return  string
 	 */
 	public function getPageTitle() {
@@ -169,8 +142,16 @@ class Actor {
 	/**
 	 * Scroll to element
 	 */
-	public function scrollToElement( string $element_path ) {
-		$this->executeJavaScript( 'document.querySelector("' . $element_path . '").scrollIntoView();' );
+	public function scrollToElement( $element ) {
+		$element = $this->getElement( $element );
+
+		$this->getPage()->evaluate(
+			JsFunction::createWithParameters( [ 'element' ] )
+			->body(
+				'element.scrollIntoView'
+			),
+			$element
+		);
 	}
 
 	/**
@@ -186,18 +167,42 @@ class Actor {
 	/**
 	 * Directly set element attribute via JS
 	 *
-	 * @param string $element_path    Element path
+	 * @param  $element    Element path
 	 * @param string $attribute_name  Attribute name
 	 * @param string $attribute_value Attribute value
 	 */
-	public function setElementAttribute( string $element_path, string $attribute_name, $attribute_value ) {
-		$this->executeJavaScript( 'window.document.querySelector("' . addcslashes( $element_path, '"' ) . '").setAttribute("' . addcslashes( $attribute_name, '"' ) . '", "' . addcslashes( $attribute_value, '"' ) . '")' );
+	public function setElementAttribute( $element, string $attribute_name, $attribute_value ) {
+		$element = $this->getElement( $element );
+
+		$this->getPage()->evaluate(
+			JsFunction::createWithParameters( [ 'element' ] )
+			->body(
+				'element.setAttribute( "' . addcslashes( $attribute_name, '"' ) . '", "' . addcslashes( $attribute_value, '"' ) . '" );'
+			),
+			$element
+		);
+	}
+
+	/**
+	 * Directly set element property via JS
+	 *
+	 * @param  $element    Element path
+	 */
+	public function setElementProperty( $element, string $property_name, $property_value ) {
+		$element = $this->getElement( $element );
+
+		$this->getPage()->evaluate(
+			JsFunction::createWithParameters( [ 'element' ] )
+			->body(
+				'element.' . $property_name . ' = "' . addcslashes( $property_value, '"' ) . '";'
+			),
+			$element
+		);
 	}
 
 	/**
 	 * Take a screenshot of the viewport
 	 *
-	 * @access public
 	 * @param string $name A filename without extension.
 	 */
 	public function takeScreenshot( string $name = null ) {
@@ -212,8 +217,6 @@ class Actor {
 
 	/**
 	 * Move back to the previous page in the history.
-	 *
-	 * @access public
 	 */
 	public function moveBack() {
 		$this->getPage()->goBack();
@@ -222,8 +225,6 @@ class Actor {
 
 	/**
 	 * Move forward to the next page in the history.
-	 *
-	 * @access public
 	 */
 	public function moveForward() {
 		$this->getPage()->goForward();
@@ -232,8 +233,6 @@ class Actor {
 
 	/**
 	 * Refresh the current page.
-	 *
-	 * @access public
 	 */
 	public function refresh() {
 		$this->getPage()->reload();
@@ -265,7 +264,6 @@ class Actor {
 	/**
 	 * Navigate to a new URL.
 	 *
-	 * @access public
 	 * @param string $url_or_path Path (relative to main site in network) or full url
 	 * @param int    $blog_id Optional blog id
 	 */
@@ -296,7 +294,6 @@ class Actor {
 	/**
 	 * Resize viewport to a new dimension.
 	 *
-	 * @access public
 	 * @param int $width A new width.
 	 * @param int $height A new height.
 	 */
@@ -312,7 +309,6 @@ class Actor {
 	/**
 	 * Assert that the actor sees a cookie.
 	 *
-	 * @access public
 	 * @param string $name The cookie name.
 	 * @param mixed  $value Optional. The cookie value. If it's empty, value check will be ignored.
 	 * @param string $message Optional. The message to use on a failure.
@@ -378,7 +374,6 @@ class Actor {
 	/**
 	 * Assert that the actor can't see a cookie.
 	 *
-	 * @access public
 	 * @param string $name The cookie name.
 	 * @param mixed  $value Optional. The cookie value. If it's empty, value check will be ignored.
 	 * @param string $message Optional. The message to use on a failure.
@@ -393,7 +388,6 @@ class Actor {
 	/**
 	 * Set a specific cookie.
 	 *
-	 * @access public
 	 * @param string $name A name of a cookie.
 	 * @param string $value Value for a cookie.
 	 * @param array  $params Additional parameters for a cookie.
@@ -412,7 +406,6 @@ class Actor {
 	/**
 	 * Return value of a cookie.
 	 *
-	 * @access public
 	 * @param string $name A cookie name.
 	 * @return mixed A cookie value.
 	 */
@@ -441,7 +434,6 @@ class Actor {
 	/**
 	 * Get all cookies
 	 *
-	 * @access public
 	 * @return  array
 	 */
 	public function getCookies() {
@@ -451,7 +443,6 @@ class Actor {
 	/**
 	 * Delete a cookie with the give name.
 	 *
-	 * @access public
 	 * @param string $name A cookie name to reset.
 	 */
 	public function deleteCookie( $name ) {
@@ -469,8 +460,6 @@ class Actor {
 
 	/**
 	 * Return an element based on CSS selector.
-	 *
-	 * @access public
 	 */
 	public function getElement( $element ) {
 		if ( $element instanceof ElementHandle ) {
@@ -488,8 +477,6 @@ class Actor {
 
 	/**
 	 * Return elements based on CSS selector.
-	 *
-	 * @access public
 	 */
 	public function getElements( $elements ) {
 		if ( is_array( $elements ) ) {
@@ -510,9 +497,22 @@ class Actor {
 	}
 
 	/**
+	 * Click an element with only JS.
+	 */
+	public function jsClick( $element ) {
+		$element = $this->getElement( $element );
+
+		$this->getPage()->evaluate(
+			JsFunction::createWithParameters( [ 'element' ] )
+			->body(
+				'element.click();'
+			),
+			$element
+		);
+	}
+
+	/**
 	 * Click an element.
-	 *
-	 * @access public
 	 */
 	public function click( $element ) {
 		$element = $this->getElement( $element );
@@ -522,8 +522,6 @@ class Actor {
 
 	/**
 	 * Select option by value of a dropdown element.
-	 *
-	 * @access public
 	 */
 	public function selectOptionByValue( string $element_path, $option_value ) {
 		$element = $this->getElement( $element_path );
@@ -533,8 +531,6 @@ class Actor {
 
 	/**
 	 * Submit a form from an element.
-	 *
-	 * @access public
 	 */
 	public function submitForm( $element ) {
 		$element = $this->getElement( $element );
@@ -566,8 +562,6 @@ class Actor {
 
 	/**
 	 * Check a checkbox or radio input.
-	 *
-	 * @access public
 	 */
 	public function checkOptions( $elements ) {
 		$elements = $this->getElements( $elements );
@@ -583,8 +577,6 @@ class Actor {
 
 	/**
 	 * Uncheck a checkbox.
-	 *
-	 * @access public
 	 */
 	public function uncheckOptions( $elements ) {
 		$elements = $this->getElements( $elements );
@@ -600,36 +592,42 @@ class Actor {
 
 	/**
 	 * Check if element is interactable
-	 *
-	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
-	 * @param string                                             $message Optional. The message to use on a failure.
 	 */
-	public function canInteractWithField( $element, $message = '' ) {
-		$this->assertThat(
-			new FieldInteractableConstrain( Constraint::ACTION_INTERACT, $element ),
-			$message
-		);
+	public function canInteractWithField( $element ) {
+		$element = $this->getElement( $element );
+
+		$old_value = $this->getElementAttribute( $element, 'value' );
+
+		$element->click();
+
+		$this->getPage()->keyboard->type( 'wpa' );
+		$this->getPage()->keyboard->press( 'Backspace' );
+
+		TestCase::assertTrue( ( $old_value !== $this->getElementProperty( $element, 'value' ) ), 'Can not interact with field.' );
+
+		$this->setElementProperty( $element, 'value', $old_value );
 	}
 
 	/**
 	 * Check if element is not interactable
-	 *
-	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
-	 * @param string                                             $message Optional. The message to use on a failure.
 	 */
 	public function cannotInteractWithField( $element, $message = '' ) {
-		$this->assertThat(
-			new FieldInteractableConstrain( Constraint::ACTION_CANTINTERACT, $element ),
-			$message
-		);
+		$element = $this->getElement( $element );
+
+		$old_value = $this->getElementAttribute( $element, 'value' );
+
+		$element->click();
+
+		$this->getPage()->keyboard->type( 'wpa' );
+		$this->getPage()->keyboard->press( 'Backspace' );
+
+		TestCase::assertTrue( ( $old_value === $this->getElementProperty( $element, 'value' ) ), 'Can interact with field.' );
+
+		$this->setElementProperty( $element, 'value', $old_value );
 	}
 
 	/**
 	 * Set a value for a field.
-	 *
-	 * @access public
 	 */
 	public function fillField( string $element_path, string $value ) {
 		$this->getPage()->type( $element_path, $value, [ 'delay' => 20 ] );
@@ -637,8 +635,6 @@ class Actor {
 
 	/**
 	 * Clear the value of a textarea or an input fields.
-	 *
-	 * @access public
 	 */
 	public function clearField( string $element_path ) {
 		$this->fillField( $element_path, '' );
@@ -647,7 +643,6 @@ class Actor {
 	/**
 	 * Attach a file to a field.
 	 *
-	 * @access public
 	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
 	 * @param string                                             $file A path to a file.
 	 */
@@ -660,8 +655,6 @@ class Actor {
 
 	/**
 	 * Check if the actor sees an element on the current page. Element must be visible to human eye.
-	 *
-	 * @access public
 	 */
 	public function seeElement( $element ) {
 		TestCase::assertTrue( $this->elementIsVisible( $element ), $this->elementToString( $element ) . ' is not visible.' );
@@ -669,8 +662,6 @@ class Actor {
 
 	/**
 	 * Check if the actor doesnt see an element on the current page. Element must not be visible to human eye.
-	 *
-	 * @access public
 	 */
 	public function dontSeeElement( $element, $message = '' ) {
 		TestCase::assertFalse( $this->elementIsVisible( $element ), $this->elementToString( $element ) . ' is visible.' );
@@ -679,8 +670,6 @@ class Actor {
 	/**
 	 * Check if the actor sees a text on the current page. You can use a regular expression to check a text.
 	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: "/test/i".
-	 *
-	 * @access public
 	 */
 	public function seeText( $text, $element = null ) {
 		if ( empty( $element ) ) {
@@ -699,18 +688,22 @@ class Actor {
 	/**
 	 * Check if the actor can't see a text on the current page. You can use a regular expression to check a text.
 	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: "/test/i".
-	 *
-	 * @access public
 	 */
 	public function dontSeeText( $text, $element = null ) {
 		if ( empty( $element ) ) {
 			$element = $this->getElement( 'body' );
+		} else {
+			try {
+				$element = $this->getElement( $element );
+			} catch ( ElementNotFound $exception ) {
+				return;
+			}
 		}
 
 		$content = trim( $this->getElementInnerText( $element ) );
 
 		if ( empty( $content ) ) {
-			return true;
+			return;
 		}
 
 		TestCase::assertFalse( Utils\find_match( $content, $text ), $text . ' found.' );
@@ -720,7 +713,6 @@ class Actor {
 	 * Check if the actor sees a text in the page source. You can use a regular expression to check a text.
 	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: <b>"/test/i"</b>.
 	 *
-	 * @access public
 	 * @param string $text A text to look for or a regular expression.
 	 */
 	public function seeTextInSource( $text ) {
@@ -731,7 +723,6 @@ class Actor {
 	 * Check if the actor can't see a text in the page source. You can use a regular expression to check a text.
 	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: <b>"/test/i"</b>.
 	 *
-	 * @access public
 	 * @param string $text A text to look for or a regular expression.
 	 */
 	public function dontSeeTextInSource( $text, $message = '' ) {
@@ -741,7 +732,6 @@ class Actor {
 	/**
 	 * Press a key on an element.
 	 *
-	 * @access public
 	 * @param string $key A key to press.
 	 */
 	public function pressKey( $element, $key ) {
@@ -754,8 +744,6 @@ class Actor {
 
 	/**
 	 * Press "enter" key on an element.
-	 *
-	 * @access public
 	 */
 	public function pressEnterKey( $element ) {
 		$this->pressKey( $element, 'Enter' );
@@ -764,7 +752,6 @@ class Actor {
 	/**
 	 * Return current active element.
 	 *
-	 * @access public
 	 * @return \Facebook\WebDriver\Remote\RemoteWebElement An instance of web elmeent.
 	 */
 	public function getActiveElement() {
@@ -776,7 +763,6 @@ class Actor {
 	 * a regular expression to check URL in the href attribute. Please, use forward slashes to define your
 	 * regular expression if you want to use it. For instance: <b>"/test/i"</b>.
 	 *
-	 * @access public
 	 * @param string $text A text to find a link.
 	 * @param string $url Optional. The url of the link.
 	 */
@@ -787,7 +773,7 @@ class Actor {
 			$selector = 'a[href="' . $url . '"]';
 		}
 
-		$links = $this->getPage()->querySelector( $selector );
+		$links = $this->getElements( $selector );
 
 		$found_link = false;
 
@@ -809,18 +795,17 @@ class Actor {
 	 * a regular expression to check URL in the href attribute. Please, use forward slashes to define your
 	 * regular expression if you want to use it. For instance: <b>"/test/i"</b>.
 	 *
-	 * @access public
 	 * @param string $text A text to find a link.
 	 * @param string $url Optional. The url of the link.
 	 */
-	public function dontSeeLink( $text, $url = '', $message = '' ) {
+	public function dontSeeLink( $text, $url = '' ) {
 		$selector = 'a';
 
 		if ( ! empty( $url ) ) {
 			$selector = 'a[href="' . $url . '"]';
 		}
 
-		$links = $this->getPage()->querySelector( $selector );
+		$links = $this->getElements( $selector );
 
 		$found_link = false;
 
@@ -841,7 +826,6 @@ class Actor {
 	 * Check if the actor can see a text in the current URL. You can use a regular expression to check the current URL.
 	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: <b>"/test/i"</b>.
 	 *
-	 * @access public
 	 * @param string $text A text to look for in the current URL.
 	 */
 	public function seeTextInUrl( $text ) {
@@ -852,7 +836,6 @@ class Actor {
 	 * Check if the actor cann't see a text in the current URL. You can use a regular expression to check the current URL.
 	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: <b>"/test/i"</b>.
 	 *
-	 * @access public
 	 * @param string $text A text to look for in the current URL.
 	 */
 	public function dontSeeTextInUrl( $text ) {
@@ -862,7 +845,6 @@ class Actor {
 	/**
 	 * Return current URL.
 	 *
-	 * @access public
 	 * @return string The current URL.
 	 */
 	public function getCurrentUrl() {
@@ -883,7 +865,7 @@ class Actor {
 	 * Check if the current user cann't see a checkbox is checked.
 	 *
 	 */
-	public function dontSeeCheckboxIsChecked( $element, $message = '' ) {
+	public function dontSeeCheckboxIsChecked( $element ) {
 		$element = $this->getElement( $element );
 
 		TestCase::assertFalse( $element->getProperty( 'checked' )->jsonValue(), 'Element checked.' );
@@ -907,7 +889,7 @@ class Actor {
 	/**
 	 * Check if the user can not see text inside of an attribute
 	 */
-	public function dontSeeValueInAttribute( $element, $attribute, $value, $message = '' ) {
+	public function dontSeeValueInAttribute( $element, $attribute, $value ) {
 		$element = $this->getElement( $element );
 
 		$attribute_value = $this->getElementAttribute( $element, $attribute );
@@ -954,11 +936,14 @@ class Actor {
 	/**
 	 * Convert an element to a piece of a failure message.
 	 *
-	 * @access protected
 	 * @param ElementHandle|string $element An element to convert.
 	 * @return string A message.
 	 */
 	public function elementToString( $element ) {
+		if ( is_string( $element ) ) {
+			return $element;
+		}
+
 		$element = $this->getElement( $element );
 
 		$message = $this->getElementTagName( $element );
@@ -981,7 +966,11 @@ class Actor {
 	}
 
 	public function elementIsVisible( $element ) {
-		$element = $this->getElement( $element );
+		try {
+			$element = $this->getElement( $element );
+		} catch ( ElementNotFound $exception ) {
+			return false;
+		}
 
 		return $this->getPage()->evaluate(
 			JsFunction::createWithParameters( [ 'element' ] )
@@ -995,32 +984,54 @@ class Actor {
 		);
 	}
 
+	public function elementIsEnabled( $element ) {
+		$element = $this->getElement( $element );
+
+		return $this->getPage()->evaluate(
+			JsFunction::createWithParameters( [ 'element' ] )
+			->body(
+				'return ! element.disabled;'
+			),
+			$element
+		);
+
+	}
+
 	public function getElementTagName( $element ) {
 		$element = $this->getElement( $element );
 
 		return $this->getPage()->evaluate(
 			JsFunction::createWithParameters( [ 'element' ] )
 			->body(
+				'return element.tagName;'
+			),
+			$element
+		);
+	}
+
+	public function getElementAttribute( $element, string $attribute_name ) {
+		$element = $this->getElement( $element );
+
+		return $this->getPage()->evaluate(
+			JsFunction::createWithParameters( [ 'element' ] )
+			->body(
 				'
-			    return element.tagName;
+			    return element.getAttribute( "' . addcslashes( $attribute_name, '"' ) . '" );
 				'
 			),
 			$element
 		);
 	}
 
-	public function getElementAttribute( $element, string $attribute ) {
+	public function getElementProperty( $element, string $property_name ) {
 		$element = $this->getElement( $element );
 
 		return $this->getPage()->evaluate(
-			JsFunction::createWithParameters( [ 'element', 'attribute' ] )
+			JsFunction::createWithParameters( [ 'element'] )
 			->body(
-				'
-			    return element.getAttribute( attribute );
-				'
+				'return element.' . $property_name . ';'
 			),
-			$element,
-			$attribute
+			$element
 		);
 	}
 
@@ -1030,9 +1041,7 @@ class Actor {
 		return $this->getPage()->evaluate(
 			JsFunction::createWithParameters( [ 'element' ] )
 			->body(
-				'
-			    return element.innerText;
-				'
+				'return element.innerText;'
 			),
 			$element
 		);
