@@ -578,12 +578,10 @@ class Actor {
 	/**
 	 * Select option by value of a dropdown element.
 	 *
-	 * @param  ElementHandle|string $element Either element object or selector string
-	 * @param  string $option_value Value to select
+	 * @param  string $element_path Element selector
+	 * @param  mixed  $option_value Value to select
 	 */
-	public function selectOptionByValue( $element, $option_value ) {
-		$element = $this->getElement( $element );
-
+	public function selectOptionByValue( string $element_path, $option_value ) {
 		$this->getPage()->select( $element_path, $option_value );
 	}
 
