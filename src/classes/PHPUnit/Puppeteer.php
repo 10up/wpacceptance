@@ -23,6 +23,11 @@ trait Puppeteer {
 	 */
 	private $puppeteer = null;
 
+	/**
+	 * Puppeteer browser instance
+	 *
+	 * @var object
+	 */
 	private $browser = null;
 
 	/**
@@ -40,6 +45,11 @@ trait Puppeteer {
 		return $this->puppeteer;
 	}
 
+	/**
+	 * Setup Browser with user defined options
+	 *
+	 * @return object Browser instance
+	 */
 	protected function setupBrowser() {
 		if ( empty( $this->browser ) ) {
 			$browser_args = [];
@@ -71,6 +81,12 @@ trait Puppeteer {
 		return EnvironmentFactory::get()->getWPHomeUrl( $id_or_url );
 	}
 
+	/**
+	 * Open a page in the browser
+	 *
+	 * @param  array  $options New page arguments
+	 * @return Actor
+	 */
 	public function openBrowserPage( $options = [] ) {
 		$this->setupPuppeteer();
 		$this->setupBrowser();
