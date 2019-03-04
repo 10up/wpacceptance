@@ -701,6 +701,8 @@ class Actor {
 	 * @param  mixed $value Value to put in field
 	 */
 	public function fillField( string $element_path, $value ) {
+		$this->setElementProperty( $element_path, 'value', '' );
+
 		$this->getPage()->type( $element_path, $value, [ 'delay' => 20 ] );
 	}
 
