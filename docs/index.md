@@ -147,7 +147,8 @@ Here's what `wpacceptance.json` looks like
 
 * `name` (required) - Name of test suite.
 * `tests` (required) - This is an array of path(s) to tests. Each path in the array is processed via PHP `glob`. `*.php` will include every PHP file in the directory. Sholud be relative to `wpacceptance.json`.
-* `snapshot_id` - "Primary" snapshot to test again. If the `run` command is executed without the `--local` flag, this snapshot ID will be used.
+* `snapshot_name` - Snapshot name to test again. If the `run` command is executed without the `--local` flag, this snapshot ID will be used.
+* `snapshot_id` - Snapshot to test again. If the `run` command is executed without the `--local` flag, this snapshot ID will be used.
 * `exclude` - WP Acceptance copys all the files in your repository into the snapshot for testing. There may be directories you want to include to speed things up e.g. `node_modules` and `vendor`. Should be relative `wp_assure.json` or use variable `%REPO_ROOT%` to make absolute.
 * `enforce_clean_db` - If set to `true`, a "clean" DB will be used for each test in the suite. "clean" means the untampered DB from the snapshot.
 * `disable_clean_db` - Will force WP Snapshots to disable "clean" DB functionality. By default, a clean DB is created even if `enforce_clean_db` is false since there is a test method for refreshing the DB.

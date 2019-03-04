@@ -148,7 +148,25 @@ class Run extends Command {
 			$suite_config['screenshot_on_failure'] = true;
 		}
 
+		// If the user passes a snapshot name or id, use that snapshot.
 		if ( empty( $local ) ) {
+
+			$option_snapshot_name = $input->getOption( 'snapshot_name' );
+
+			if ( ! empty( $option_snapshot_name ) ) {
+
+				// Find a matching snapshot.
+				$snapshots = $suite_config['snapshots'];
+				$snapshot = array_filter( $snapshots, function( $snapshot ) {
+					return $snapshot['snapshot_name'] === $option_snapshot_name;
+				} );
+
+				if ( ! empty( $snapshot ) ) {
+					$suite_config['snapshot_id'] = $snapshot['snapshot_id'];
+				}
+			}
+
+			// If snapshot id is passed, it overrides other settings.
 			$option_snapshot_id = $input->getOption( 'snapshot_id' );
 
 			if ( ! empty( $option_snapshot_id ) ) {
