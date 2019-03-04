@@ -125,6 +125,10 @@ Here's what `wpacceptance.json` looks like
 		"tests\/*.php"
  	],
 	"snapshot_id": "...",
+	"snapshots": [ {
+		"snapshot_name": "name",
+		"snapshot_id": "ID"
+	}]
 	"exclude": [
 		"%REPO_ROOT%/node_modules",
 		"%REPO_ROOT%/vendor"
@@ -265,6 +269,7 @@ For detailed test examples, look at the [example test suite](https://github.com/
 	* `--force_save` - Save snapshot ID to `wpacceptance.json` and push snapshot upstream no matter what.
 	* `--wp_directory` - Path to WordPress. If unset, will search up the directory tree until wp-config.php is found
 	* `--snapshot_id` - Optionally run tests against a snapshot ID.
+	* `--snapshot_name` - Optionally run tests against a names snapshot from the snapshots array.
 	* `--enforce_clean_db` - Use clean database for each test.
 	* `--cache_environment` - Keep the environment alive so it can be reused later. A cache environment can be used if the config being run is the exact same.
 	* `--skip_environment_cache` - Ensures a fresh environment is used on each run even if a cached one exists. This also will prevent environment caching. This is useful if you are running WP Acceptance multiple times on the same server e.g. shared GitLab runner.
@@ -274,7 +279,7 @@ For detailed test examples, look at the [example test suite](https://github.com/
 	* `--repository` - WP Snapshots repository to use.
 	* `--environment_id` - Manually specify environment ID. Useful for CI.
 	* `--mysql_wait_time` - Set how long WP Acceptance should wait for MySQL to become available in seconds.
-  
+
 * __wpacceptance init__ [--path] - Initialize a new test suite.
 	* `--path` - Optional path to init directory.
 

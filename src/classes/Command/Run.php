@@ -162,7 +162,7 @@ class Run extends Command {
 		if ( empty( $local ) ) {
 			if ( ! empty( $snapshots ) ) {
 
-				// Go thru each snapshot and execure the tests.
+				// Go thru each snapshot and execute the tests.
 				foreach( $snapshots as $snapshot ) {
 					if ( ! \WPSnapshots\Utils\is_snapshot_cached( $snapshot['snapshot_id'] ) ) {
 						$snapshot = Snapshot::download( $snapshot['snapshot_id'], $repository->getName() );
