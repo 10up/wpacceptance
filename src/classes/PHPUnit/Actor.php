@@ -33,9 +33,16 @@ class Actor {
 
 	/**
 	 * Current page
+	 *
+	 * @var  object
 	 */
 	private $page;
 
+	/**
+	 * Response to current page navigation
+	 *
+	 * @var object
+	 */
 	private $page_response;
 
 	/**
@@ -54,6 +61,11 @@ class Actor {
 		$this->name = $name;
 	}
 
+	/**
+	 * Set current page
+	 *
+	 * @param object $page Puppeteer page
+	 */
 	public function setPage( $page ) {
 		$this->page = $page;
 	}
@@ -76,6 +88,11 @@ class Actor {
 		return $this->name;
 	}
 
+	/**
+	 * Get current Puppeteer page
+	 *
+	 * @return object
+	 */
 	public function getPage() {
 		if ( ! $this->page ) {
 			throw new PageNotSet( 'Page is not set.' );
@@ -141,6 +158,8 @@ class Actor {
 
 	/**
 	 * Scroll to element
+	 *
+	 * @param  ElementHandle|string $element Either element object or selector string
 	 */
 	public function scrollToElement( $element ) {
 		$element = $this->getElement( $element );
@@ -158,7 +177,7 @@ class Actor {
 	 * Execute javascript
 	 *
 	 * @param  string $script JS code
-	 * @return  mixed Can be whatever JS returns
+	 * @return mixed Can be whatever JS returns
 	 */
 	public function executeJavaScript( string $script ) {
 		return $this->getPage()->evaluate( JsFunction::createWithBody( $script ) );
@@ -167,7 +186,7 @@ class Actor {
 	/**
 	 * Directly set element attribute via JS
 	 *
-	 * @param  $element    Element path
+	 * @param  ElementHandle|string $element Either element object or selector string
 	 * @param string $attribute_name  Attribute name
 	 * @param string $attribute_value Attribute value
 	 */
@@ -186,7 +205,9 @@ class Actor {
 	/**
 	 * Directly set element property via JS
 	 *
-	 * @param  $element    Element path
+	 * @param  ElementHandle|string $element Either element object or selector string
+	 * @param  string $property_name Property name
+	 * @param  string $property_value Property value
 	 */
 	public function setElementProperty( $element, string $property_name, $property_value ) {
 		$element = $this->getElement( $element );
@@ -241,6 +262,8 @@ class Actor {
 
 	/**
 	 * Move mouse to element
+	 *
+	 * @param  string $element_path Path to element
 	 */
 	public function hover( string $element_path ) {
 		$this->getPage()->hover( $element_path );
@@ -248,6 +271,8 @@ class Actor {
 
 	/**
 	 * Move mouse to element
+	 *
+	 * @param  ElementHandle|string $element Either element object or selector string
 	 */
 	public function moveMouse( $element ) {
 		$element = $this->getElement( $element );
@@ -311,17 +336,40 @@ class Actor {
 	 *
 	 * @param string $name The cookie name.
 	 * @param mixed  $value Optional. The cookie value. If it's empty, value check will be ignored.
-	 * @param string $message Optional. The message to use on a failure.
 	 */
-	public function seeCookie( string $name, $value = null, $message = '' ) {
-		$this->assertThat(
-			new CookieConstrain( Constraint::ACTION_SEE, $name, $value ),
-			$message
-		);
+	public function seeCookie( string $name, $value = null ) {
+		$cookie = $this->getCookie( $name );
+
+		TestCase::assertTrue( isset( $cookie ), 'Cookie does not exist.' );
+
+		if ( isset( $value ) ) {
+			TestCase::assertEquals( $value, $cookie, 'Cookie value does not match.' );
+		}
 	}
 
+	/**
+	 * Assert that the actor can't see a cookie.
+	 *
+	 * @param string $name The cookie name.
+	 * @param mixed  $value Optional. The cookie value. If it's empty, value check will be ignored.
+	 */
+	public function dontSeeCookie( $name, $value = null ) {
+		$cookie = $this->getCookie( $name );
+
+		TestCase::assertFalse( isset( $cookie ), 'Cookie exists.' );
+
+		if ( isset( $value ) ) {
+			TestCase::assertNotEquals( $value, $cookie, 'Cookie values match.' );
+		}
+	}
+
+	/**
+	 * Wait until navigation
+	 *
+	 * @param  string $condition Navigation condition to check
+	 */
 	public function waitUntilNavigation( $condition = 'networkidle0' ) {
-		return $this->getPage()->waitForNavigation( [ 'waitUntil' => $condition ] );
+		$this->getPage()->waitForNavigation( [ 'waitUntil' => $condition ] );
 	}
 
 	/**
@@ -349,6 +397,8 @@ class Actor {
 
 	/**
 	 * Wait until title contains
+	 *
+	 * @param  string $title Title to wait for
 	 */
 	public function waitUntilTitleContains( $title ) {
 		$this->getPage()->waitForFunction( JsFunction::createWithBody( 'return document.title.includes("' . addcslashes( $title, '"' ) . '")' ) );
@@ -358,7 +408,6 @@ class Actor {
 	 * Wait until element is visible
 	 *
 	 * @param  string  $element_path Path to element to check
-	 * @param  integer $max_wait  Max wait time in seconds
 	 */
 	public function waitUntilElementVisible( string $element_path ) {
 		$this->getPage()->waitForSelector( $element_path, [ 'visible' => true ] );
@@ -366,23 +415,11 @@ class Actor {
 
 	/**
 	 * Wait until page source contains text
+	 *
+	 * @param  string $text Text to wait for
 	 */
 	public function waitUntilPageSourceContains( $text ) {
 		$this->getPage()->waitForFunction( JsFunction::createWithBody( 'return document.documentElement.outerHTML.includes("' . addcslashes( $text, '"' ) . '")' ) );
-	}
-
-	/**
-	 * Assert that the actor can't see a cookie.
-	 *
-	 * @param string $name The cookie name.
-	 * @param mixed  $value Optional. The cookie value. If it's empty, value check will be ignored.
-	 * @param string $message Optional. The message to use on a failure.
-	 */
-	public function dontSeeCookie( $name, $value = null, $message = '' ) {
-		$this->assertThat(
-			new CookieConstrain( Constraint::ACTION_DONTSEE, $name, $value ),
-			$message
-		);
 	}
 
 	/**
@@ -424,11 +461,18 @@ class Actor {
 	/**
 	 * Hide an element in the dom
 	 *
-	 * @throws ExpectationFailedException When the element is not found on the page.
-	 * @param  strin $element_path A CSS selector for the element.
+	 * @param  ElementHandle|string $element Either element object or selector string
 	 */
-	public function hideElement( $element_path ) {
-		$this->executeJavaScript( 'window.document.querySelector("' . addcslashes( $element_path, '"' ) . '").style.display = "none";' );
+	public function hideElement( $element) {
+		$element = $this->getElement( $element );
+
+		return $this->getPage()->evaluate(
+			JsFunction::createWithParameters( [ 'element' ] )
+			->body(
+				'element.style.display = "none";'
+			),
+			$element
+		);
 	}
 
 	/**
@@ -453,6 +497,7 @@ class Actor {
 	 * Get element containing text
 	 *
 	 * @param  string $text Text to search for
+	 * @return  ElementHandle
 	 */
 	public function getElementContaining( $text ) {
 		return $this->getPage()->querySelectorXPath( "//*[contains(text(), '" . $text . "')]" );
@@ -460,6 +505,9 @@ class Actor {
 
 	/**
 	 * Return an element based on CSS selector.
+	 *
+	 * @throws ElementNotFound Element not found in DOM
+	 * @return  ElementHandle
 	 */
 	public function getElement( $element ) {
 		if ( $element instanceof ElementHandle ) {
@@ -477,6 +525,9 @@ class Actor {
 
 	/**
 	 * Return elements based on CSS selector.
+	 *
+	 * @param  array $elements Elements to get
+	 * @return  array Array of ElementHandle
 	 */
 	public function getElements( $elements ) {
 		if ( is_array( $elements ) ) {
@@ -498,6 +549,8 @@ class Actor {
 
 	/**
 	 * Click an element with only JS.
+	 *
+	 * @param  ElementHandle|string $element Either element object or selector string
 	 */
 	public function jsClick( $element ) {
 		$element = $this->getElement( $element );
@@ -513,6 +566,8 @@ class Actor {
 
 	/**
 	 * Click an element.
+	 *
+	 * @param  ElementHandle|string $element Either element object or selector string
 	 */
 	public function click( $element ) {
 		$element = $this->getElement( $element );
@@ -522,15 +577,20 @@ class Actor {
 
 	/**
 	 * Select option by value of a dropdown element.
+	 *
+	 * @param  ElementHandle|string $element Either element object or selector string
+	 * @param  string $option_value Value to select
 	 */
-	public function selectOptionByValue( string $element_path, $option_value ) {
-		$element = $this->getElement( $element_path );
+	public function selectOptionByValue( $element, $option_value ) {
+		$element = $this->getElement( $element );
 
 		$this->getPage()->select( $element_path, $option_value );
 	}
 
 	/**
 	 * Submit a form from an element.
+	 *
+	 * @param  ElementHandle|string $element Either element object or selector string
 	 */
 	public function submitForm( $element ) {
 		$element = $this->getElement( $element );
@@ -562,6 +622,8 @@ class Actor {
 
 	/**
 	 * Check a checkbox or radio input.
+	 *
+	 * @param  array $elements Array of ElementHandle or selector string
 	 */
 	public function checkOptions( $elements ) {
 		$elements = $this->getElements( $elements );
@@ -577,6 +639,8 @@ class Actor {
 
 	/**
 	 * Uncheck a checkbox.
+	 *
+	 * @param  array $elements Array of ElementHandle or selector string
 	 */
 	public function uncheckOptions( $elements ) {
 		$elements = $this->getElements( $elements );
@@ -592,6 +656,8 @@ class Actor {
 
 	/**
 	 * Check if element is interactable
+	 *
+	 * @param  ElementHandle|string $element Either element object or selector string
 	 */
 	public function canInteractWithField( $element ) {
 		$element = $this->getElement( $element );
@@ -610,8 +676,10 @@ class Actor {
 
 	/**
 	 * Check if element is not interactable
+	 *
+	 * @param  ElementHandle|string $element Either element object or selector string
 	 */
-	public function cannotInteractWithField( $element, $message = '' ) {
+	public function cannotInteractWithField( $element ) {
 		$element = $this->getElement( $element );
 
 		$old_value = $this->getElementAttribute( $element, 'value' );
@@ -628,13 +696,18 @@ class Actor {
 
 	/**
 	 * Set a value for a field.
+	 *
+	 * @param  string $element_path Path to element
+	 * @param  mixed $value Value to put in field
 	 */
-	public function fillField( string $element_path, string $value ) {
+	public function fillField( string $element_path, $value ) {
 		$this->getPage()->type( $element_path, $value, [ 'delay' => 20 ] );
 	}
 
 	/**
 	 * Clear the value of a textarea or an input fields.
+	 *
+	 * @param  string $element_path Path to element
 	 */
 	public function clearField( string $element_path ) {
 		$this->fillField( $element_path, '' );
@@ -655,6 +728,8 @@ class Actor {
 
 	/**
 	 * Check if the actor sees an element on the current page. Element must be visible to human eye.
+	 *
+	 * @param  ElementHandle|string $element Either element object or selector string
 	 */
 	public function seeElement( $element ) {
 		TestCase::assertTrue( $this->elementIsVisible( $element ), $this->elementToString( $element ) . ' is not visible.' );
@@ -662,14 +737,19 @@ class Actor {
 
 	/**
 	 * Check if the actor doesnt see an element on the current page. Element must not be visible to human eye.
+	 *
+	 * @param  ElementHandle|string $element Either element object or selector string
 	 */
-	public function dontSeeElement( $element, $message = '' ) {
+	public function dontSeeElement( $element ) {
 		TestCase::assertFalse( $this->elementIsVisible( $element ), $this->elementToString( $element ) . ' is visible.' );
 	}
 
 	/**
 	 * Check if the actor sees a text on the current page. You can use a regular expression to check a text.
 	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: "/test/i".
+	 *
+	 * @param  string $text Text to check for
+	 * @param  ElementHandle|string $element Either element object or selector string
 	 */
 	public function seeText( $text, $element = null ) {
 		if ( empty( $element ) ) {
@@ -688,6 +768,9 @@ class Actor {
 	/**
 	 * Check if the actor can't see a text on the current page. You can use a regular expression to check a text.
 	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: "/test/i".
+	 *
+	 * @param  string $Text to check for
+	 * @param  ElementHandle|string $element Either element object or selector string
 	 */
 	public function dontSeeText( $text, $element = null ) {
 		if ( empty( $element ) ) {
@@ -725,13 +808,14 @@ class Actor {
 	 *
 	 * @param string $text A text to look for or a regular expression.
 	 */
-	public function dontSeeTextInSource( $text, $message = '' ) {
+	public function dontSeeTextInSource( $text ) {
 		TestCase::assertFalse( Utils\find_match( $this->getPageSource(), $text ), $text . ' found in source.' );
 	}
 
 	/**
 	 * Press a key on an element.
 	 *
+	 * @param  ElementHandle|string $element Either element object or selector string
 	 * @param string $key A key to press.
 	 */
 	public function pressKey( $element, $key ) {
@@ -744,6 +828,8 @@ class Actor {
 
 	/**
 	 * Press "enter" key on an element.
+	 *
+	 * @param  ElementHandle|string $element Either element object or selector string
 	 */
 	public function pressEnterKey( $element ) {
 		$this->pressKey( $element, 'Enter' );
@@ -752,7 +838,7 @@ class Actor {
 	/**
 	 * Return current active element.
 	 *
-	 * @return \Facebook\WebDriver\Remote\RemoteWebElement An instance of web elmeent.
+	 * @return ElementHandle
 	 */
 	public function getActiveElement() {
 		return $this->getPage()->evaluate( JsFunction::createWithBody( 'return document.activeElement;' ) );
@@ -854,6 +940,7 @@ class Actor {
 	/**
 	 * Check if the current user can see a checkbox is checked.
 	 *
+	 * @param  ElementHandle|string $element Either element object or selector string
 	 */
 	public function seeCheckboxIsChecked( $element ) {
 		$element = $this->getElement( $element );
@@ -864,6 +951,7 @@ class Actor {
 	/**
 	 * Check if the current user cann't see a checkbox is checked.
 	 *
+	 * @param  ElementHandle|string $element Either element object or selector string
 	 */
 	public function dontSeeCheckboxIsChecked( $element ) {
 		$element = $this->getElement( $element );
@@ -873,6 +961,9 @@ class Actor {
 
 	/**
 	 * Check if the user can see text inside of an attribute
+	 *
+	 * @param  ElementHandle|string $element Either element object or selector string
+	 *
 	 */
 	public function seeValueInAttribute( $element, $attribute, $value ) {
 		$element = $this->getElement( $element );
@@ -888,6 +979,8 @@ class Actor {
 
 	/**
 	 * Check if the user can not see text inside of an attribute
+	 *
+	 * @param  ElementHandle|string $element Either element object or selector string
 	 */
 	public function dontSeeValueInAttribute( $element, $attribute, $value ) {
 		$element = $this->getElement( $element );
@@ -904,6 +997,8 @@ class Actor {
 	/**
 	 * Check if the current user can see a value in a field. You can use a regular expression to check the value.
 	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: <b>"/test/i"</b>.
+	 *
+	 * @param  ElementHandle|string $element Either element object or selector string
 	 */
 	public function seeFieldValue( $element, $value ) {
 		$element = $this->getElement( $element );
@@ -920,6 +1015,8 @@ class Actor {
 	/**
 	 * Check if the current user can see a value in a field. You can use a regular expression to check the value.
 	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: <b>"/test/i"</b>.
+	 *
+	 * @param  ElementHandle|string $element Either element object or selector string
 	 */
 	public function dontSeeFieldValue( $element, $value ) {
 		$element = $this->getElement( $element );
@@ -936,7 +1033,7 @@ class Actor {
 	/**
 	 * Convert an element to a piece of a failure message.
 	 *
-	 * @param ElementHandle|string $element An element to convert.
+	 * @param  ElementHandle|string $element Either element object or selector string
 	 * @return string A message.
 	 */
 	public function elementToString( $element ) {
@@ -965,6 +1062,12 @@ class Actor {
 		return $message;
 	}
 
+	/**
+	 * Check if element is visible
+	 *
+	 * @param  ElementHandle|string $element Either element object or selector string
+	 * @return boolean
+	 */
 	public function elementIsVisible( $element ) {
 		try {
 			$element = $this->getElement( $element );
@@ -984,6 +1087,12 @@ class Actor {
 		);
 	}
 
+	/**
+	 * Check if element is enabled
+	 *
+	 * @param  ElementHandle|string $element Either element object or selector string
+	 * @return boolean
+	 */
 	public function elementIsEnabled( $element ) {
 		$element = $this->getElement( $element );
 
@@ -994,9 +1103,14 @@ class Actor {
 			),
 			$element
 		);
-
 	}
 
+	/**
+	 * Get element tag name
+	 *
+	 * @param  ElementHandle|string $element Either element object or selector string
+	 * @return  string
+	 */
 	public function getElementTagName( $element ) {
 		$element = $this->getElement( $element );
 
@@ -1009,6 +1123,13 @@ class Actor {
 		);
 	}
 
+	/**
+	 * Get element attribute
+	 *
+	 * @param  ElementHandle|string $element Either element object or selector string
+	 * @param  string $attribute_name Attribute name
+	 * @return string
+	 */
 	public function getElementAttribute( $element, string $attribute_name ) {
 		$element = $this->getElement( $element );
 
@@ -1023,6 +1144,13 @@ class Actor {
 		);
 	}
 
+	/**
+	 * Get element property
+	 *
+	 * @param  ElementHandle|string $element Either element object or selector string
+	 * @param  string $property_name Property name
+	 * @return string
+	 */
 	public function getElementProperty( $element, string $property_name ) {
 		$element = $this->getElement( $element );
 
@@ -1035,6 +1163,12 @@ class Actor {
 		);
 	}
 
+	/**
+	 * Get element inner text
+	 *
+	 * @param  ElementHandle|string $element Either element object or selector string
+	 * @return string
+	 */
 	public function getElementInnerText( $element ) {
 		$element = $this->getElement( $element );
 
