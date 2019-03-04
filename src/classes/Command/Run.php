@@ -51,6 +51,7 @@ class Run extends Command {
 		$this->addOption( 'force_save', false, InputOption::VALUE_NONE, 'No matter the outcome of the tests, save snapshot ID to wpacceptance.json and push it to the remote repository.' );
 
 		$this->addOption( 'snapshot_id', null, InputOption::VALUE_REQUIRED, 'WP Snapshot ID.' );
+		$this->addOption( 'snapshots', null, InputArgument::OPTIONAL, 'WP Snapshots' );
 		$this->addOption( 'environment_id', null, InputOption::VALUE_REQUIRED, 'Manually set environment ID.' );
 		$this->addOption( 'repository', null, InputOption::VALUE_REQUIRED, 'WP Snapshots repository to use.' );
 		$this->addOption( 'wp_directory', null, InputOption::VALUE_REQUIRED, 'Path to WordPress wp-config.php directory.' );
@@ -155,25 +156,51 @@ class Run extends Command {
 			}
 		}
 
+		// If snapshots are defined, test for each snapshot.
+		$snapshots = $suite_config['snapshots'];
+
 		if ( empty( $local ) ) {
-			if ( empty( $suite_config['snapshot_id'] ) ) {
-				Log::instance()->write( 'You must either provide --snapshot_id, have a snapshot ID in wpacceptance.json, or provide the --local parameter.', 0, 'error' );
-				return 3;
-			}
+			if ( ! empty( $snapshots ) ) {
 
-			if ( ! \WPSnapshots\Utils\is_snapshot_cached( $suite_config['snapshot_id'] ) ) {
-				$snapshot = Snapshot::download( $suite_config['snapshot_id'], $repository->getName() );
+				// Go thru each snapshot and execure the tests.
+				foreach( $snapshots as $snapshot ) {
+					if ( ! \WPSnapshots\Utils\is_snapshot_cached( $snapshot['snapshot_id'] ) ) {
+						$snapshot = Snapshot::download( $snapshot['snapshot_id'], $repository->getName() );
 
-				if ( ! is_a( $snapshot, '\WPSnapshots\Snapshot' ) ) {
-					Log::instance()->write( 'Could not download snapshot ' . $suite_config['snapshot_id'] . '. Does it exist?', 0, 'error' );
-					return 2;
+						if ( ! is_a( $snapshot, '\WPSnapshots\Snapshot' ) ) {
+							Log::instance()->write( 'Could not download snapshot ' . $snapshot['snapshot_id'] . '. Does it exist?', 0, 'error' );
+							return 2;
+						} else {
+							self::execute_tests_in_snapshot( $input, $output, $suite_config);
+						}
 				}
-			} else {
-				$snapshot = Snapshot::get( $suite_config['snapshot_id'] );
 
-				if ( ! is_a( $snapshot, '\WPSnapshots\Snapshot' ) ) {
-					Log::instance()->write( 'Could not find cached snapshot ' . $suite_config['snapshot_id'] . '. Does it exist?', 0, 'error' );
-					return 2;
+			} else {
+
+				if ( empty( $suite_config['snapshot_id'] ) ) {
+					Log::instance()->write( 'You must either provide --snapshot_id, have a snapshot ID in wpacceptance.json, or provide the --local parameter.', 0, 'error' );
+					return 3;
+				}
+
+
+				if ( ! \WPSnapshots\Utils\is_snapshot_cached( $suite_config['snapshot_id'] ) ) {
+					$snapshot = Snapshot::download( $suite_config['snapshot_id'], $repository->getName() );
+
+					if ( ! is_a( $snapshot, '\WPSnapshots\Snapshot' ) ) {
+						Log::instance()->write( 'Could not download snapshot ' . $suite_config['snapshot_id'] . '. Does it exist?', 0, 'error' );
+						return 2;
+					} else {
+						self::execute_tests_in_snapshot( $input, $output, $suite_config);
+					}
+				} else {
+					$snapshot = Snapshot::get( $suite_config['snapshot_id'] );
+
+					if ( ! is_a( $snapshot, '\WPSnapshots\Snapshot' ) ) {
+						Log::instance()->write( 'Could not find cached snapshot ' . $suite_config['snapshot_id'] . '. Does it exist?', 0, 'error' );
+						return 2;
+					} else {
+						self::execute_tests_in_snapshot( $input, $output, $suite_config);
+					}
 				}
 			}
 		} else {
@@ -206,7 +233,19 @@ class Run extends Command {
 			$suite_config['snapshot_id'] = $snapshot->id;
 
 			Log::instance()->write( 'Snapshot ID is ' . $suite_config['snapshot_id'], 1 );
+
+			self::execute_tests_in_snapshot( $input, $output, $suite_config);
 		}
+	}
+
+	/**
+	 * Run the tests for the currently loaded snapshot.
+	 *
+	 * @param InputInterface  $input Console input
+	 * @param OutputInterface $output Console output
+	 * @param arrat           $suite_config The configuration.
+	 */
+	protected function execute_tests_in_snapshot( InputInterface $input, OutputInterface $output, $suite_config ) {
 
 		Log::instance()->write( 'Creating environment...' );
 
