@@ -14,7 +14,7 @@ class FrontendTest extends \WPAcceptance\PHPUnit\TestCase {
 	 * Check that all html outputted on homepage
 	 */
 	public function testPageLoaded() {
-		$I = $this->getAnonymousUser();
+		$I = $this->openBrowserPage();
 
 		$I->moveTo( '/' );
 
@@ -28,7 +28,7 @@ class FrontendTest extends \WPAcceptance\PHPUnit\TestCase {
 	 * Check that required HTML tags are shown
 	 */
 	public function testRequiredHTMLTags() {
-		$I = $this->getAnonymousUser();
+		$I = $this->openBrowserPage();
 
 		$I->moveTo( '/' );
 

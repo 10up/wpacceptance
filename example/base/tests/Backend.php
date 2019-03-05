@@ -14,7 +14,7 @@ class BackendTest extends \WPAcceptance\PHPUnit\TestCase {
 	 * Test that someone can login
 	 */
 	public function testLogin() {
-		$I = $this->getAnonymousUser();
+		$I = $this->openBrowserPage();
 
 		$I->loginAs( 'wpsnapshots' );
 
@@ -25,7 +25,7 @@ class BackendTest extends \WPAcceptance\PHPUnit\TestCase {
 	 * Test admin bar shows on the front end
 	 */
 	public function testAdminBarOnFront() {
-		$I = $this->getAnonymousUser();
+		$I = $this->openBrowserPage();
 
 		$I->loginAs( 'wpsnapshots' );
 
@@ -38,7 +38,7 @@ class BackendTest extends \WPAcceptance\PHPUnit\TestCase {
 	 * Test that a post actually publishes
 	 */
 	public function testPostPublish() {
-		$I = $this->getAnonymousUser();
+		$I = $this->openBrowserPage();
 
 		$I->loginAs( 'wpsnapshots' );
 
@@ -61,7 +61,7 @@ class BackendTest extends \WPAcceptance\PHPUnit\TestCase {
 	 * Test that a user can edit their profile
 	 */
 	public function testProfileSave() {
-		$I = $this->getAnonymousUser();
+		$I = $this->openBrowserPage();
 
 		$I->loginAs( 'wpsnapshots' );
 

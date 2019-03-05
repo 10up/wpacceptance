@@ -16,7 +16,7 @@ use PHPUnit\Runner\BaseTestRunner;
  */
 abstract class TestCase extends \PHPUnit\Framework\TestCase {
 
-	use WebDriver, Database;
+	use Puppeteer, Database;
 
 	/**
 	 * Store the last modifying query in the DB. We do this to determine if the DB is dirty (has changed)
@@ -77,6 +77,16 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase {
 		}
 
 		$this->last_modifying_query = $new_last_modifying_query;
+
+		$page = $this->last_actor->getPage();
+
+		if ( ! empty( $page ) ) {
+			$page->close();
+		}
+
+		if ( ! empty( $this->browser ) ) {
+			$this->browser->close();
+		}
 	}
 
 }

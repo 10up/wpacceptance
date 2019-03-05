@@ -36,7 +36,6 @@ class Environment {
 	protected $containers = [
 		'mysql',
 		'wordpress',
-		'selenium',
 	];
 
 	/**
@@ -45,13 +44,6 @@ class Environment {
 	 * @var string
 	 */
 	protected $environment_id;
-
-	/**
-	 * Docker instance
-	 *
-	 * @var Docker\Docker
-	 */
-	protected $docker;
 
 	/**
 	 * WordPress port
@@ -66,13 +58,6 @@ class Environment {
 	 * @var string
 	 */
 	protected $gateway_ip;
-
-	/**
-	 * Selenium port
-	 *
-	 * @var int
-	 */
-	protected $selenium_port;
 
 	/**
 	 * MySQL port
@@ -159,6 +144,13 @@ class Environment {
 	protected $mysql_wait_time = 30;
 
 	/**
+	 * Host file manager
+	 *
+	 * @var HostFile
+	 */
+	protected $host_file;
+
+	/**
 	 * Environment constructor
 	 *
 	 * @param  Config  $suite_config Config array
@@ -168,7 +160,6 @@ class Environment {
 	 * @param  int     $mysql_wait_time How long should we wait for MySQL to become available (seconds)
 	 */
 	public function __construct( $suite_config = null, $cache_environment = false, $skip_environment_cache = false, $environment_id = null, $mysql_wait_time = null ) {
-		$this->docker                 = Docker::create();
 		$this->suite_config           = $suite_config;
 		$this->cache_environment      = $cache_environment;
 		$this->skip_environment_cache = $skip_environment_cache;
@@ -181,6 +172,76 @@ class Environment {
 		$id = ( $skip_environment_cache ) ? md5( time() . '' . rand( 0, 10000 ) ) : self::generateEnvironmentId( $suite_config );
 
 		$this->environment_id = ( ! empty( $environment_id ) ) ? $environment_id . '-wpa' : $id . '-wpa';
+	}
+
+	/**
+	 * Setup host file adding entries if needed
+	 *
+	 * @return  boolean
+	 */
+	public function setupHosts() {
+		Log::instance()->write( 'Setting up host(s)...', 1 );
+
+		$this->host_file = new HostFile();
+
+		$hosts = [];
+
+		$host_line = $this->gateway_ip . ' ';
+
+		foreach ( $this->sites as $site ) {
+			$home_host = parse_url( $site['home_url'], PHP_URL_HOST );
+			$site_host = parse_url( $site['site_url'], PHP_URL_HOST );
+
+			$hosts[ $home_host ] = true;
+			$hosts[ $site_host ] = true;
+		}
+
+		foreach ( $hosts as $host => $nothing ) {
+			$host_line .= ' ' . $host;
+		}
+
+		$this->host_file->add( '127.0.0.1', array_keys( $hosts ) );
+
+		Log::instance()->write( 'Hosts insert: ' . $host_line, 2 );
+
+		$command = "echo '" . $host_line . "' >> /etc/hosts";
+
+		Log::instance()->write( 'Running `' . $command . '` on wordpress', 2 );
+
+		$exec_config = new ContainersIdExecPostBody();
+		$exec_config->setTty( true );
+		$exec_config->setAttachStdout( true );
+		$exec_config->setAttachStderr( true );
+		$exec_config->setCmd( [ '/bin/bash', '-c', $command ] );
+
+		$exec_id           = EnvironmentFactory::$docker->containerExec( $this->environment_id . '-wordpress', $exec_config )->getId();
+		$exec_start_config = new ExecIdStartPostBody();
+
+		$exec_start_config->setDetach( false );
+		$stream = EnvironmentFactory::$docker->execStart( $exec_id, $exec_start_config );
+
+		$stream->onStdout(
+			function( $stdout ) {
+				Log::instance()->write( $stdout, 1 );
+			}
+		);
+
+		$stream->onStderr(
+			function( $stderr ) {
+				Log::instance()->write( $stderr, 1 );
+			}
+		);
+
+		$stream->wait();
+
+		$exit_code = EnvironmentFactory::$docker->execInspect( $exec_id )->getExitCode();
+
+		if ( 0 !== $exit_code ) {
+			Log::instance()->write( 'Failed to setup hosts in wordpress container.', 0, 'error' );
+			return false;
+		}
+
+		return true;
 	}
 
 	/**
@@ -223,12 +284,12 @@ class Environment {
 		$exec_config->setCmd( [ '/bin/sh', '-c', $command ] );
 
 		try {
-			$exec_command      = $this->docker->containerExec( $this->environment_id . '-wordpress', $exec_config );
+			$exec_command      = EnvironmentFactory::$docker->containerExec( $this->environment_id . '-wordpress', $exec_config );
 			$exec_id           = $exec_command->getId();
 			$exec_start_config = new ExecIdStartPostBody();
 			$exec_start_config->setDetach( false );
 
-			$stream = $this->docker->execStart( $exec_id, $exec_start_config );
+			$stream = EnvironmentFactory::$docker->execStart( $exec_id, $exec_start_config );
 		} catch ( \Exception $e ) {
 			Log::instance()->write( 'Environment NOT found in cache.', 1 );
 			return false;
@@ -250,7 +311,6 @@ class Environment {
 
 		$this->suite_config               = $environment_meta['suite_config'];
 		$this->wordpress_port             = $environment_meta['wordpress_port'];
-		$this->selenium_port              = $environment_meta['selenium_port'];
 		$this->mysql_port                 = $environment_meta['mysql_port'];
 		$this->gateway_ip                 = $environment_meta['gateway_ip'];
 		$this->snapshot_wpacceptance_path = $environment_meta['snapshot_wpacceptance_path'];
@@ -294,12 +354,12 @@ class Environment {
 		$exec_config->setAttachStderr( true );
 		$exec_config->setCmd( [ '/bin/sh', '-c', $command ] );
 
-		$exec_command      = $this->docker->containerExec( $this->environment_id . '-wordpress', $exec_config );
+		$exec_command      = EnvironmentFactory::$docker->containerExec( $this->environment_id . '-wordpress', $exec_config );
 		$exec_id           = $exec_command->getId();
 		$exec_start_config = new ExecIdStartPostBody();
 		$exec_start_config->setDetach( false );
 
-		$stream = $this->docker->execStart( $exec_id, $exec_start_config );
+		$stream = EnvironmentFactory::$docker->execStart( $exec_id, $exec_start_config );
 
 		$stream->onStdout(
 			function( $stdout ) {
@@ -315,7 +375,7 @@ class Environment {
 
 		$stream->wait();
 
-		$exit_code = $this->docker->execInspect( $exec_id )->getExitCode();
+		$exit_code = EnvironmentFactory::$docker->execInspect( $exec_id )->getExitCode();
 
 		if ( 0 !== $exit_code ) {
 			Log::instance()->write( 'Could not modify database in wp-config.php.', 0, 'error' );
@@ -344,12 +404,12 @@ class Environment {
 		$exec_config->setAttachStderr( true );
 		$exec_config->setCmd( [ '/bin/sh', '-c', $command ] );
 
-		$exec_command      = $this->docker->containerExec( $this->environment_id . '-mysql', $exec_config );
+		$exec_command      = EnvironmentFactory::$docker->containerExec( $this->environment_id . '-mysql', $exec_config );
 		$exec_id           = $exec_command->getId();
 		$exec_start_config = new ExecIdStartPostBody();
 		$exec_start_config->setDetach( false );
 
-		$stream = $this->docker->execStart( $exec_id, $exec_start_config );
+		$stream = EnvironmentFactory::$docker->execStart( $exec_id, $exec_start_config );
 
 		$stream->onStdout(
 			function( $stdout ) {
@@ -365,7 +425,7 @@ class Environment {
 
 		$stream->wait();
 
-		$exit_code = $this->docker->execInspect( $exec_id )->getExitCode();
+		$exit_code = EnvironmentFactory::$docker->execInspect( $exec_id )->getExitCode();
 
 		if ( 0 !== $exit_code ) {
 			Log::instance()->write( 'Could not duplicate MySQL database.', 0, 'error' );
@@ -398,12 +458,12 @@ class Environment {
 			$exec_config->setAttachStderr( true );
 			$exec_config->setCmd( [ '/bin/bash', '-c', $command ] );
 
-			$exec_command      = $this->docker->containerExec( $this->environment_id . '-wordpress', $exec_config );
+			$exec_command      = EnvironmentFactory::$docker->containerExec( $this->environment_id . '-wordpress', $exec_config );
 			$exec_id           = $exec_command->getId();
 			$exec_start_config = new ExecIdStartPostBody();
 			$exec_start_config->setDetach( false );
 
-			$stream = $this->docker->execStart( $exec_id, $exec_start_config );
+			$stream = EnvironmentFactory::$docker->execStart( $exec_id, $exec_start_config );
 
 			$stream->onStdout(
 				function( $stdout ) {
@@ -419,90 +479,10 @@ class Environment {
 
 			$stream->wait();
 
-			$exit_code = $this->docker->execInspect( $exec_id )->getExitCode();
+			$exit_code = EnvironmentFactory::$docker->execInspect( $exec_id )->getExitCode();
 
 			if ( 0 !== $exit_code ) {
 				Log::instance()->write( 'Before script returned a non-zero exit code: ' . $script, 0, 'warning' );
-			}
-		}
-
-		return true;
-	}
-
-	/**
-	 * Setup internal hosts for WP and Selenium
-	 *
-	 * @param  boolean $mysql_setup Setup hosts on mysql
-	 * @param  boolean $selenium_setup Setup hosts on selenium
-	 * @return bool
-	 */
-	public function setupHosts( $mysql_setup = true, $selenium_setup = true ) {
-		Log::instance()->write( 'Setting up host(s)...', 1 );
-
-		$containers = [];
-
-		if ( $mysql_setup ) {
-			$containers[] = 'wordpress';
-		}
-
-		if ( $selenium_setup ) {
-			$containers[] = 'selenium';
-		}
-
-		$host_line = $this->gateway_ip . ' ';
-
-		foreach ( $this->sites as $site ) {
-			$home_host = parse_url( $site['home_url'], PHP_URL_HOST );
-			$site_host = parse_url( $site['site_url'], PHP_URL_HOST );
-
-			// Doesn't matter if the same host gets added more than once
-			$host_line .= ' ' . $home_host . ' ' . $site_host;
-		}
-
-		Log::instance()->write( 'Hosts insert: ' . $host_line, 2 );
-
-		foreach ( $containers as $container ) {
-			$command = "echo '" . $host_line . "' >> /etc/hosts";
-
-			if ( 'selenium' === $container ) {
-				$command = "echo '" . $host_line . "' | sudo tee --append /etc/hosts";
-			} else {
-				$command = "echo '" . $host_line . "' >> /etc/hosts";
-			}
-
-			Log::instance()->write( 'Running `' . $command . '` on ' . $container, 2 );
-
-			$exec_config = new ContainersIdExecPostBody();
-			$exec_config->setTty( true );
-			$exec_config->setAttachStdout( true );
-			$exec_config->setAttachStderr( true );
-			$exec_config->setCmd( [ '/bin/bash', '-c', $command ] );
-
-			$exec_id           = $this->docker->containerExec( $this->environment_id . '-' . $container, $exec_config )->getId();
-			$exec_start_config = new ExecIdStartPostBody();
-			$exec_start_config->setDetach( false );
-
-			$stream = $this->docker->execStart( $exec_id, $exec_start_config );
-
-			$stream->onStdout(
-				function( $stdout ) {
-					Log::instance()->write( $stdout, 1 );
-				}
-			);
-
-			$stream->onStderr(
-				function( $stderr ) {
-					Log::instance()->write( $stderr, 1 );
-				}
-			);
-
-			$stream->wait();
-
-			$exit_code = $this->docker->execInspect( $exec_id )->getExitCode();
-
-			if ( 0 !== $exit_code ) {
-				Log::instance()->write( 'Failed to setup hosts in ' . $container . ' container.', 0, 'error' );
-				return false;
 			}
 		}
 
@@ -612,12 +592,12 @@ class Environment {
 		$exec_config->setAttachStderr( true );
 		$exec_config->setCmd( [ '/bin/sh', '-c', $command ] );
 
-		$exec_command      = $this->docker->containerExec( $this->environment_id . '-wordpress', $exec_config );
+		$exec_command      = EnvironmentFactory::$docker->containerExec( $this->environment_id . '-wordpress', $exec_config );
 		$exec_id           = $exec_command->getId();
 		$exec_start_config = new ExecIdStartPostBody();
 		$exec_start_config->setDetach( false );
 
-		$stream = $this->docker->execStart( $exec_id, $exec_start_config );
+		$stream = EnvironmentFactory::$docker->execStart( $exec_id, $exec_start_config );
 
 		$stream->onStdout(
 			function( $stdout ) {
@@ -633,7 +613,7 @@ class Environment {
 
 		$stream->wait();
 
-		$exit_code = $this->docker->execInspect( $exec_id )->getExitCode();
+		$exit_code = EnvironmentFactory::$docker->execInspect( $exec_id )->getExitCode();
 
 		if ( 0 !== $exit_code ) {
 			Log::instance()->write( 'Failed to pull snapshot into WordPress container.', 0, 'error' );
@@ -682,11 +662,11 @@ class Environment {
 		$exec_config->setAttachStderr( true );
 		$exec_config->setCmd( [ '/bin/sh', '-c', 'find /var/www/html -name "wpacceptance.json" -not -path "/var/www/html/wp-includes/*" -not -path "/var/www/html/wp-admin/*"' ] );
 
-		$exec_id           = $this->docker->containerExec( $this->environment_id . '-wordpress', $exec_config )->getId();
+		$exec_id           = EnvironmentFactory::$docker->containerExec( $this->environment_id . '-wordpress', $exec_config )->getId();
 		$exec_start_config = new ExecIdStartPostBody();
 		$exec_start_config->setDetach( false );
 
-		$stream = $this->docker->execStart( $exec_id, $exec_start_config );
+		$stream = EnvironmentFactory::$docker->execStart( $exec_id, $exec_start_config );
 
 		$suite_config_files = [];
 
@@ -712,7 +692,7 @@ class Environment {
 
 		$stream->wait();
 
-		$exit_code = $this->docker->execInspect( $exec_id )->getExitCode();
+		$exit_code = EnvironmentFactory::$docker->execInspect( $exec_id )->getExitCode();
 
 		if ( 0 !== $exit_code ) {
 			Log::instance()->write( 'Failed to find codebase in snapshot.', 0, 'error' );
@@ -726,11 +706,11 @@ class Environment {
 			$exec_config->setAttachStderr( true );
 			$exec_config->setCmd( [ '/bin/sh', '-c', 'php -r "\$config = json_decode(file_get_contents(\"' . $suite_config_file . '\"), true); echo \$config[\"name\"];"' ] );
 
-			$exec_id           = $this->docker->containerExec( $this->environment_id . '-wordpress', $exec_config )->getId();
+			$exec_id           = EnvironmentFactory::$docker->containerExec( $this->environment_id . '-wordpress', $exec_config )->getId();
 			$exec_start_config = new ExecIdStartPostBody();
 			$exec_start_config->setDetach( false );
 
-			$stream = $this->docker->execStart( $exec_id, $exec_start_config );
+			$stream = EnvironmentFactory::$docker->execStart( $exec_id, $exec_start_config );
 
 			$suite_config_files = [];
 			$suite_config_name  = '';
@@ -810,11 +790,11 @@ class Environment {
 		$exec_config->setAttachStderr( true );
 		$exec_config->setCmd( [ '/bin/sh', '-c', $rsync_command ] );
 
-		$exec_id           = $this->docker->containerExec( $this->environment_id . '-wordpress', $exec_config )->getId();
+		$exec_id           = EnvironmentFactory::$docker->containerExec( $this->environment_id . '-wordpress', $exec_config )->getId();
 		$exec_start_config = new ExecIdStartPostBody();
 		$exec_start_config->setDetach( false );
 
-		$stream = $this->docker->execStart( $exec_id, $exec_start_config );
+		$stream = EnvironmentFactory::$docker->execStart( $exec_id, $exec_start_config );
 
 		$stream->onStdout(
 			function( $stdout ) {
@@ -830,7 +810,7 @@ class Environment {
 
 		$stream->wait();
 
-		$exit_code = $this->docker->execInspect( $exec_id )->getExitCode();
+		$exit_code = EnvironmentFactory::$docker->execInspect( $exec_id )->getExitCode();
 
 		if ( 0 !== $exit_code ) {
 			Log::instance()->write( 'Failed to copy codebase into WordPress container.', 0, 'error' );
@@ -849,11 +829,11 @@ class Environment {
 		$exec_config->setAttachStderr( true );
 		$exec_config->setCmd( [ '/bin/sh', '-c', 'chmod -R 0777 /var/www/html/wp-content/uploads' ] );
 
-		$exec_id           = $this->docker->containerExec( $this->environment_id . '-wordpress', $exec_config )->getId();
+		$exec_id           = EnvironmentFactory::$docker->containerExec( $this->environment_id . '-wordpress', $exec_config )->getId();
 		$exec_start_config = new ExecIdStartPostBody();
 		$exec_start_config->setDetach( false );
 
-		$stream = $this->docker->execStart( $exec_id, $exec_start_config );
+		$stream = EnvironmentFactory::$docker->execStart( $exec_id, $exec_start_config );
 
 		$suite_config_files = [];
 
@@ -871,7 +851,7 @@ class Environment {
 
 		$stream->wait();
 
-		$exit_code = $this->docker->execInspect( $exec_id )->getExitCode();
+		$exit_code = EnvironmentFactory::$docker->execInspect( $exec_id )->getExitCode();
 
 		if ( 0 !== $exit_code ) {
 			Log::instance()->write( 'Failed to chmod uploads directory.', 0, 'error' );
@@ -888,20 +868,16 @@ class Environment {
 	public function destroy() {
 		if ( $this->cache_environment && ! $this->skip_environment_cache ) {
 			Log::instance()->write( 'Caching environment.' );
-
-			$this->stopContainers( [ 'selenium' ] );
-			$this->deleteContainers( [ 'selenium' ] );
-
 			return false;
-		} else {
-			Log::instance()->write( 'Destroying environment...', 1 );
-
-			$this->stopContainers();
-			$this->deleteContainers();
-			$this->deleteNetwork();
-
-			return true;
 		}
+
+		Log::instance()->write( 'Destroying environment...', 1 );
+
+		$this->stopContainers();
+		$this->deleteContainers();
+		$this->deleteNetwork();
+
+		return true;
 	}
 
 	/**
@@ -921,14 +897,10 @@ class Environment {
 				'name' => '10up/wpacceptance-wordpress',
 				'tag'  => 'latest',
 			],
-			[
-				'name' => 'selenium/standalone-chrome',
-				'tag'  => '3.4.0',
-			],
 		];
 
 		foreach ( $images as $image ) {
-			$create_image = $this->docker->imageCreate(
+			$create_image = EnvironmentFactory::$docker->imageCreate(
 				'',
 				[
 					'fromImage' => $image['name'],
@@ -973,176 +945,127 @@ class Environment {
 	/**
 	 * Create Docker containers
 	 *
-	 * @param  array $containers List of containers to start. Null means all.
 	 * @return  bool
 	 */
-	public function createContainers( array $containers = null ) {
-		if ( null === $containers ) {
-			$containers = $this->containers;
-		}
-
-		Log::instance()->write( 'Creating container(s)...' );
+	public function createContainers() {
+		Log::instance()->write( 'Creating containers...' );
 
 		$stream_factory = \Http\Discovery\StreamFactoryDiscovery::find();
 		$serializer     = new \Symfony\Component\Serializer\Serializer( \Docker\API\Normalizer\NormalizerFactory::create(), [ new \Symfony\Component\Serializer\Encoder\JsonEncoder( new \Symfony\Component\Serializer\Encoder\JsonEncode(), new \Symfony\Component\Serializer\Encoder\JsonDecode() ) ] );
 
-		if ( in_array( 'mysql', $containers, true ) ) {
-			/**
-			 * Create MySQL
-			 */
+		/**
+		 * Create MySQL
+		 */
 
-			if ( empty( $this->mysql_port ) ) {
-				$this->mysql_port = $this->getOpenPort();
-			}
+		$this->mysql_port = $this->getOpenPort();
 
-			$host_config = new HostConfig();
-			$host_config->setNetworkMode( $this->environment_id );
-			$host_config->setBinds(
-				[
-					WPACCEPTANCE_DIR . '/docker/mysql:/etc/mysql/conf.d',
-				]
-			);
+		$host_config = new HostConfig();
+		$host_config->setNetworkMode( $this->environment_id );
+		$host_config->setBinds(
+			[
+				WPACCEPTANCE_DIR . '/docker/mysql:/etc/mysql/conf.d',
+			]
+		);
 
-			$port_binding = new PortBinding();
-			$port_binding->setHostPort( $this->mysql_port );
-			$port_binding->setHostIp( '0.0.0.0' );
+		$port_binding = new PortBinding();
+		$port_binding->setHostPort( $this->mysql_port );
+		$port_binding->setHostIp( '0.0.0.0' );
 
-			$host_port_map             = new \ArrayObject();
-			$host_port_map['3306/tcp'] = [ $port_binding ];
+		$host_port_map             = new \ArrayObject();
+		$host_port_map['3306/tcp'] = [ $port_binding ];
 
-			$host_config->setPortBindings( $host_port_map );
+		$host_config->setPortBindings( $host_port_map );
 
-			$container_config = new ContainersCreatePostBody();
-			$container_config->setImage( 'mysql:5.7' );
-			$container_config->setAttachStdin( true );
-			$container_config->setAttachStdout( true );
-			$container_config->setAttachStderr( true );
-			$container_config->setEnv(
-				[
-					'MYSQL_ROOT_PASSWORD=password',
-					'MYSQL_DATABASE=wordpress_clean',
-				]
-			);
-			$container_config->setHostConfig( $host_config );
+		$container_config = new ContainersCreatePostBody();
+		$container_config->setImage( 'mysql:5.7' );
+		$container_config->setAttachStdin( true );
+		$container_config->setAttachStdout( true );
+		$container_config->setAttachStderr( true );
+		$container_config->setEnv(
+			[
+				'MYSQL_ROOT_PASSWORD=password',
+				'MYSQL_DATABASE=wordpress_clean',
+			]
+		);
+		$container_config->setHostConfig( $host_config );
 
-			$container_create = new ContainerCreate( $container_config );
+		$container_create = new ContainerCreate( $container_config );
 
-			$container_body = $container_create->getBody( $serializer, $stream_factory );
+		$container_body = $container_create->getBody( $serializer, $stream_factory );
 
-			Log::instance()->write( 'Container Request Body (MySQL):', 2 );
-			Log::instance()->write( $container_body[1], 2 );
+		Log::instance()->write( 'Container Request Body (MySQL):', 2 );
+		Log::instance()->write( $container_body[1], 2 );
 
-			$this->docker->containerCreate( $container_config, [ 'name' => $this->environment_id . '-mysql' ] );
+		EnvironmentFactory::$docker->containerCreate( $container_config, [ 'name' => $this->environment_id . '-mysql' ] );
 
-			$this->mysql_stream = $this->docker->containerAttach(
-				$this->environment_id . '-mysql',
-				[
-					'stream' => true,
-					'stdin'  => true,
-					'stdout' => true,
-					'stderr' => true,
-				]
-			);
+		$this->mysql_stream = EnvironmentFactory::$docker->containerAttach(
+			$this->environment_id . '-mysql',
+			[
+				'stream' => true,
+				'stdin'  => true,
+				'stdout' => true,
+				'stderr' => true,
+			]
+		);
+
+		/**
+		 * Create WP container
+		 */
+
+		$this->wordpress_port = $this->getOpenPort();
+
+		$host_config = new HostConfig();
+
+		$host_config->setNetworkMode( $this->environment_id );
+
+		$container_config = new ContainersCreatePostBody();
+
+		if ( GitLab::get()->isGitLab() ) {
+			$container_config->setEnv( [ 'WPSNAPSHOTS_DIR=/gitlab/.wpsnapshots/' ] );
+
+			$binds = [
+				GitLab::get()->getVolumeName() . ':/gitlab',
+			];
+		} else {
+			$binds = [
+				\WPSnapshots\Utils\get_snapshot_directory() . $this->suite_config['snapshot_id'] . ':/root/.wpsnapshots/' . $this->suite_config['snapshot_id'],
+				\WPSnapshots\Utils\get_snapshot_directory() . 'config.json:/root/.wpsnapshots/config.json',
+				$this->suite_config['host_repo_path'] . ':/root/repo',
+			];
 		}
 
-		if ( in_array( 'wordpress', $containers, true ) ) {
-			/**
-			 * Create WP container
-			 */
+		$host_config->setBinds( $binds );
 
-			if ( empty( $this->wordpress_port ) ) {
-				$this->wordpress_port = $this->getOpenPort();
-			}
+		Log::instance()->write( 'Mapping ' . $this->suite_config['host_repo_path'] . ' to ' . $this->getWPContainerRepoRoot(), 2 );
 
-			$host_config = new HostConfig();
+		$container_port_map           = new \ArrayObject();
+		$container_port_map['80/tcp'] = new \stdClass();
 
-			$host_config->setNetworkMode( $this->environment_id );
+		$container_config->setImage( '10up/wpacceptance-wordpress' );
+		$container_config->setAttachStdin( true );
+		$container_config->setAttachStdout( true );
+		$container_config->setExposedPorts( $container_port_map );
+		$container_config->setAttachStderr( true );
+		$container_config->setTty( true );
 
-			$container_config = new ContainersCreatePostBody();
+		$port_binding = new PortBinding();
+		$port_binding->setHostPort( $this->wordpress_port );
+		$port_binding->setHostIp( '0.0.0.0' );
 
-			if ( GitLab::get()->isGitLab() ) {
-				$container_config->setEnv( [ 'WPSNAPSHOTS_DIR=/gitlab/.wpsnapshots/' ] );
+		$host_port_map           = new \ArrayObject();
+		$host_port_map['80/tcp'] = [ $port_binding ];
 
-				$binds = [
-					GitLab::get()->getVolumeName() . ':/gitlab',
-				];
-			} else {
-				$binds = [
-					\WPSnapshots\Utils\get_snapshot_directory() . $this->suite_config['snapshot_id'] . ':/root/.wpsnapshots/' . $this->suite_config['snapshot_id'],
-					\WPSnapshots\Utils\get_snapshot_directory() . 'config.json:/root/.wpsnapshots/config.json',
-					$this->suite_config['host_repo_path'] . ':/root/repo',
-				];
-			}
+		$host_config->setPortBindings( $host_port_map );
+		$container_config->setHostConfig( $host_config );
 
-			$host_config->setBinds( $binds );
+		$container_create = new ContainerCreate( $container_config );
 
-			Log::instance()->write( 'Mapping ' . $this->suite_config['host_repo_path'] . ' to ' . $this->getWPContainerRepoRoot(), 2 );
+		$container_body = $container_create->getBody( $serializer, $stream_factory );
 
-			$container_port_map           = new \ArrayObject();
-			$container_port_map['80/tcp'] = new \stdClass();
+		Log::instance()->write( 'Container Request Body (WordPress):', 2 );
+		Log::instance()->write( $container_body[1], 2 );
 
-			$container_config->setImage( '10up/wpacceptance-wordpress' );
-			$container_config->setAttachStdin( true );
-			$container_config->setAttachStdout( true );
-			$container_config->setExposedPorts( $container_port_map );
-			$container_config->setAttachStderr( true );
-			$container_config->setTty( true );
-
-			$port_binding = new PortBinding();
-			$port_binding->setHostPort( $this->wordpress_port );
-			$port_binding->setHostIp( '0.0.0.0' );
-
-			$host_port_map           = new \ArrayObject();
-			$host_port_map['80/tcp'] = [ $port_binding ];
-
-			$host_config->setPortBindings( $host_port_map );
-			$container_config->setHostConfig( $host_config );
-
-			$container_create = new ContainerCreate( $container_config );
-
-			$container_body = $container_create->getBody( $serializer, $stream_factory );
-
-			Log::instance()->write( 'Container Request Body (WordPress):', 2 );
-			Log::instance()->write( $container_body[1], 2 );
-
-			$this->docker->containerCreate( $container_config, [ 'name' => $this->environment_id . '-wordpress' ] );
-		}
-
-		if ( in_array( 'selenium', $containers, true ) ) {
-			/**
-			 * Create selenium container
-			 */
-
-			if ( empty( $this->selenium_port ) ) {
-				$this->selenium_port = $this->getOpenPort();
-			}
-
-			$host_config = new HostConfig();
-			$host_config->setNetworkMode( $this->environment_id );
-			$host_config->setShmSize( ( 1000 * 1000 * 1000 ) ); // 1GB in bytes
-
-			$container_config = new ContainersCreatePostBody();
-			$container_config->setImage( 'selenium/standalone-chrome:3.4.0' );
-
-			$port_binding = new PortBinding();
-			$port_binding->setHostPort( $this->selenium_port );
-			$port_binding->setHostIp( '0.0.0.0' );
-
-			$host_port_map             = new \ArrayObject();
-			$host_port_map['4444/tcp'] = [ $port_binding ];
-			$host_config->setPortBindings( $host_port_map );
-
-			$container_config->setHostConfig( $host_config );
-
-			$container_create = new ContainerCreate( $container_config );
-
-			$container_body = $container_create->getBody( $serializer, $stream_factory );
-
-			Log::instance()->write( 'Container Request Body (Selenium):', 2 );
-			Log::instance()->write( $container_body[1], 2 );
-
-			$this->docker->containerCreate( $container_config, [ 'name' => $this->environment_id . '-selenium' ] );
-		}
+		EnvironmentFactory::$docker->containerCreate( $container_config, [ 'name' => $this->environment_id . '-wordpress' ] );
 
 		return true;
 	}
@@ -1168,15 +1091,15 @@ class Environment {
 			$exec_config->setAttachStderr( true );
 			$exec_config->setCmd( [ '/bin/sh', '-c', 'mysqladmin ping -h"' . $mysql_creds['DB_HOST'] . '" -u ' . $mysql_creds['DB_USER'] . ' -p' . $mysql_creds['DB_PASSWORD'] ] );
 
-			$exec_id           = $this->docker->containerExec( $this->environment_id . '-wordpress', $exec_config )->getId();
+			$exec_id           = EnvironmentFactory::$docker->containerExec( $this->environment_id . '-wordpress', $exec_config )->getId();
 			$exec_start_config = new ExecIdStartPostBody();
 			$exec_start_config->setDetach( false );
 
-			$stream = $this->docker->execStart( $exec_id, $exec_start_config );
+			$stream = EnvironmentFactory::$docker->execStart( $exec_id, $exec_start_config );
 
 			$stream->wait();
 
-			$exit_code = $this->docker->execInspect( $exec_id )->getExitCode();
+			$exit_code = EnvironmentFactory::$docker->execInspect( $exec_id )->getExitCode();
 
 			if ( 0 === $exit_code ) {
 				Log::instance()->write( 'MySQL connection available after ' . ( $i + 2 ) . ' seconds.', 2 );
@@ -1210,7 +1133,7 @@ class Environment {
 		Log::instance()->write( 'Starting containers...', 1 );
 
 		foreach ( $containers as $container ) {
-			$response = $this->docker->containerStart( $this->environment_id . '-' . $container );
+			$response = EnvironmentFactory::$docker->containerStart( $this->environment_id . '-' . $container );
 		}
 
 		return $this->waitForMySQL();
@@ -1231,7 +1154,7 @@ class Environment {
 
 		foreach ( $containers as $container ) {
 			try {
-				$this->docker->containerStop( $this->environment_id . '-' . $container );
+				EnvironmentFactory::$docker->containerStop( $this->environment_id . '-' . $container );
 			} catch ( \Exception $exception ) {
 				Log::instance()->write( 'Could not stop container: ' . $this->environment_id . '-' . $container, 1 );
 			}
@@ -1255,7 +1178,7 @@ class Environment {
 
 		foreach ( $containers as $container ) {
 			try {
-				$this->docker->containerDelete(
+				EnvironmentFactory::$docker->containerDelete(
 					$this->environment_id . '-' . $container,
 					[
 						'v'     => true,
@@ -1282,14 +1205,14 @@ class Environment {
 		$network_config->setName( $this->environment_id );
 
 		try {
-			$this->docker->networkCreate( $network_config );
+			EnvironmentFactory::$docker->networkCreate( $network_config );
 		} catch ( \Exception $e ) {
 			Log::instance()->write( 'Could not create network.', 0, 'error' );
 
 			return false;
 		}
 
-		$network = $this->docker->networkInspect( $this->environment_id );
+		$network = EnvironmentFactory::$docker->networkInspect( $this->environment_id );
 		if ( empty( $network ) ) {
 			Log::instance()->write( 'Could not create network. This network address might already exist. Try `docker network prune`.', 0, 'error' );
 
@@ -1315,21 +1238,12 @@ class Environment {
 		Log::instance()->write( 'Deleting network...', 1 );
 
 		try {
-			$this->docker->networkDelete( $this->environment_id );
+			EnvironmentFactory::$docker->networkDelete( $this->environment_id );
 		} catch ( \Exception $exception ) {
 			// Proceed no matter what
 		}
 
 		return true;
-	}
-
-	/**
-	 * Get Selenium server URL
-	 *
-	 * @return string
-	 */
-	public function getSeleniumServerUrl() {
-		return 'http://' . $this->getLocalIP() . ':' . intval( $this->selenium_port ) . '/wd/hub';
 	}
 
 	/**
@@ -1438,7 +1352,6 @@ class Environment {
 		return [
 			'suite_config'               => $this->suite_config->toArray(),
 			'wordpress_port'             => $this->wordpress_port,
-			'selenium_port'              => $this->selenium_port,
 			'mysql_port'                 => $this->mysql_port,
 			'snapshot_id'                => $this->suite_config['snapshot_id'],
 			'environment_id'             => $this->environment_id,
@@ -1474,12 +1387,12 @@ class Environment {
 		$exec_config->setAttachStderr( true );
 		$exec_config->setCmd( [ '/bin/sh', '-c', $command ] );
 
-		$exec_command      = $this->docker->containerExec( $this->environment_id . '-wordpress', $exec_config );
+		$exec_command      = EnvironmentFactory::$docker->containerExec( $this->environment_id . '-wordpress', $exec_config );
 		$exec_id           = $exec_command->getId();
 		$exec_start_config = new ExecIdStartPostBody();
 		$exec_start_config->setDetach( false );
 
-		$stream = $this->docker->execStart( $exec_id, $exec_start_config );
+		$stream = EnvironmentFactory::$docker->execStart( $exec_id, $exec_start_config );
 
 		$stream->onStdout(
 			function( $stdout ) {

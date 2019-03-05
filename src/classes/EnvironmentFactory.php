@@ -21,6 +21,27 @@ class EnvironmentFactory {
 	public static $environments = [];
 
 	/**
+	 * Docker instance
+	 *
+	 * @var Docker\Docker
+	 */
+	public static $docker;
+
+	/**
+	 * Initialize environment factory
+	 */
+	public static function init() {
+		self::$docker = Docker::create();
+	}
+
+	/**
+	 * Clean up unused Docker networks
+	 */
+	public static function pruneNetworks() {
+		self::$docker->networkPrune();
+	}
+
+	/**
 	 * Get an environment given an index
 	 *
 	 * @param  int $index Environments index
@@ -63,9 +84,7 @@ class EnvironmentFactory {
 	 * @return boolean
 	 */
 	public static function destroyAll() {
-		$docker = Docker::create();
-
-		$containers = $docker->containerList();
+		$containers = self::$docker->containerList();
 
 		foreach ( $containers as $container ) {
 			$names = $container->getNames();
@@ -91,6 +110,8 @@ class EnvironmentFactory {
 	 * @return  \WPAcceptance\Environment|bool
 	 */
 	public static function create( $suite_config, $cache_environment = false, $skip_environment_cache = false, $environment_id = null, $mysql_wait_time = null ) {
+		self::pruneNetworks();
+
 		$environment = new Environment( $suite_config, $cache_environment, $skip_environment_cache, $environment_id, $mysql_wait_time );
 
 		if ( empty( self::$environments ) ) {
@@ -100,19 +121,7 @@ class EnvironmentFactory {
 		if ( $environment->populateEnvironmentFromCache() ) {
 			self::$environments[] = $environment;
 
-			$environment->stopContainers( [ 'selenium' ] );
-
-			$environment->deleteContainers( [ 'selenium' ] );
-
-			if ( ! $environment->createContainers( [ 'selenium' ] ) ) {
-				return false;
-			}
-
-			if ( ! $environment->startContainers( [ 'selenium' ] ) ) {
-				return false;
-			}
-
-			if ( ! $environment->setupHosts( false, true ) ) {
+			if ( ! $environment->setupHosts() ) {
 				return false;
 			}
 
@@ -128,6 +137,7 @@ class EnvironmentFactory {
 				return false;
 			}
 		} else {
+
 			if ( ! $environment->createNetwork() ) {
 				return false;
 			}
@@ -147,6 +157,10 @@ class EnvironmentFactory {
 			}
 
 			if ( ! $environment->pullSnapshot() ) {
+				return false;
+			}
+
+			if ( ! $environment->setupHosts() ) {
 				return false;
 			}
 
