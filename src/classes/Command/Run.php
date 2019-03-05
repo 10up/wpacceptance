@@ -51,7 +51,8 @@ class Run extends Command {
 		$this->addOption( 'force_save', false, InputOption::VALUE_NONE, 'No matter the outcome of the tests, save snapshot ID to wpacceptance.json and push it to the remote repository.' );
 
 		$this->addOption( 'snapshot_id', null, InputOption::VALUE_REQUIRED, 'WP Snapshot ID.' );
-		$this->addOption( 'snapshots', null, InputArgument::OPTIONAL, 'WP Snapshots' );
+		$this->addOption( 'snapshot_name', null, InputArgument::OPTIONAL, 'WP Snapshot Name.' );
+		$this->addOption( 'snapshots', null, InputArgument::OPTIONAL, 'WP Snapshots.' );
 		$this->addOption( 'environment_id', null, InputOption::VALUE_REQUIRED, 'Manually set environment ID.' );
 		$this->addOption( 'repository', null, InputOption::VALUE_REQUIRED, 'WP Snapshots repository to use.' );
 		$this->addOption( 'wp_directory', null, InputOption::VALUE_REQUIRED, 'Path to WordPress wp-config.php directory.' );
@@ -163,6 +164,7 @@ class Run extends Command {
 
 				if ( ! empty( $snapshot ) ) {
 					$suite_config['snapshot_id'] = $snapshot['snapshot_id'];
+					Log::instance()->write( 'Loading ' .  $snapshot['snapshot_name'] );
 				}
 			}
 
@@ -188,11 +190,11 @@ class Run extends Command {
 						if ( ! is_a( $snapshot, '\WPSnapshots\Snapshot' ) ) {
 							Log::instance()->write( 'Could not download snapshot ' . $snapshot['snapshot_id'] . '. Does it exist?', 0, 'error' );
 							return 2;
-						} else {
-							self::execute_tests_in_snapshot( $input, $output, $suite_config);
 						}
+					}
+					Log::instance()->write( 'Executing tests in ' . $snapshot['snapshot_name'] );
+					self::execute_tests_in_snapshot( $input, $output, $suite_config );
 				}
-
 			} else {
 
 				if ( empty( $suite_config['snapshot_id'] ) ) {
