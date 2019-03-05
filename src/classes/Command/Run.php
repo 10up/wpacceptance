@@ -193,6 +193,7 @@ class Run extends Command {
 						}
 					}
 					Log::instance()->write( 'Executing tests in ' . $snapshot['snapshot_name'] );
+					$suite_config['snapshot_id'] = $snapshot['snapshot_id'];
 					self::execute_tests_in_snapshot( $input, $output, $suite_config );
 				}
 			} else {
