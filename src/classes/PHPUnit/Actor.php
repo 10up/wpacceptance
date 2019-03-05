@@ -425,6 +425,17 @@ class Actor {
 	}
 
 	/**
+	 * Wait until property contains a value
+	 *
+	 * @param  string $value Value to wait for
+	 * @param  string $element_path Path to element to check
+	 * @param  string $property Property name
+	 */
+	public function waitUntilPropertyContains( $value, string $element_path, $property ) {
+		$this->getPage()->waitForFunction( JsFunction::createWithBody( 'return document.querySelector("' . addcslashes( $element_path, '"' ) . '").' . $property . '.includes("' . addcslashes( $value, '"' ) . '")' ) );
+	}
+
+	/**
 	 * Set a specific cookie.
 	 *
 	 * @param string $name A name of a cookie.
@@ -524,13 +535,13 @@ class Actor {
 			$container = $this->getElement( $container );
 		}
 
-		$element = $container->querySelector( $element );
+		$found_element = $container->querySelector( $element );
 
-		if ( empty( $element ) ) {
+		if ( empty( $found_element ) ) {
 			throw new ElementNotFound( 'Element not found.' );
 		}
 
-		return $element;
+		return $found_element;
 	}
 
 	/**
@@ -705,22 +716,39 @@ class Actor {
 	/**
 	 * Set a value for a field.
 	 *
-	 * @param  string $element_path Path to element
-	 * @param  mixed  $value Value to put in field
+	 * @param  ElementHandle|string $element Either element object or selector string
+	 * @param  mixed                $value Value to put in field
 	 */
-	public function fillField( string $element_path, $value ) {
-		$this->setElementProperty( $element_path, 'value', '' );
-
-		$this->getPage()->type( $element_path, $value, [ 'delay' => 20 ] );
+	public function fillField( $element, $value ) {
+		$this->setElementProperty( $element, 'value', $value );
 	}
 
 	/**
 	 * Clear the value of a textarea or an input fields.
 	 *
-	 * @param  string $element_path Path to element
+	 * @param  ElementHandle|string $element Either element object or selector string
 	 */
-	public function clearField( string $element_path ) {
+	public function clearField( $element ) {
 		$this->fillField( $element_path, '' );
+	}
+
+	/**
+	 * Type in a field
+	 *
+	 * @param  string $element_path Path to element
+	 * @param  mixed  $value Value to put in field
+	 */
+	public function typeInField( string $element_path, $value ) {
+		$this->setElementProperty( $element_path, 'value', '' );
+
+		$this->getPage()->type( $element_path, $value, [ 'delay' => 20 ] );
+
+		// Hack for buggy type behavior
+		$element_value = $this->getElementProperty( $element_path, 'value' );
+
+		if ( $value !== $element_value ) {
+			$this->getPage()->type( $element_path, $value, [ 'delay' => 20 ] );
+		}
 	}
 
 	/**

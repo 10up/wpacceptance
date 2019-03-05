@@ -62,6 +62,8 @@ trait Puppeteer {
 			$browser_args = [];
 			$config       = EnvironmentFactory::get()->getSuiteConfig();
 
+			$browser_args['slowMo'] = 5;
+
 			if ( ! empty( $config['show_browser'] ) ) {
 				$browser_args['headless'] = false;
 			}
