@@ -21,7 +21,7 @@ There are many acceptance tests frameworks out there. They all have one major fl
 
 ## Install
 
-[Installation instructions are on the docs site.](https://wpacceptance.readthedocs.io/en/latest/install/)
+[Installation instructions are on the docs site.](https://wpacceptance.readthedocs.io/en/latest/#installation)
 
 ## Usage
 
