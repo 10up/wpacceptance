@@ -509,15 +509,22 @@ class Actor {
 	 * Return an element based on CSS selector.
 	 *
 	 * @param  ElementHandle|string $element Either element object or selector string
+	 * @param  ElementHandle|string $container When provided searches elements inside this container
 	 * @throws ElementNotFound Element not found in DOM
 	 * @return  ElementHandle
 	 */
-	public function getElement( $element ) {
+	public function getElement( $element, $container = null ) {
 		if ( $element instanceof ElementHandle ) {
 			return $element;
 		}
 
-		$element = $this->getPage()->querySelector( $element );
+		if ( empty( $container ) ) {
+			$container = $this->getPage();
+		} else {
+			$container = $this->getElement( $container );
+		}
+
+		$element = $container->querySelector( $element );
 
 		if ( empty( $element ) ) {
 			throw new ElementNotFound( 'Element not found.' );
@@ -719,14 +726,13 @@ class Actor {
 	/**
 	 * Attach a file to a field.
 	 *
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
-	 * @param string                                             $file A path to a file.
+	 * @param  ElementHandle|string $element Either element object or selector string
+	 * @param  string               $file_path Path to file
 	 */
-	public function attachFile( $element, $file ) {
-		$detector = new \Facebook\WebDriver\Remote\LocalFileDetector();
-		$element  = $this->getElement( $element );
-		$element->setFileDetector( $detector );
-		$element->sendKeys( $file );
+	public function attachFile( $element, $file_path ) {
+		$element = $this->getElement( $element );
+
+		$element->uploadFile( $file_path );
 	}
 
 	/**
@@ -974,11 +980,7 @@ class Actor {
 
 		$attribute_value = $this->getElementAttribute( $element, $attribute );
 
-		if ( empty( $attribute ) ) {
-			return false;
-		}
-
-		TestCase::assertTrue( Utils\find_match( $attribute_value, $value ), $text . ' not found in attribute.' );
+		TestCase::assertTrue( Utils\find_match( $attribute_value, $value ), $value . ' not found in attribute.' );
 	}
 
 	/**
@@ -993,11 +995,37 @@ class Actor {
 
 		$attribute_value = $this->getElementAttribute( $element, $attribute );
 
-		if ( empty( $attribute ) ) {
-			return;
-		}
-
 		TestCase::assertFalse( Utils\find_match( $attribute_value, $value ), $text . ' found in attribute.' );
+	}
+
+	/**
+	 * Check if the user can see text inside of an property
+	 *
+	 * @param  ElementHandle|string $element Either element object or selector string
+	 * @param string               $property Property name
+	 * @param string               $value Property value
+	 */
+	public function seeValueInProperty( $element, $property, $value ) {
+		$element = $this->getElement( $element );
+
+		$property_value = $this->getElementProperty( $element, $property );
+
+		TestCase::assertTrue( Utils\find_match( $property_value, $value ), $value . ' not found in property.' );
+	}
+
+	/**
+	 * Check if the user can see text inside of an property
+	 *
+	 * @param ElementHandle|string $element Either element object or selector string
+	 * @param string               $property Property name
+	 * @param string               $value Property value
+	 */
+	public function dontSeeValueInProperty( $element, $property, $value ) {
+		$element = $this->getElement( $element );
+
+		$property_value = $this->getElementProperty( $element, $property );
+
+		TestCase::assertFalse( Utils\find_match( $property_value, $value ), $value . ' found in property.' );
 	}
 
 	/**
@@ -1010,13 +1038,9 @@ class Actor {
 	public function seeFieldValue( $element, $value ) {
 		$element = $this->getElement( $element );
 
-		$attribute_value = $this->getElementAttribute( $element, 'value' );
+		$prop_value = $this->getElementProperty( $element, 'value' );
 
-		if ( empty( $attribute ) ) {
-			return false;
-		}
-
-		TestCase::assertTrue( Utils\find_match( $attribute_value, $value ), $text . ' not found in attribute.' );
+		TestCase::assertTrue( Utils\find_match( $prop_value, $value ), $value . ' not found in field value.' );
 	}
 
 	/**
@@ -1029,13 +1053,9 @@ class Actor {
 	public function dontSeeFieldValue( $element, $value ) {
 		$element = $this->getElement( $element );
 
-		$attribute_value = $this->getElementAttribute( $element, 'value' );
+		$prop_value = $this->getElementProperty( $element, 'value' );
 
-		if ( empty( $attribute ) ) {
-			return false;
-		}
-
-		TestCase::assertFalse( Utils\find_match( $attribute_value, $value ), $text . ' found in attribute.' );
+		TestCase::assertFalse( Utils\find_match( $prop_value, $value ), $value . ' found in field value.' );
 	}
 
 	/**
