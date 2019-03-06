@@ -278,7 +278,7 @@ class Run extends Command {
 	 * @param arrat           $suite_config The configuration.
 	 */
 	protected function execute_tests_in_snapshot( InputInterface $input, OutputInterface $output, $suite_config ) {
-
+		$local = $input->getOption( 'local' );
 		Log::instance()->write( 'Creating environment...' );
 
 		$environment = EnvironmentFactory::create( $suite_config, $input->getOption( 'cache_environment' ), $input->getOption( 'skip_environment_cache' ), $input->getOption( 'environment_id' ), $input->getOption( 'mysql_wait_time' ) );
