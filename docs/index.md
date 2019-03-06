@@ -129,7 +129,7 @@ Here's what `wpacceptance.json` looks like
 	"snapshots": [ {
 		"snapshot_name": "name",
 		"snapshot_id": "ID"
-	}]
+	} ],
 	"exclude": [
 		"%REPO_ROOT%/node_modules",
 		"%REPO_ROOT%/vendor"
