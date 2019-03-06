@@ -14,7 +14,7 @@ class GalleryTest extends \WPAcceptance\PHPUnit\TestCase {
 	 * @testdox Clicking gallery dots works.
 	 */
 	public function testGalleryNav() {
-		$I = $this->getAnonymousUser();
+		$I = $this->openBrowserPage();
 
 		$I->moveTo( '/' );
 
@@ -33,7 +33,7 @@ class GalleryTest extends \WPAcceptance\PHPUnit\TestCase {
 	 * @testdox Clicking the next arrow performs a gallery slide to the correct image.
 	 */
 	public function testNextArrow() {
-		$I = $this->getAnonymousUser();
+		$I = $this->openBrowserPage();
 
 		$I->moveTo( '/' );
 
@@ -54,7 +54,7 @@ class GalleryTest extends \WPAcceptance\PHPUnit\TestCase {
 	 * @testdox Clicking the previous arrow performs a gallery slide to the correct image.
 	 */
 	public function testPreviousArrow() {
-		$I = $this->getAnonymousUser();
+		$I = $this->openBrowserPage();
 
 		$I->moveTo( '/' );
 
@@ -75,14 +75,18 @@ class GalleryTest extends \WPAcceptance\PHPUnit\TestCase {
 	 * @testdox Next and previous arrows properly appear on hover.
 	 */
 	public function testShowNextPrev() {
-		$I = $this->getAnonymousUser();
+		$I = $this->openBrowserPage();
 
 		$I->moveTo( '/' );
 
 		$I->dontSeeElement( '#metaslider_39 .flex-prev' );
 		$I->dontSeeElement( '#metaslider_39 .flex-next' );
 
-		$I->moveMouse( '#metaslider_39' );
+		$I->scrollToElement( '#metaslider_39' );
+
+		$I->hover( '#metaslider_39' );
+
+		sleep( 2 );
 
 		$I->seeElement( '#metaslider_39 .flex-prev' );
 		$I->seeElement( '#metaslider_39 .flex-next' );

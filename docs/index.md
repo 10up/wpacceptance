@@ -11,6 +11,7 @@ WP Acceptance is a toolkit that empowers developers and CI pipelines to test cod
 * PHP 7.2+
 * mysqli PHP extension
 * Docker
+* Node >= 8 (WP Acceptance uses Puppeteer behind the scenes)
 
 [WP Local Docker](https://github.com/10up/wp-local-docker) is highly recommended as the local development environment but not required.
 
@@ -186,11 +187,11 @@ The most poweful WP Acceptance functionality is provided by the `Actor` class an
 A new Actor must be initialized for each test and is done like so:
 ```php
 public function testExample() {
-	$I = $this->getAnonymousUser();
+	$I = $this->openBrowserPage();
 }
 ```
 
-`getAnonymousUser` does take an optional array of arguments. In particular, you can choose the browser size: `getAnonymousUser( [ 'screen_size' => 'small' ] )`.
+`openBrowserPage` does take an optional array of arguments. In particular, you can choose the browser size: `openBrowserPage( [ 'screen_size' => 'small' ] )`.
 
 With `$I` we can navigate to sections of our website:
 ```php
@@ -262,7 +263,7 @@ For detailed test examples, look at the [example test suite](https://github.com/
 
 ## Commands
 
-* __wpacceptance run__ [&lt;PATH TO wpacceptance.json DIRECTORY&gt;] [--local] [--snapshot_id=&lt;WPSNAPSHOT ID&gt;] [--enforce_clean_db] [--cache_environment] [--skip_environment_cache] [--db_host=&lt;DATABASE HOST&gt;] [--verbose] [--wp_directory=&lt;PATH TO WP DIRECTORY&gt;] [--save] [--force_save] [--filter_tests=&lt;TEST FILTER&gt;] [--filter_test_files=&lt;TEST FILE FILTER&gt;] [--repository=&lt;REPOSITORY&gt;] [--mysql_wait_time=&lt;MYSQL WAIT TIME&gt;] [--screenshot_on_failure] [--environment_id=&lt;ENVIRONMENT ID&gt;] - Runs a test suite.
+* __wpacceptance run__ [&lt;PATH TO wpacceptance.json DIRECTORY&gt;] [--local] [--snapshot_id=&lt;WPSNAPSHOT ID&gt;] [--enforce_clean_db] [--cache_environment] [--skip_environment_cache] [--db_host=&lt;DATABASE HOST&gt;] [--verbose] [--wp_directory=&lt;PATH TO WP DIRECTORY&gt;] [--save] [--force_save] [--filter_tests=&lt;TEST FILTER&gt;] [--filter_test_files=&lt;TEST FILE FILTER&gt;] [--repository=&lt;REPOSITORY&gt;] [--mysql_wait_time=&lt;MYSQL WAIT TIME&gt;] [--screenshot_on_failure] [--environment_id=&lt;ENVIRONMENT ID&gt;] --show_browser] [--slowmo=&lt;TIME IN MILLISECONDS&gt;] - Runs a test suite.
 	* `<PATH TO wpacceptance.json DIRECTORY>` - Path to `wpacceptance.json`, defaults to current working directory.
 	* `--local` - Runs your test suite against your local environment.
 	 * `--verbose`, `-v`, `-vv`, `-vvv` - Run with various degrees of verbosity.
@@ -280,6 +281,8 @@ For detailed test examples, look at the [example test suite](https://github.com/
 	* `--repository` - WP Snapshots repository to use.
 	* `--environment_id` - Manually specify environment ID. Useful for CI.
 	* `--mysql_wait_time` - Set how long WP Acceptance should wait for MySQL to become available in seconds.
+	* `--show_browser` - Show browser during tests. This is very useful for debugging failing tests.
+	* `--slowmo` - Slow testing down so interactions can be more easily viewed in browser. Specify value in milliseconds.
 
 * __wpacceptance init__ [--path] - Initialize a new test suite.
 	* `--path` - Optional path to init directory.
@@ -305,8 +308,8 @@ Here are some tips for writing tests locally:
 * Optimize your test suite for speed as much as possible. See [Speed of Testing](#speed-of-testing).
 * Always use `--cache_environment`. Similarly, `--local` should be used sparingly as a new snapshot will need to be created each time.
 * If Docker starts running slowly or you get weird errors. stop and remove all containers: `docker stop $(docker ps -a -q) && docker rm $(docker ps -a -q)`. Then run a system prune: `docker system prune`. If this doesn't fix things, restart Docker. Worst case scenario you made need to prune volumes. Beware pruning volumes will delete all WP Local Docker environment databases you have.
-* If you run into browser/Selenium interaction errors, take a screenshot before the error to see what is happening.
-* Most Selenium errors happen because an element is covered by another element making it unclickable or the page is still loading. If you are dealing with fading elements, a simple PHP sleep, `usleep( 500 );`, works great.
+* If you run into browser/Puppeteer interaction errors, run your tests with the `--show_browser` flag to see what's happening.
+* Most Puppeteer errors happen because an element is covered by another element making it unclickable or the page is still loading. If you are dealing with fading elements, a simple PHP sleep, `usleep( 500 );`, works great.
 * Use the `--screenshot_on_failure` to help identify issues with tests that are failing/erroring.
 
 ## Continuous Integration

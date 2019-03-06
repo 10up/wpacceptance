@@ -15,7 +15,7 @@ class ContactFormTest extends \WPAcceptance\PHPUnit\TestCase {
 	 * @testdox When I don't fill out required fields, the contact form wont submit.
 	 */
 	public function testRequiredFieldsFail() {
-		$I = $this->getAnonymousUser();
+		$I = $this->openBrowserPage();
 		$I->moveTo( '/contact' );
 
 		$I->click( 'form .submit-wrap input' );
@@ -29,7 +29,7 @@ class ContactFormTest extends \WPAcceptance\PHPUnit\TestCase {
 	public function testSubmit() {
 		$last_id = self::getLastPostId( [ 'post_type' => 'nf_sub' ] );
 
-		$I = $this->getAnonymousUser();
+		$I = $this->openBrowserPage();
 		$I->moveTo( '/contact' );
 
 		$I->fillField( '#nf-field-1', 'John' );

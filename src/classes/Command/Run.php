@@ -49,6 +49,7 @@ class Run extends Command {
 		$this->addOption( 'enforce_clean_db', false, InputOption::VALUE_NONE, 'Ensure each test has a clean version of the snapshot database.' );
 		$this->addOption( 'save', false, InputOption::VALUE_NONE, 'If tests are successful, save snapshot ID to wpacceptance.json and push it to the remote repository.' );
 		$this->addOption( 'force_save', false, InputOption::VALUE_NONE, 'No matter the outcome of the tests, save snapshot ID to wpacceptance.json and push it to the remote repository.' );
+		$this->addOption( 'show_browser', false, InputOption::VALUE_NONE, 'Show the browser where testing is occuring.' );
 
 		$this->addOption( 'snapshot_id', null, InputOption::VALUE_REQUIRED, 'WP Snapshot ID.' );
 		$this->addOption( 'snapshot_name', null, InputArgument::OPTIONAL, 'WP Snapshot Name.' );
@@ -62,6 +63,7 @@ class Run extends Command {
 		$this->addOption( 'db_password', null, InputOption::VALUE_REQUIRED, 'Database password.' );
 
 		$this->addOption( 'mysql_wait_time', null, InputOption::VALUE_REQUIRED, 'Determine how long WP Acceptance should wait in seconds for MySQL to be available.' );
+		$this->addOption( 'slowmo', null, InputOption::VALUE_REQUIRED, 'Slow down tests so errors can be more easily observed. Value provided in milliseconds. Needs to be used with --show_browser.' );
 		$this->addOption( 'filter_test_files', null, InputOption::VALUE_REQUIRED, 'Comma separate test files to execute. If used all other test files will be ignored.' );
 		$this->addOption( 'filter_tests', null, InputOption::VALUE_REQUIRED, 'Filter tests to run. Is analagous to PHPUnit --filter.' );
 		$this->addOption( 'colors', null, InputOption::VALUE_REQUIRED, 'Use colors in output ("never", "auto" or "always")' );
@@ -84,6 +86,11 @@ class Run extends Command {
 		Log::instance()->setOutput( $output );
 		WPSnapshotsLog::instance()->setOutput( $output );
 		WPSnapshotsLog::instance()->setVerbosityOffset( 1 );
+
+		putenv( 'NODE_PATH=' . WPACCEPTANCE_DIR . '/node_modules' );
+		$_ENV['NODE_PATH'] = WPACCEPTANCE_DIR . '/node_modules';
+
+		exec( 'cd ' . WPACCEPTANCE_DIR . ' && npm install' );
 
 		if ( ! function_exists( 'mysqli_init' ) ) {
 			Log::instance()->write( 'WP Acceptance requires the mysqli PHP extension is installed.', 0, 'error' );
@@ -117,6 +124,10 @@ class Run extends Command {
 		}
 
 		$suite_config['repository'] = $repository->getName();
+
+		$suite_config['show_browser'] = $input->getOption( 'show_browser' );
+
+		$suite_config['slowmo'] = (int) $input->getOption( 'slowmo' );
 
 		$local = $input->getOption( 'local' );
 

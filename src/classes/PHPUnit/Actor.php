@@ -7,34 +7,17 @@
 
 namespace WPAcceptance\PHPUnit;
 
-use Facebook\WebDriver\Exception\NoSuchElementException;
-use Facebook\WebDriver\Remote\RemoteWebElement;
-use Facebook\WebDriver\WebDriverBy;
-use Facebook\WebDriver\WebDriverSelect;
-use Facebook\WebDriver\WebDriverKeys;
-use Facebook\WebDriver\WebDriverExpectedCondition;
-use Facebook\WebDriver\Exception\InvalidElementStateException;
-use Facebook\WebDriver\Exception\UnknownServerException;
-
 use PHPUnit\Framework\ExpectationFailedException;
 use PHPUnit\Framework\TestCase;
 
-use WPAcceptance\Exception;
 use WPAcceptance\Log;
 use WPAcceptance\Utils;
+use WPAcceptance\Exception\PageNotSet as PageNotSet;
+use WPAcceptance\Exception\ElementNotFound as ElementNotFound;
 use WPAcceptance\EnvironmentFactory;
-use WPAcceptance\PHPUnit\Constraint;
-use WPAcceptance\PHPUnit\Constraints\Cookie as CookieConstrain;
-use WPAcceptance\PHPUnit\Constraints\PageContains as PageContainsConstrain;
-use WPAcceptance\PHPUnit\Constraints\PageSourceContains as PageSourceContainsConstrain;
-use WPAcceptance\PHPUnit\Constraints\LinkOnPage as LinkOnPageConstrain;
-use WPAcceptance\PHPUnit\Constraints\ElementVisible as ElementVisibleConstrain;
-use WPAcceptance\PHPUnit\Constraints\UrlContains as UrlContainsConstrain;
-use WPAcceptance\PHPUnit\Constraints\CheckboxChecked as CheckboxCheckedConstrain;
-use WPAcceptance\PHPUnit\Constraints\FieldValueContains as FieldValueContainsConstrain;
-use WPAcceptance\PHPUnit\Constraints\FieldInteractable as FieldInteractableConstrain;
-use WPAcceptance\PHPUnit\Constraints\AttributeContains as AttributeContainsConstrain;
-use WPAcceptance\PHPUnit\Constraints\NewDatabaseEntry as NewDatabaseEntry;
+
+use Nesk\Rialto\Data\JsFunction;
+use Nesk\Puphpeteer\Resources\ElementHandle;
 
 /**
  * Actor class
@@ -44,23 +27,27 @@ class Actor {
 	/**
 	 * Actor's name.
 	 *
-	 * @access private
 	 * @var string
 	 */
 	private $name;
 
 	/**
-	 * Facebook WebDrive instance.
+	 * Current page
 	 *
-	 * @access private
-	 * @var \Facebook\WebDriver\Remote\RemoteWebDriver
+	 * @var  object
 	 */
-	private $web_driver = null;
+	private $page;
+
+	/**
+	 * Response to current page navigation
+	 *
+	 * @var object
+	 */
+	private $page_response;
 
 	/**
 	 * Test case instance.
 	 *
-	 * @access private
 	 * @var \PHPUnit\Framework\TestCase
 	 */
 	private $test = null;
@@ -68,27 +55,33 @@ class Actor {
 	/**
 	 * Constructor.
 	 *
-	 * @access public
 	 * @param string $name Actor name.
 	 */
-	public function __construct( $name = 'user' ) {
+	public function __construct( string $name = 'user' ) {
 		$this->name = $name;
+	}
+
+	/**
+	 * Set current page
+	 *
+	 * @param object $page Puppeteer page
+	 */
+	public function setPage( $page ) {
+		$this->page = $page;
 	}
 
 	/**
 	 * Set actor name.
 	 *
-	 * @access public
 	 * @param string $name Actor name.
 	 */
-	public function setActorName( $name ) {
+	public function setActorName( string $name ) {
 		$this->name = $name;
 	}
 
 	/**
 	 * Return actor name.
 	 *
-	 * @access public
 	 * @return string Actor name.
 	 */
 	public function getActorName() {
@@ -96,34 +89,22 @@ class Actor {
 	}
 
 	/**
-	 * Set a new instance of a web driver.
+	 * Get current Puppeteer page
 	 *
-	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebDriver $web_driver A web driver instance.
+	 * @throws  PageNotSet Puppeteer page not set
+	 * @return object
 	 */
-	public function setWebDriver( $web_driver ) {
-		$this->web_driver = $web_driver;
-	}
-
-	/**
-	 * Return a web driver instance associated with the actor.
-	 *
-	 * @access public
-	 * @throws Exception if a web driver is not assigned.
-	 * @return \Facebook\WebDriver\Remote\RemoteWebDriver An instance of a web driver.
-	 */
-	public function getWebDriver() {
-		if ( ! $this->web_driver ) {
-			throw new Exception( 'WebDriver is not provided.' );
+	public function getPage() {
+		if ( ! $this->page ) {
+			throw new PageNotSet( 'Page is not set.' );
 		}
 
-		return $this->web_driver;
+		return $this->page;
 	}
 
 	/**
 	 * Set a new instance of PHPUnit test case.
 	 *
-	 * @access public
 	 * @param \PHPUnit\Framework\TestCase $test A test case instance.
 	 */
 	public function setTest( TestCase $test ) {
@@ -133,7 +114,6 @@ class Actor {
 	/**
 	 * Return an instance of a test case associated with the actor.
 	 *
-	 * @access public
 	 * @throws Exception if a test case is not assigned.
 	 * @return \PHPUnit\Framework\TestCase An instance of a test case.
 	 */
@@ -146,56 +126,26 @@ class Actor {
 	}
 
 	/**
-	 * Perform assertion for a specific constraint.
-	 *
-	 * @access protected
-	 * @param \WPAcceptance\PHPUnit\Constraint $constraint An instance of constraint class.
-	 * @param string                       $message Optional. A message for a failure.
-	 */
-	protected function assertThat( $constraint, $message = '' ) {
-		TestCase::assertThat( $this, $constraint, $message );
-	}
-
-	/**
 	 * Return a page source.
 	 *
-	 * @access public
+	 * @throws  PageNotSet Page not set exception
 	 * @return string A page source.
 	 */
 	public function getPageSource() {
-		return $this->getWebDriver()->getPageSource();
-	}
+		if ( empty( $this->page_response ) ) {
+			throw new PageNotSet( 'Page is not set.' );
+		}
 
-	/**
-	 * Accept the current native popup window created by window.alert, window.confirm,
-	 * window.prompt fucntions.
-	 *
-	 * @access public
-	 */
-	public function acceptPopup() {
-		$this->getWebDriver()->switchTo()->alert()->accept();
-		Log::instance()->write( 'Accepted the current popup.', 1 );
+		return $this->page_response->text();
 	}
 
 	/**
 	 * Get current page title
 	 *
-	 * @access public
 	 * @return  string
 	 */
 	public function getPageTitle() {
-		return $this->getWebDriver()->getTitle();
-	}
-
-	/**
-	 * Dismiss the current native popup window created by window.alert, window.confirm,
-	 * window.prompt fucntions.
-	 *
-	 * @access public
-	 */
-	public function cancelPopup() {
-		$this->getWebDriver()->switchTo()->alert()->dismiss();
-		Log::instance()->write( 'Dismissed the current popup.', 1 );
+		return $this->getPage()->title();
 	}
 
 	/**
@@ -204,87 +154,111 @@ class Actor {
 	 * @param  int $x X browser coordinate
 	 * @param  int $y Y browser coordinate
 	 */
-	public function scrollTo( $x, $y ) {
-		$this->executeJavaScript( 'window.scrollTo(' . (int) $x . ', ' . (int) $y . ')' );
+	public function scrollTo( int $x, int $y ) {
+		$this->executeJavaScript( 'window.scrollTo(' . $x . ', ' . $y . ')' );
 	}
 
 	/**
 	 * Scroll to element
 	 *
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
+	 * @param  ElementHandle|string $element Either element object or selector string
 	 */
 	public function scrollToElement( $element ) {
 		$element = $this->getElement( $element );
 
-		$this->getWebDriver()->action()->moveToElement( $element )->perform();
+		$this->getPage()->evaluate(
+			JsFunction::createWithParameters( [ 'element' ] )
+			->body(
+				'element.scrollIntoView'
+			),
+			$element
+		);
 	}
 
 	/**
 	 * Execute javascript
 	 *
 	 * @param  string $script JS code
-	 * @return  mixed Can be whatever JS returns
+	 * @return mixed Can be whatever JS returns
 	 */
-	public function executeJavaScript( $script ) {
-		return $this->getWebDriver()->executeScript( $script );
+	public function executeJavaScript( string $script ) {
+		return $this->getPage()->evaluate( JsFunction::createWithBody( $script ) );
 	}
 
 	/**
 	 * Directly set element attribute via JS
 	 *
-	 * @param string $element_path    Element path
-	 * @param string $attribute_name  Attribute name
-	 * @param string $attribute_value Attribute value
+	 * @param  ElementHandle|string $element Either element object or selector string
+	 * @param string               $attribute_name  Attribute name
+	 * @param string               $attribute_value Attribute value
 	 */
-	public function setElementAttribute( $element_path, $attribute_name, $attribute_value ) {
-		$this->executeJavaScript( 'window.document.querySelector("' . addcslashes( $element_path, '"' ) . '").setAttribute("' . addcslashes( $attribute_name, '"' ) . '", "' . addcslashes( $attribute_value, '"' ) . '")' );
+	public function setElementAttribute( $element, string $attribute_name, $attribute_value ) {
+		$element = $this->getElement( $element );
+
+		$this->getPage()->evaluate(
+			JsFunction::createWithParameters( [ 'element' ] )
+			->body(
+				'element.setAttribute( "' . addcslashes( $attribute_name, '"' ) . '", "' . addcslashes( $attribute_value, '"' ) . '" );'
+			),
+			$element
+		);
+	}
+
+	/**
+	 * Directly set element property via JS
+	 *
+	 * @param  ElementHandle|string $element Either element object or selector string
+	 * @param  string               $property_name Property name
+	 * @param  string               $property_value Property value
+	 */
+	public function setElementProperty( $element, string $property_name, $property_value ) {
+		$element = $this->getElement( $element );
+
+		$this->getPage()->evaluate(
+			JsFunction::createWithParameters( [ 'element' ] )
+			->body(
+				'element.' . $property_name . ' = "' . addcslashes( $property_value, '"' ) . '";'
+			),
+			$element
+		);
 	}
 
 	/**
 	 * Take a screenshot of the viewport
 	 *
-	 * @access public
 	 * @param string $name A filename without extension.
 	 */
-	public function takeScreenshot( $name = null ) {
+	public function takeScreenshot( string $name = null ) {
 		if ( empty( $name ) ) {
 			$name = uniqid( date( 'Y-m-d_H-i-s_' ) );
 		}
 
 		$filename = $name . '.jpg';
-		$this->getWebDriver()->takeScreenshot( $filename );
+		$this->getPage()->screenshot( [ 'path' => $filename ] );
 		Log::instance()->write( 'Screenshot saved to ' . $filename, 1 );
 	}
 
 	/**
 	 * Move back to the previous page in the history.
-	 *
-	 * @access public
 	 */
 	public function moveBack() {
-		$web_driver = $this->getWebDriver();
-		$web_driver->navigate()->back();
+		$this->getPage()->goBack();
 		Log::instance()->write( 'Back to ' . $web_driver->getCurrentURL(), 1 );
 	}
 
 	/**
 	 * Move forward to the next page in the history.
-	 *
-	 * @access public
 	 */
 	public function moveForward() {
-		$web_driver = $this->getWebDriver();
-		$web_driver->navigate()->forward();
+		$this->getPage()->goForward();
 		Log::instance()->write( 'Forward to ' . $web_driver->getCurrentURL(), 1 );
 	}
 
 	/**
 	 * Refresh the current page.
-	 *
-	 * @access public
 	 */
 	public function refresh() {
-		$this->getWebDriver()->navigate()->refresh();
+		$this->getPage()->reload();
 		Log::instance()->write( 'Refreshed the current page', 1 );
 	}
 
@@ -293,18 +267,34 @@ class Actor {
 	 *
 	 * @param  string $element_path Path to element
 	 */
-	public function moveMouse( $element_path ) {
-		$this->getWebDriver()->getMouse()->mouseMove( $this->getElement( $element_path )->getCoordinates() );
+	public function hover( string $element_path ) {
+		$this->getPage()->hover( $element_path );
+	}
+
+	/**
+	 * Move mouse to element
+	 *
+	 * @param  ElementHandle|string $element Either element object or selector string
+	 */
+	public function moveMouse( $element ) {
+		$element = $this->getElement( $element );
+
+		if ( empty( $element ) ) {
+			return false;
+		}
+
+		$bounding_box = $element->boundingBox();
+
+		$this->getPage()->mouse->move( $bounding_box['x'], $bounding_box['y'] );
 	}
 
 	/**
 	 * Navigate to a new URL.
 	 *
-	 * @access public
 	 * @param string $url_or_path Path (relative to main site in network) or full url
 	 * @param int    $blog_id Optional blog id
 	 */
-	public function moveTo( $url_or_path, $blog_id = null ) {
+	public function moveTo( string $url_or_path, int $blog_id = null ) {
 
 		$url_parts = parse_url( $url_or_path );
 
@@ -323,158 +313,136 @@ class Actor {
 			$url .= '?' . $url_parts['query'];
 		}
 
-		$web_driver = $this->getWebDriver();
-		$web_driver->get( $url );
+		$this->page_response = $this->page->goto( $url, [ 'waitUntil' => 'domcontentloaded' ] );
 
 		Log::instance()->write( 'Navigating to URL: ' . $url, 1 );
 	}
 
 	/**
-	 * Resize window to a new dimension.
+	 * Resize viewport to a new dimension.
 	 *
-	 * @access public
 	 * @param int $width A new width.
 	 * @param int $height A new height.
 	 */
-	public function resizeWindow( $width, $height ) {
-		$dimension = new \Facebook\WebDriver\WebDriverDimension( $width, $height );
-
-		$web_driver = $this->getWebDriver();
-		$web_driver->manage()->window()->setSize( $dimension );
+	public function resizeViewport( int $width, int $height ) {
+		$this->getPage()->setViewport(
+			[
+				'width'  => $width,
+				'height' => $height,
+			]
+		);
 	}
 
 	/**
 	 * Assert that the actor sees a cookie.
 	 *
-	 * @access public
 	 * @param string $name The cookie name.
 	 * @param mixed  $value Optional. The cookie value. If it's empty, value check will be ignored.
-	 * @param string $message Optional. The message to use on a failure.
 	 */
-	public function seeCookie( $name, $value = null, $message = '' ) {
-		$this->assertThat(
-			new CookieConstrain( Constraint::ACTION_SEE, $name, $value ),
-			$message
-		);
-	}
+	public function seeCookie( string $name, $value = null ) {
+		$cookie = $this->getCookie( $name );
 
-	/**
-	 * Wait until element is clickable
-	 *
-	 * @param  string  $element_path Path to element to check
-	 * @param  integer $max_wait  Max wait time in seconds
-	 */
-	public function waitUntilElementClickable( $element_path, $max_wait = 10 ) {
-		$web_driver = $this->getWebDriver();
+		TestCase::assertTrue( isset( $cookie ), 'Cookie does not exist.' );
 
-		$web_driver->wait( $max_wait )->until( WebDriverExpectedCondition::elementToBeClickable( WebDriverBy::cssSelector( $element_path ) ) );
-	}
-
-	/**
-	 * Wait until element contains text
-	 *
-	 * @param  string  $text     Title string
-	 * @param  string  $element_path Path to element to check
-	 * @param  integer $max_wait  Max wait time in seconds
-	 */
-	public function waitUntilElementContainsText( $text, $element_path, $max_wait = 10 ) {
-		$web_driver = $this->getWebDriver();
-
-		// First wait for element to exist
-		$web_driver->wait( $max_wait )->until( WebDriverExpectedCondition::presenceOfElementLocated( WebDriverBy::cssSelector( $element_path ) ) );
-
-		// Now wait for element to contain text
-		$web_driver->wait( $max_wait )->until( WebDriverExpectedCondition::textToBePresentInElement( WebDriverBy::cssSelector( $element_path ), $text ) );
-	}
-
-	/**
-	 * Wait until title contains
-	 *
-	 * @param  string  $title     Title string
-	 * @param  integer $max_wait  Max wait time in seconds
-	 */
-	public function waitUntilTitleContains( $title, $max_wait = 10 ) {
-		$web_driver = $this->getWebDriver();
-
-		$web_driver->wait( $max_wait )->until( WebDriverExpectedCondition::titleContains( $title ) );
-	}
-
-	/**
-	 * Wait until element is visible
-	 *
-	 * @param  string  $element_path Path to element to check
-	 * @param  integer $max_wait  Max wait time in seconds
-	 */
-	public function waitUntilElementVisible( $element_path, $max_wait = 10 ) {
-		$web_driver = $this->getWebDriver();
-
-		$web_driver->wait( $max_wait )->until( WebDriverExpectedCondition::visibilityOfElementLocated( WebDriverBy::cssSelector( $element_path ) ) );
-	}
-
-	/**
-	 * Wait until page source contains text/regex
-	 *
-	 * @param  string  $text Text or regex to look for
-	 * @param  integer $max_wait  Max wait time in seconds
-	 */
-	public function waitUntilPageSourceContains( $text, $max_wait = 10 ) {
-		$web_driver = $this->getWebDriver();
-
-		$web_driver->wait( $max_wait )->until(
-			function() use ( $text ) {
-				$source = $this->getPageSource();
-
-				return Utils\find_match( $source, $text );
-			},
-			'Error waiting for page source to contain text.'
-		);
-	}
-
-	/**
-	 * Wait until element is not disabled
-	 *
-	 * @param  string  $element_path Path to element to check
-	 * @param  integer $max_wait  Max wait time in seconds
-	 */
-	public function waitUntilElementEnabled( $element_path, $max_wait = 10 ) {
-		$web_driver = $this->getWebDriver();
-
-		$web_driver->wait( $max_wait )->until(
-			function() use ( $element_path ) {
-				$element = $this->getElement( $element_path );
-
-				return $element->isEnabled();
-			},
-			'Error waiting for element to be enabled.'
-		);
+		if ( isset( $value ) ) {
+			TestCase::assertEquals( $value, $cookie, 'Cookie value does not match.' );
+		}
 	}
 
 	/**
 	 * Assert that the actor can't see a cookie.
 	 *
-	 * @access public
 	 * @param string $name The cookie name.
 	 * @param mixed  $value Optional. The cookie value. If it's empty, value check will be ignored.
-	 * @param string $message Optional. The message to use on a failure.
 	 */
-	public function dontSeeCookie( $name, $value = null, $message = '' ) {
-		$this->assertThat(
-			new CookieConstrain( Constraint::ACTION_DONTSEE, $name, $value ),
-			$message
-		);
+	public function dontSeeCookie( $name, $value = null ) {
+		$cookie = $this->getCookie( $name );
+
+		TestCase::assertFalse( isset( $cookie ), 'Cookie exists.' );
+
+		if ( isset( $value ) ) {
+			TestCase::assertNotEquals( $value, $cookie, 'Cookie values match.' );
+		}
+	}
+
+	/**
+	 * Wait until navigation
+	 *
+	 * @param  string $condition Navigation condition to check
+	 */
+	public function waitUntilNavigation( $condition = 'networkidle0' ) {
+		$this->getPage()->waitForNavigation( [ 'waitUntil' => $condition ] );
+	}
+
+	/**
+	 * Wait until element is enabled
+	 *
+	 * @param  string $element_path Path to element to check
+	 */
+	public function waitUntilElementEnabled( string $element_path ) {
+		$this->getPage()->waitForFunction( JsFunction::createWithBody( 'return ! document.querySelector("' . addcslashes( $element_path, '"' ) . '").disabled' ) );
+	}
+
+	/**
+	 * Wait until element contains text
+	 *
+	 * @param  string $text     Title string
+	 * @param  string $element_path Path to element to check
+	 */
+	public function waitUntilElementContainsText( $text, string $element_path ) {
+		// Wait for element to exist
+		$this->getPage()->waitForSelector( $element_path );
+
+		// Wait for element to contain text
+		$this->getPage()->waitForFunction( JsFunction::createWithBody( 'return document.querySelector("' . addcslashes( $element_path, '"' ) . '").innerText.includes("' . addcslashes( $text, '"' ) . '")' ) );
+	}
+
+	/**
+	 * Wait until title contains
+	 *
+	 * @param  string $title Title to wait for
+	 */
+	public function waitUntilTitleContains( $title ) {
+		$this->getPage()->waitForFunction( JsFunction::createWithBody( 'return document.title.includes("' . addcslashes( $title, '"' ) . '")' ) );
+	}
+
+	/**
+	 * Wait until element is visible
+	 *
+	 * @param  string $element_path Path to element to check
+	 */
+	public function waitUntilElementVisible( string $element_path ) {
+		$this->getPage()->waitForSelector( $element_path, [ 'visible' => true ] );
+	}
+
+	/**
+	 * Wait until page source contains text
+	 *
+	 * @param  string $text Text to wait for
+	 */
+	public function waitUntilPageSourceContains( $text ) {
+		$this->getPage()->waitForFunction( JsFunction::createWithBody( 'return document.documentElement.outerHTML.includes("' . addcslashes( $text, '"' ) . '")' ) );
+	}
+
+	/**
+	 * Wait until property contains a value
+	 *
+	 * @param  string $value Value to wait for
+	 * @param  string $element_path Path to element to check
+	 * @param  string $property Property name
+	 */
+	public function waitUntilPropertyContains( $value, string $element_path, $property ) {
+		$this->getPage()->waitForFunction( JsFunction::createWithBody( 'return document.querySelector("' . addcslashes( $element_path, '"' ) . '").' . $property . '.includes("' . addcslashes( $value, '"' ) . '")' ) );
 	}
 
 	/**
 	 * Set a specific cookie.
 	 *
-	 * @access public
 	 * @param string $name A name of a cookie.
 	 * @param string $value Value for a cookie.
 	 * @param array  $params Additional parameters for a cookie.
 	 */
 	public function setCookie( $name, $value, array $params = array() ) {
-		$web_driver = $this->getWebDriver();
-
 		$params['name']  = (string) $name;
 		$params['value'] = (string) $value;
 
@@ -482,19 +450,18 @@ class Actor {
 			$params['domain'] = '.' . parse_url( $this->test->getWPHomeUrl(), PHP_URL_HOST );
 		}
 
-		$web_driver->manage()->addCookie( $params );
+		$this->getPage()->setCookie( $params );
 	}
 
 	/**
 	 * Return value of a cookie.
 	 *
-	 * @access public
 	 * @param string $name A cookie name.
 	 * @return mixed A cookie value.
 	 */
 	public function getCookie( $name ) {
-		$web_driver = $this->getWebDriver();
-		$cookies    = $web_driver->manage()->getCookies();
+		$cookies = $this->getCookies();
+
 		foreach ( $cookies as $cookie ) {
 			if ( $cookie['name'] === $name ) {
 				return $cookie['value'];
@@ -507,84 +474,88 @@ class Actor {
 	/**
 	 * Hide an element in the dom
 	 *
-	 * @throws ExpectationFailedException When the element is not found on the page.
-	 * @param  strin $element_path A CSS selector for the element.
+	 * @param  ElementHandle|string $element Either element object or selector string
 	 */
-	public function hideElement( $element_path ) {
-		$this->executeJavaScript( 'window.document.querySelector("' . addcslashes( $element_path, '"' ) . '").style.display = "none";' );
+	public function hideElement( $element ) {
+		$element = $this->getElement( $element );
+
+		return $this->getPage()->evaluate(
+			JsFunction::createWithParameters( [ 'element' ] )
+			->body(
+				'element.style.display = "none";'
+			),
+			$element
+		);
 	}
 
 	/**
 	 * Get all cookies
 	 *
-	 * @access public
 	 * @return  array
 	 */
 	public function getCookies() {
-		$web_driver = $this->getWebDriver();
-		return $web_driver->manage()->getCookies();
+		return $this->getPage()->cookies();
 	}
 
 	/**
 	 * Delete a cookie with the give name.
 	 *
-	 * @access public
 	 * @param string $name A cookie name to reset.
 	 */
-	public function resetCookie( $name ) {
-		$web_driver = $this->getWebDriver();
-		$web_driver->manage()->deleteCookieNamed( $name );
+	public function deleteCookie( $name ) {
+		$this->getPage()->deleteCookies( [ 'name' => $name ] );
 	}
 
 	/**
 	 * Get element containing text
 	 *
 	 * @param  string $text Text to search for
-	 * @return \Facebook\WebDriver\Remote\RemoteWebElement An element instance.
+	 * @return  ElementHandle
 	 */
 	public function getElementContaining( $text ) {
-		$web_driver = $this->getWebDriver();
-		return $web_driver->findElement( WebDriverBy::xpath( "//*[contains(text(), '" . $text . "')]" ) );
+		return $this->getPage()->querySelectorXPath( "//*[contains(text(), '" . $text . "')]" );
 	}
 
 	/**
 	 * Return an element based on CSS selector.
 	 *
-	 * @access public
-	 * @throws ExpectationFailedException When the element is not found on the page.
-	 * @param  \Facebook\WebDriver\Remote\RemoteWebElement|\Facebook\WebDriver\WebDriverBy|string $element A CSS selector for the element.
-	 * @return \Facebook\WebDriver\Remote\RemoteWebElement An element instance.
+	 * @param  ElementHandle|string $element Either element object or selector string
+	 * @param  ElementHandle|string $container When provided searches elements inside this container
+	 * @throws ElementNotFound Element not found in DOM
+	 * @return  ElementHandle
 	 */
-	public function getElement( $element ) {
-		if ( $element instanceof RemoteWebElement ) {
+	public function getElement( $element, $container = null ) {
+		if ( $element instanceof ElementHandle ) {
 			return $element;
 		}
 
-		$web_driver = $this->getWebDriver();
-		$by         = $element instanceof WebDriverBy ? $element : WebDriverBy::cssSelector( $element );
-
-		try {
-			return $web_driver->findElement( $by );
-		} catch ( NoSuchElementException $e ) {
-			$message = sprintf( 'No element found using %s "%s"', $by->getMechanism(), $by->getValue() );
-			throw new ExpectationFailedException( $message );
+		if ( empty( $container ) ) {
+			$container = $this->getPage();
+		} else {
+			$container = $this->getElement( $container );
 		}
+
+		$found_element = $container->querySelector( $element );
+
+		if ( empty( $found_element ) ) {
+			throw new ElementNotFound( 'Element not found.' );
+		}
+
+		return $found_element;
 	}
 
 	/**
 	 * Return elements based on CSS selector.
 	 *
-	 * @access public
-	 * @throws ExpectationFailedException When elements are not found on the page.
-	 * @param \Facebook\WebDriver\WebDriverBy|array|string $elements A CSS selector for elements.
-	 * @return array Array of elements.
+	 * @param  array $elements Elements to get
+	 * @return  array Array of ElementHandle
 	 */
 	public function getElements( $elements ) {
 		if ( is_array( $elements ) ) {
 			$items = [];
 
 			foreach ( $elements as $element ) {
-				if ( $element instanceof RemoteWebElement ) {
+				if ( $element instanceof ElementHandle ) {
 					$items[] = $element;
 				} else {
 					$items[] = $this->getElement( $lement );
@@ -594,187 +565,51 @@ class Actor {
 			return $items;
 		}
 
-		$web_driver = $this->getWebDriver();
-		$by         = $elements instanceof WebDriverBy ? $elements : WebDriverBy::cssSelector( $elements );
-
-		try {
-			return $web_driver->findElements( $by );
-		} catch ( NoSuchElementException $e ) {
-			$message = sprintf( 'No elements found using %s "%s"', $by->getMechanism(), $by->getValue() );
-			throw new ExpectationFailedException( $message );
-		}
+		return $this->getPage()->querySelectorAll( $elements );
 	}
 
 	/**
-	 * Click an element with JS.
+	 * Click an element with only JS.
 	 *
-	 * @access public
-	 * @param string $element_path Path to element in DOM to click
+	 * @param  ElementHandle|string $element Either element object or selector string
 	 */
-	public function jsClick( $element_path ) {
-		$element = $this->getElement( $element_path );
-
-		$this->waitUntilElementClickable( $element_path );
-
-		$this->waitUntilElementVisible( $element_path );
-
-		$this->executeJavaScript( 'window.document.querySelector( "' . addcslashes( $element_path, '"' ) . '" ).click();' );
-	}
-
-	/**
-	 * Click an element. Click can be buggy. Try jsClick as well.
-	 *
-	 * @access public
-	 * @param string  $element_path Path to element in DOM to click
-	 * @param boolean $expect_navigate If true, will try harder to ensure navigation occurs circumventing
-	 *                                  buggy Selenium.
-	 */
-	public function click( $element_path, $expect_navigate = false ) {
-		if ( $expect_navigate ) {
-			$this->executeJavaScript( 'window.' . __FUNCTION__ . ' = 1;' );
-		}
-
-		$element = $this->getElement( $element_path );
-
-		$this->waitUntilElementClickable( $element_path );
-
-		$this->waitUntilElementVisible( $element_path );
-
-		try {
-			$element->sendKeys( '' );
-			$this->executeJavaScript( 'window.document.querySelector( "' . $element_path . '" ).focus(); ' );
-		} catch ( \Exception $e ) {
-			// Just continue
-		}
-
-		try {
-			$element->click();
-		} catch ( UnknownServerException $e ) {
-			// Weird hack to get around inconsistent click behavior
-			$this->executeJavaScript( 'window.scrollTo( 0, ( window.document.documentElement.scrollTop + 100 ) )' );
-
-			$element->click();
-		}
-
-		if ( $expect_navigate && ! empty( $this->executeJavaScript( 'return window.' . __FUNCTION__ . ' || false;' ) ) ) {
-			$this->pressKey( $element, WebDriverKeys::ENTER );
-		}
-
-		if ( $expect_navigate && ! empty( $this->executeJavaScript( 'return window.' . __FUNCTION__ . ' || false;' ) ) ) {
-			$element->click();
-		}
-	}
-
-	/**
-	 * Select options of a dropdown element.
-	 *
-	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
-	 * @param string|array                                       $options Single or multiple options to select.
-	 */
-	public function selectOptions( $element, $options ) {
+	public function jsClick( $element ) {
 		$element = $this->getElement( $element );
-		if ( $element->getTagName() === 'select' ) {
-			$select = new WebDriverSelect( $element );
-			if ( $select->isMultiple() ) {
-				$select->deselectAll();
-			}
 
-			if ( ! is_array( $options ) ) {
-				$options = array( $options );
-			}
-
-			foreach ( $options as $option ) {
-				// try to select an option by value
-				try {
-					$select->selectByValue( $option );
-					continue;
-				} catch ( NoSuchElementException $e ) {
-					// Do nothing
-				}
-
-				// try to select an option by visible text
-				try {
-					$select->selectByVisibleText( $option );
-					continue;
-				} catch ( NoSuchElementException $e ) {
-					// Do nothing
-				}
-
-				// try to select an option by visible partial text
-				try {
-					$select->selectByVisiblePartialText( $option );
-					continue;
-				} catch ( NoSuchElementException $e ) {
-					// Do nothing
-				}
-
-				// fallback to select by index
-				try {
-					$select->selectByIndex( $option );
-				} catch ( NoSuchElementException $e ) {
-					// Do nothing
-				}
-			}
-		}
+		$this->getPage()->evaluate(
+			JsFunction::createWithParameters( [ 'element' ] )
+			->body(
+				'element.click();'
+			),
+			$element
+		);
 	}
 
 	/**
-	 * Unselect options of a dropdown element.
+	 * Click an element.
 	 *
-	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
-	 * @param string|array                                       $options Single or multiple options to deselect.
+	 * @param  ElementHandle|string $element Either element object or selector string
 	 */
-	public function deselectOptions( $element, $options ) {
+	public function click( $element ) {
 		$element = $this->getElement( $element );
-		if ( $element->getTagName() === 'select' ) {
-			$select = new WebDriverSelect( $element );
 
-			if ( ! is_array( $options ) ) {
-				$options = array( $options );
-			}
+		$element->click();
+	}
 
-			foreach ( $options as $option ) {
-				// try to deselect an option by value
-				try {
-					$select->deselectByValue( $option );
-					continue;
-				} catch ( NoSuchElementException $e ) {
-					// Do nothing
-				}
-
-				// try to deselect an option by visible text
-				try {
-					$select->deselectByVisibleText( $option );
-					continue;
-				} catch ( NoSuchElementException $e ) {
-					// Do nothing
-				}
-
-				// try to deselect an option by visible partial text
-				try {
-					$select->deselectByVisiblePartialText( $option );
-					continue;
-				} catch ( NoSuchElementException $e ) {
-					// Do nothing
-				}
-
-				// fallback to deselect by index
-				try {
-					$select->deselectByIndex( $option );
-				} catch ( NoSuchElementException $e ) {
-					// Do nothing
-				}
-			}
-		}
+	/**
+	 * Select option by value of a dropdown element.
+	 *
+	 * @param  string $element_path Element selector
+	 * @param  mixed  $option_value Value to select
+	 */
+	public function selectOptionByValue( string $element_path, $option_value ) {
+		$this->getPage()->select( $element_path, $option_value );
 	}
 
 	/**
 	 * Submit a form from an element.
 	 *
-	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
+	 * @param  ElementHandle|string $element Either element object or selector string
 	 */
 	public function submitForm( $element ) {
 		$element = $this->getElement( $element );
@@ -788,7 +623,7 @@ class Actor {
 	 * @param  string $username Username
 	 * @param  string $password Password
 	 */
-	public function loginAs( $username, $password = 'password' ) {
+	public function loginAs( string $username, string $password = 'password' ) {
 		$this->moveTo( 'wp-login.php' );
 
 		$this->setElementAttribute( '#user_login', 'value', $username );
@@ -807,14 +642,15 @@ class Actor {
 	/**
 	 * Check a checkbox or radio input.
 	 *
-	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|array $elements A remote elements or CSS selector.
+	 * @param  array $elements Array of ElementHandle or selector string
 	 */
 	public function checkOptions( $elements ) {
 		$elements = $this->getElements( $elements );
+
 		foreach ( $elements as $element ) {
-			$type = $element->getAttribute( 'type' );
-			if ( in_array( $type, array( 'checkbox', 'radio' ), true ) && ! $element->isSelected() ) {
+			$type = $this->getElementAttribute( $element, 'type' );
+
+			if ( in_array( $type, array( 'checkbox', 'radio' ), true ) && empty( $element->getProperty( 'checked' )->jsonValue() ) ) {
 				$element->click();
 			}
 		}
@@ -823,16 +659,15 @@ class Actor {
 	/**
 	 * Uncheck a checkbox.
 	 *
-	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|array $elements A remote element or CSS selector.
+	 * @param  array $elements Array of ElementHandle or selector string
 	 */
 	public function uncheckOptions( $elements ) {
 		$elements = $this->getElements( $elements );
 
 		foreach ( $elements as $element ) {
-			$type = $element->getAttribute( 'type' );
+			$type = $this->getElementAttribute( $element, 'type' );
 
-			if ( 'checkbox' === $type && $element->isSelected() ) {
+			if ( 'checkbox' === $type && ! empty( $element->getProperty( 'checked' )->jsonValue() ) ) {
 				$element->click();
 			}
 		}
@@ -841,194 +676,209 @@ class Actor {
 	/**
 	 * Check if element is interactable
 	 *
-	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
-	 * @param string                                             $message Optional. The message to use on a failure.
+	 * @param  ElementHandle|string $element Either element object or selector string
 	 */
-	public function canInteractWithField( $element, $message = '' ) {
-		$this->assertThat(
-			new FieldInteractableConstrain( Constraint::ACTION_INTERACT, $element ),
-			$message
-		);
+	public function canInteractWithField( $element ) {
+		$element = $this->getElement( $element );
+
+		$old_value = $this->getElementAttribute( $element, 'value' );
+
+		$element->click();
+
+		$this->getPage()->keyboard->type( 'wpa' );
+		$this->getPage()->keyboard->press( 'Backspace' );
+
+		TestCase::assertTrue( ( $old_value !== $this->getElementProperty( $element, 'value' ) ), 'Can not interact with field.' );
+
+		$this->setElementProperty( $element, 'value', $old_value );
 	}
 
 	/**
 	 * Check if element is not interactable
 	 *
-	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
-	 * @param string                                             $message Optional. The message to use on a failure.
+	 * @param  ElementHandle|string $element Either element object or selector string
 	 */
-	public function cannotInteractWithField( $element, $message = '' ) {
-		$this->assertThat(
-			new FieldInteractableConstrain( Constraint::ACTION_CANTINTERACT, $element ),
-			$message
-		);
+	public function cannotInteractWithField( $element ) {
+		$element = $this->getElement( $element );
+
+		$old_value = $this->getElementAttribute( $element, 'value' );
+
+		$element->click();
+
+		$this->getPage()->keyboard->type( 'wpa' );
+		$this->getPage()->keyboard->press( 'Backspace' );
+
+		TestCase::assertTrue( ( $old_value === $this->getElementProperty( $element, 'value' ) ), 'Can interact with field.' );
+
+		$this->setElementProperty( $element, 'value', $old_value );
 	}
 
 	/**
 	 * Set a value for a field.
 	 *
-	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
-	 * @param string                                             $value A new value.
+	 * @param  ElementHandle|string $element Either element object or selector string
+	 * @param  mixed                $value Value to put in field
 	 */
 	public function fillField( $element, $value ) {
-		$element = $this->getElement( $element );
-		$element->clear();
-		$element->sendKeys( (string) $value );
-
-		return $element;
+		$this->setElementProperty( $element, 'value', $value );
 	}
 
 	/**
 	 * Clear the value of a textarea or an input fields.
 	 *
-	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|array $elements A remote elements or CSS selector.
+	 * @param  ElementHandle|string $element Either element object or selector string
 	 */
-	public function clearFields( $elements ) {
-		$elements = $this->getElements( $elements );
-		foreach ( $elements as $element ) {
-			$element->clear();
+	public function clearField( $element ) {
+		$this->fillField( $element_path, '' );
+	}
+
+	/**
+	 * Type in a field
+	 *
+	 * @param  string $element_path Path to element
+	 * @param  mixed  $value Value to put in field
+	 */
+	public function typeInField( string $element_path, $value ) {
+		$this->setElementProperty( $element_path, 'value', '' );
+
+		$this->getPage()->type( $element_path, $value, [ 'delay' => 20 ] );
+
+		// Hack for buggy type behavior
+		$element_value = $this->getElementProperty( $element_path, 'value' );
+
+		if ( $value !== $element_value ) {
+			$this->getPage()->type( $element_path, $value, [ 'delay' => 20 ] );
 		}
 	}
 
 	/**
 	 * Attach a file to a field.
 	 *
-	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
-	 * @param string                                             $file A path to a file.
+	 * @param  ElementHandle|string $element Either element object or selector string
+	 * @param  string               $file_path Path to file
 	 */
-	public function attachFile( $element, $file ) {
-		$detector = new \Facebook\WebDriver\Remote\LocalFileDetector();
-		$element  = $this->getElement( $element );
-		$element->setFileDetector( $detector );
-		$element->sendKeys( $file );
+	public function attachFile( $element, $file_path ) {
+		$element = $this->getElement( $element );
+
+		$element->uploadFile( $file_path );
 	}
 
 	/**
 	 * Check if the actor sees an element on the current page. Element must be visible to human eye.
 	 *
-	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A CSS selector for the element.
-	 * @param string                                             $message Optional. The message to use on a failure.
+	 * @param  ElementHandle|string $element Either element object or selector string
 	 */
-	public function seeElement( $element, $message = '' ) {
-		$this->assertThat(
-			new ElementVisibleConstrain( Constraint::ACTION_SEE, $element ),
-			$message
-		);
+	public function seeElement( $element ) {
+		TestCase::assertTrue( $this->elementIsVisible( $element ), $this->elementToString( $element ) . ' is not visible.' );
 	}
 
 	/**
 	 * Check if the actor doesnt see an element on the current page. Element must not be visible to human eye.
 	 *
-	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A CSS selector for the element.
-	 * @param string                                             $message Optional. The message to use on a failure.
+	 * @param  ElementHandle|string $element Either element object or selector string
 	 */
-	public function dontSeeElement( $element, $message = '' ) {
-		$this->assertThat(
-			new ElementVisibleConstrain( Constraint::ACTION_DONTSEE, $element ),
-			$message
-		);
+	public function dontSeeElement( $element ) {
+		TestCase::assertFalse( $this->elementIsVisible( $element ), $this->elementToString( $element ) . ' is visible.' );
 	}
 
 	/**
 	 * Check if the actor sees a text on the current page. You can use a regular expression to check a text.
 	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: "/test/i".
 	 *
-	 * @access public
-	 * @param string                                             $text A text to look for or a regular expression.
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A CSS selector for the element.
-	 * @param string                                             $message Optional. The message to use on a failure.
+	 * @param  string               $text Text to check for
+	 * @param  ElementHandle|string $element Either element object or selector string
 	 */
-	public function seeText( $text, $element = null, $message = '' ) {
-		$this->assertThat(
-			new PageContainsConstrain( Constraint::ACTION_SEE, $text, $element ),
-			$message
-		);
+	public function seeText( $text, $element = null ) {
+		if ( empty( $element ) ) {
+			$element = $this->getElement( 'body' );
+		}
+
+		$content = trim( $this->getElementInnerText( $element ) );
+
+		if ( empty( $content ) ) {
+			return false;
+		}
+
+		TestCase::assertTrue( Utils\find_match( $content, $text ), $text . ' not found.' );
 	}
 
 	/**
 	 * Check if the actor can't see a text on the current page. You can use a regular expression to check a text.
 	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: "/test/i".
 	 *
-	 * @access public
-	 * @param string                                             $text A text to look for or a regular expression.
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A CSS selector for the element.
-	 * @param string                                             $message Optional. The message to use on a failure.
+	 * @param  string               $text to check for
+	 * @param  ElementHandle|string $element Either element object or selector string
 	 */
-	public function dontSeeText( $text, $element = null, $message = '' ) {
-		$this->assertThat(
-			new PageContainsConstrain( Constraint::ACTION_DONTSEE, $text, $element ),
-			$message
-		);
+	public function dontSeeText( $text, $element = null ) {
+		if ( empty( $element ) ) {
+			$element = $this->getElement( 'body' );
+		} else {
+			try {
+				$element = $this->getElement( $element );
+			} catch ( ElementNotFound $exception ) {
+				return;
+			}
+		}
+
+		$content = trim( $this->getElementInnerText( $element ) );
+
+		if ( empty( $content ) ) {
+			return;
+		}
+
+		TestCase::assertFalse( Utils\find_match( $content, $text ), $text . ' found.' );
 	}
 
 	/**
 	 * Check if the actor sees a text in the page source. You can use a regular expression to check a text.
 	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: <b>"/test/i"</b>.
 	 *
-	 * @access public
 	 * @param string $text A text to look for or a regular expression.
-	 * @param string $message Optional. The message to use on a failure.
 	 */
-	public function seeTextInSource( $text, $message = '' ) {
-		$this->assertThat(
-			new PageSourceContainsConstrain( Constraint::ACTION_SEE, $text ),
-			$message
-		);
+	public function seeTextInSource( $text ) {
+		TestCase::assertTrue( Utils\find_match( $this->getPageSource(), $text ), $text . ' not found in source.' );
 	}
 
 	/**
 	 * Check if the actor can't see a text in the page source. You can use a regular expression to check a text.
 	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: <b>"/test/i"</b>.
 	 *
-	 * @access public
 	 * @param string $text A text to look for or a regular expression.
-	 * @param string $message Optional. The message to use on a failure.
 	 */
-	public function dontSeeTextInSource( $text, $message = '' ) {
-		$this->assertThat(
-			new PageSourceContainsConstrain( Constraint::ACTION_DONTSEE, $text ),
-			$message
-		);
+	public function dontSeeTextInSource( $text ) {
+		TestCase::assertFalse( Utils\find_match( $this->getPageSource(), $text ), $text . ' found in source.' );
 	}
 
 	/**
 	 * Press a key on an element.
 	 *
-	 * @see \Facebook\WebDriver\WebDriverKeys
-	 *
-	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
-	 * @param string                                             $key A key to press.
+	 * @param  ElementHandle|string $element Either element object or selector string
+	 * @param string               $key A key to press.
 	 */
 	public function pressKey( $element, $key ) {
-		$this->getElement( $element )->sendKeys( $key );
+		$element = $this->getElement( $element );
+
+		if ( ! empty( $element ) ) {
+			$element->press( $key );
+		}
 	}
 
 	/**
 	 * Press "enter" key on an element.
 	 *
-	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A remote element or CSS selector.
+	 * @param  ElementHandle|string $element Either element object or selector string
 	 */
 	public function pressEnterKey( $element ) {
-		$this->pressKey( $element, WebDriverKeys::ENTER );
+		$this->pressKey( $element, 'Enter' );
 	}
 
 	/**
 	 * Return current active element.
 	 *
-	 * @access public
-	 * @return \Facebook\WebDriver\Remote\RemoteWebElement An instance of web elmeent.
+	 * @return ElementHandle
 	 */
 	public function getActiveElement() {
-		return $this->getWebDriver()->switchTo()->activeElement();
+		return $this->getPage()->evaluate( JsFunction::createWithBody( 'return document.activeElement;' ) );
 	}
 
 	/**
@@ -1036,16 +886,31 @@ class Actor {
 	 * a regular expression to check URL in the href attribute. Please, use forward slashes to define your
 	 * regular expression if you want to use it. For instance: <b>"/test/i"</b>.
 	 *
-	 * @access public
 	 * @param string $text A text to find a link.
 	 * @param string $url Optional. The url of the link.
-	 * @param string $message Optional. The message to use on a failure.
 	 */
-	public function seeLink( $text, $url = '', $message = '' ) {
-		$this->assertThat(
-			new LinkOnPageConstrain( Constraint::ACTION_SEE, $text, $url ),
-			$message
-		);
+	public function seeLink( $text, $url = '' ) {
+		$selector = 'a';
+
+		if ( ! empty( $url ) ) {
+			$selector = 'a[href="' . $url . '"]';
+		}
+
+		$links = $this->getElements( $selector );
+
+		$found_link = false;
+
+		foreach ( $links as $link ) {
+			$content = trim( $this->getElementInnerText( $link ) );
+
+			$found_link = Utils\find_match( $content, $text );
+
+			if ( $found_link ) {
+				break;
+			}
+		}
+
+		TestCase::assertTrue( $found_link, $text . ' not found in link.' );
 	}
 
 	/**
@@ -1053,147 +918,322 @@ class Actor {
 	 * a regular expression to check URL in the href attribute. Please, use forward slashes to define your
 	 * regular expression if you want to use it. For instance: <b>"/test/i"</b>.
 	 *
-	 * @access public
 	 * @param string $text A text to find a link.
 	 * @param string $url Optional. The url of the link.
-	 * @param string $message Optional. The message to use on a failure.
 	 */
-	public function dontSeeLink( $text, $url = '', $message = '' ) {
-		$this->assertThat(
-			new LinkOnPageConstrain( Constraint::ACTION_DONTSEE, $text, $url ),
-			$message
-		);
+	public function dontSeeLink( $text, $url = '' ) {
+		$selector = 'a';
+
+		if ( ! empty( $url ) ) {
+			$selector = 'a[href="' . $url . '"]';
+		}
+
+		$links = $this->getElements( $selector );
+
+		$found_link = false;
+
+		foreach ( $links as $link ) {
+			$content = trim( $this->getElementInnerText( $link ) );
+
+			$found_link = Utils\find_match( $content, $text );
+
+			if ( $found_link ) {
+				break;
+			}
+		}
+
+		TestCase::assertFalse( $found_link, $text . ' found in link.' );
 	}
 
 	/**
 	 * Check if the actor can see a text in the current URL. You can use a regular expression to check the current URL.
 	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: <b>"/test/i"</b>.
 	 *
-	 * @access public
 	 * @param string $text A text to look for in the current URL.
-	 * @param string $message Optional. The message to use on a failure.
 	 */
-	public function seeTextInUrl( $text, $message = '' ) {
-		$this->assertThat(
-			new UrlContainsConstrain( Constraint::ACTION_SEE, $text ),
-			$message
-		);
+	public function seeTextInUrl( $text ) {
+		TestCase::assertTrue( Utils\find_match( $this->getCurrentUrl(), $text ), $text . ' not found.' );
 	}
 
 	/**
 	 * Check if the actor cann't see a text in the current URL. You can use a regular expression to check the current URL.
 	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: <b>"/test/i"</b>.
 	 *
-	 * @access public
 	 * @param string $text A text to look for in the current URL.
-	 * @param string $message Optional. The message to use on a failure.
 	 */
-	public function dontSeeTextInUrl( $text, $message = '' ) {
-		$this->assertThat(
-			new UrlContainsConstrain( Constraint::ACTION_DONTSEE, $text ),
-			$message
-		);
+	public function dontSeeTextInUrl( $text ) {
+		TestCase::assertFalse( Utils\find_match( $this->getCurrentUrl(), $text ), $text . ' found.' );
 	}
 
 	/**
 	 * Return current URL.
 	 *
-	 * @access public
 	 * @return string The current URL.
 	 */
 	public function getCurrentUrl() {
-		return $this->getWebDriver()->getCurrentURL();
+		return $this->getPage()->url();
 	}
 
 	/**
 	 * Check if the current user can see a checkbox is checked.
 	 *
-	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A CSS selector for the element.
-	 * @param string                                             $message Optional. The message to use on a failure.
+	 * @param  ElementHandle|string $element Either element object or selector string
 	 */
-	public function seeCheckboxIsChecked( $element, $message = '' ) {
-		$this->assertThat(
-			new CheckboxCheckedConstrain( Constraint::ACTION_SEE, $element ),
-			$message
-		);
+	public function seeCheckboxIsChecked( $element ) {
+		$element = $this->getElement( $element );
+
+		TestCase::assertTrue( $element->getProperty( 'checked' )->jsonValue(), 'Element not checked.' );
 	}
 
 	/**
 	 * Check if the current user cann't see a checkbox is checked.
 	 *
-	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A CSS selector for the element.
-	 * @param string                                             $message Optional. The message to use on a failure.
+	 * @param  ElementHandle|string $element Either element object or selector string
 	 */
-	public function dontSeeCheckboxIsChecked( $element, $message = '' ) {
-		$this->assertThat(
-			new CheckboxCheckedConstrain( Constraint::ACTION_DONTSEE, $element ),
-			$message
-		);
+	public function dontSeeCheckboxIsChecked( $element ) {
+		$element = $this->getElement( $element );
+
+		TestCase::assertFalse( $element->getProperty( 'checked' )->jsonValue(), 'Element checked.' );
 	}
 
 	/**
 	 * Check if the user can see text inside of an attribute
 	 *
-	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A CSS selector for the element.
-	 * @param string                                             $attribute Attribute name
-	 * @param string                                             $value A value to check.
-	 * @param string                                             $message Optional. The message to use on a failure.
+	 * @param  ElementHandle|string $element Either element object or selector string
+	 * @param string               $attribute Attribute name
+	 * @param string               $value Attribute value
 	 */
-	public function seeValueInAttribute( $element, $attribute, $value, $message = '' ) {
-		$this->assertThat(
-			new AttributeContainsConstrain( Constraint::ACTION_SEE, $element, $attribute, $value ),
-			$message
-		);
+	public function seeValueInAttribute( $element, $attribute, $value ) {
+		$element = $this->getElement( $element );
+
+		$attribute_value = $this->getElementAttribute( $element, $attribute );
+
+		TestCase::assertTrue( Utils\find_match( $attribute_value, $value ), $value . ' not found in attribute.' );
 	}
 
 	/**
 	 * Check if the user can not see text inside of an attribute
 	 *
-	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A CSS selector for the element.
-	 * @param string                                             $attribute Attribute name
-	 * @param string                                             $value A value to check.
-	 * @param string                                             $message Optional. The message to use on a failure.
+	 * @param ElementHandle|string $element Either element object or selector string
+	 * @param string               $attribute Attribute name
+	 * @param string               $value Attribute value
 	 */
-	public function dontSeeValueInAttribute( $element, $attribute, $value, $message = '' ) {
-		$this->assertThat(
-			new AttributeContainsConstrain( Constraint::ACTION_DONTSEE, $element, $attribute, $value ),
-			$message
-		);
+	public function dontSeeValueInAttribute( $element, $attribute, $value ) {
+		$element = $this->getElement( $element );
+
+		$attribute_value = $this->getElementAttribute( $element, $attribute );
+
+		TestCase::assertFalse( Utils\find_match( $attribute_value, $value ), $text . ' found in attribute.' );
+	}
+
+	/**
+	 * Check if the user can see text inside of an property
+	 *
+	 * @param  ElementHandle|string $element Either element object or selector string
+	 * @param string               $property Property name
+	 * @param string               $value Property value
+	 */
+	public function seeValueInProperty( $element, $property, $value ) {
+		$element = $this->getElement( $element );
+
+		$property_value = $this->getElementProperty( $element, $property );
+
+		TestCase::assertTrue( Utils\find_match( $property_value, $value ), $value . ' not found in property.' );
+	}
+
+	/**
+	 * Check if the user can see text inside of an property
+	 *
+	 * @param ElementHandle|string $element Either element object or selector string
+	 * @param string               $property Property name
+	 * @param string               $value Property value
+	 */
+	public function dontSeeValueInProperty( $element, $property, $value ) {
+		$element = $this->getElement( $element );
+
+		$property_value = $this->getElementProperty( $element, $property );
+
+		TestCase::assertFalse( Utils\find_match( $property_value, $value ), $value . ' found in property.' );
 	}
 
 	/**
 	 * Check if the current user can see a value in a field. You can use a regular expression to check the value.
 	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: <b>"/test/i"</b>.
 	 *
-	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A CSS selector for the element.
-	 * @param string                                             $value A value to check.
-	 * @param string                                             $message Optional. The message to use on a failure.
+	 * @param  ElementHandle|string $element Either element object or selector string
+	 * @param  string               $value Field value
 	 */
-	public function seeFieldValue( $element, $value, $message = '' ) {
-		$this->assertThat(
-			new FieldValueContainsConstrain( Constraint::ACTION_SEE, $element, $value ),
-			$message
-		);
+	public function seeFieldValue( $element, $value ) {
+		$element = $this->getElement( $element );
+
+		$prop_value = $this->getElementProperty( $element, 'value' );
+
+		TestCase::assertTrue( Utils\find_match( $prop_value, $value ), $value . ' not found in field value.' );
 	}
 
 	/**
 	 * Check if the current user can see a value in a field. You can use a regular expression to check the value.
 	 * Please, use forward slashes to define your regular expression if you want to use it. For instance: <b>"/test/i"</b>.
 	 *
-	 * @access public
-	 * @param \Facebook\WebDriver\Remote\RemoteWebElement|string $element A CSS selector for the element.
-	 * @param string                                             $value A value to check.
-	 * @param string                                             $message Optional. The message to use on a failure.
+	 * @param  ElementHandle|string $element Either element object or selector string
+	 * @param  string               $value Field value
 	 */
-	public function dontSeeFieldValue( $element, $value, $message = '' ) {
-		$this->assertThat(
-			new FieldValueContainsConstrain( Constraint::ACTION_DONTSEE, $element, $value ),
-			$message
+	public function dontSeeFieldValue( $element, $value ) {
+		$element = $this->getElement( $element );
+
+		$prop_value = $this->getElementProperty( $element, 'value' );
+
+		TestCase::assertFalse( Utils\find_match( $prop_value, $value ), $value . ' found in field value.' );
+	}
+
+	/**
+	 * Convert an element to a piece of a failure message.
+	 *
+	 * @param  ElementHandle|string $element Either element object or selector string
+	 * @return string A message.
+	 */
+	public function elementToString( $element ) {
+		if ( is_string( $element ) ) {
+			return $element;
+		}
+
+		$element = $this->getElement( $element );
+
+		$message = $this->getElementTagName( $element );
+
+		$id = trim( $this->getElementAttribute( $element, 'id' ) );
+		if ( ! empty( $id ) ) {
+			$message .= '#' . $id;
+		}
+
+		$class = trim( $this->getElementAttribute( $element, 'class' ) );
+
+		if ( ! empty( $class ) ) {
+			$classes = array_filter( array_map( 'trim', explode( ' ', $class ) ) );
+			if ( ! empty( $classes ) ) {
+				$message .= '.' . implode( '.', $classes );
+			}
+		}
+
+		return $message;
+	}
+
+	/**
+	 * Check if element is visible
+	 *
+	 * @param  ElementHandle|string $element Either element object or selector string
+	 * @return boolean
+	 */
+	public function elementIsVisible( $element ) {
+		try {
+			$element = $this->getElement( $element );
+		} catch ( ElementNotFound $exception ) {
+			return false;
+		}
+
+		return $this->getPage()->evaluate(
+			JsFunction::createWithParameters( [ 'element' ] )
+			->body(
+				"
+			    var style = window.getComputedStyle( element );
+			    return style && style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0';
+				"
+			),
+			$element
+		);
+	}
+
+	/**
+	 * Check if element is enabled
+	 *
+	 * @param  ElementHandle|string $element Either element object or selector string
+	 * @return boolean
+	 */
+	public function elementIsEnabled( $element ) {
+		$element = $this->getElement( $element );
+
+		return $this->getPage()->evaluate(
+			JsFunction::createWithParameters( [ 'element' ] )
+			->body(
+				'return ! element.disabled;'
+			),
+			$element
+		);
+	}
+
+	/**
+	 * Get element tag name
+	 *
+	 * @param  ElementHandle|string $element Either element object or selector string
+	 * @return  string
+	 */
+	public function getElementTagName( $element ) {
+		$element = $this->getElement( $element );
+
+		return $this->getPage()->evaluate(
+			JsFunction::createWithParameters( [ 'element' ] )
+			->body(
+				'return element.tagName;'
+			),
+			$element
+		);
+	}
+
+	/**
+	 * Get element attribute
+	 *
+	 * @param  ElementHandle|string $element Either element object or selector string
+	 * @param  string               $attribute_name Attribute name
+	 * @return string
+	 */
+	public function getElementAttribute( $element, string $attribute_name ) {
+		$element = $this->getElement( $element );
+
+		return $this->getPage()->evaluate(
+			JsFunction::createWithParameters( [ 'element' ] )
+			->body(
+				'
+			    return element.getAttribute( "' . addcslashes( $attribute_name, '"' ) . '" );
+				'
+			),
+			$element
+		);
+	}
+
+	/**
+	 * Get element property
+	 *
+	 * @param  ElementHandle|string $element Either element object or selector string
+	 * @param  string               $property_name Property name
+	 * @return string
+	 */
+	public function getElementProperty( $element, string $property_name ) {
+		$element = $this->getElement( $element );
+
+		return $this->getPage()->evaluate(
+			JsFunction::createWithParameters( [ 'element' ] )
+			->body(
+				'return element.' . $property_name . ';'
+			),
+			$element
+		);
+	}
+
+	/**
+	 * Get element inner text
+	 *
+	 * @param  ElementHandle|string $element Either element object or selector string
+	 * @return string
+	 */
+	public function getElementInnerText( $element ) {
+		$element = $this->getElement( $element );
+
+		return $this->getPage()->evaluate(
+			JsFunction::createWithParameters( [ 'element' ] )
+			->body(
+				'return element.innerText;'
+			),
+			$element
 		);
 	}
 

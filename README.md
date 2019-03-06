@@ -9,6 +9,7 @@ WP Acceptance is a toolkit that empowers developers and CI pipelines to test cod
 * PHP 7.2+
 * mysqli PHP extension
 * Docker
+* Node >= 8 (WP Acceptance uses Puppeteer behind the scenes)
 
 [WP Local Docker](https://github.com/10up/wp-local-docker) is highly recommended as the local development environment but not required.
 
