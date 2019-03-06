@@ -1,0 +1,6 @@
+{
+  "name": "wpacceptance",
+  "dependencies": {
+    "@nesk/puphpeteer": "^1.4.1"
+  }
+}

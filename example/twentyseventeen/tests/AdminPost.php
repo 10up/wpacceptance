@@ -14,21 +14,26 @@ class AdminPostTest extends \WPAcceptance\PHPUnit\TestCase {
 	 * @testdox I can successfully publish a post in Gutenberg.
 	 */
 	public function testPostPublish() {
-		$I = $this->getAnonymousUser();
+		$I = $this->openBrowserPage();
 
 		$I->loginAs( 'wpsnapshots' );
 
 		$I->moveTo( 'wp-admin/post-new.php' );
 
+		$I->waitUntilElementVisible( '.nux-dot-tip__disable' );
+
+		$I->click( '.nux-dot-tip__disable' );
+
 		$I->fillField( '#post-title-0', 'Test Post' );
 
-		$I->click( '.editor-block-list__layout .wp-block' );
-
-		$I->fillField( '.editor-block-list__layout .wp-block:first-child p', 'Test content' );
+		$I->waitUntilElementVisible( '.editor-post-publish-panel__toggle' );
 
 		$I->click( '.editor-post-publish-panel__toggle' );
 
 		$I->waitUntilElementVisible( '.editor-post-publish-button' );
+		$I->waitUntilElementEnabled( '.editor-post-publish-button' );
+
+		sleep( 5 );
 
 		$I->click( '.editor-post-publish-button' );
 
@@ -37,7 +42,7 @@ class AdminPostTest extends \WPAcceptance\PHPUnit\TestCase {
 		$I->seeText( 'Post published', '.components-notice__content' );
 
 		// Make sure data is in DB correctly
-		$post_id = (int) $I->getElement( '#post_ID' )->getAttribute( 'value' );
+		$post_id = (int) $I->getElementAttribute( '#post_ID', 'value' );
 
 		self::assertPostFieldContains( $post_id, 'post_title', 'Test Post' );
 	}
