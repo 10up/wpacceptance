@@ -37,10 +37,10 @@
   ],
   "scripts": {
     "lint": [
-      "phpcs ."
+      "phpcs --runtime-set testVersion 7.2- ."
     ],
     "lint-fix": [
-      "phpcbf ."
+      "phpcbf --runtime-set testVersion 7.2- ."
     ],
     "post-install-cmd": [
       "npm install"
