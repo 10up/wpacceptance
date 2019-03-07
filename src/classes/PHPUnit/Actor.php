@@ -313,7 +313,7 @@ class Actor {
 			$url .= '?' . $url_parts['query'];
 		}
 
-		$this->page_response = $this->page->goto( $url, [ 'waitUntil' => 'domcontentloaded' ] );
+		$this->page_response = $this->page->goto( $url, [ 'waitUntil' => [ 'domcontentloaded', 'networkidle2', 'load' ] ] );
 
 		Log::instance()->write( 'Navigating to URL: ' . $url, 1 );
 	}
@@ -370,7 +370,9 @@ class Actor {
 	 *
 	 * @param  string $condition Navigation condition to check
 	 */
-	public function waitUntilNavigation( $condition = 'networkidle0' ) {
+	public function waitUntilNavigation( $condition = [ 'domcontentloaded', 'networkidle2', 'load' ] ) {
+		usleep( 500 );
+
 		$this->getPage()->waitForNavigation( [ 'waitUntil' => $condition ] );
 	}
 
