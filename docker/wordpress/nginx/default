@@ -1,5 +1,6 @@
 server {
 	listen 80 default_server;
+	listen 443 ssl;
 
 	# Doesn't really matter because default server, but this way email doesn't throw errors
 	server_name localhost;
