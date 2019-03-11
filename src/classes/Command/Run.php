@@ -205,6 +205,7 @@ class Run extends Command {
 						'vendor',
 						'node_modules',
 						'bower_components',
+						'object-cache.php', // Don't even try object caching
 					],
 				]
 			);
