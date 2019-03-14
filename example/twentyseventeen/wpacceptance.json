@@ -3,5 +3,8 @@
     "tests": [
         "tests\/*.php"
     ],
-    "snapshot_id": "69dd8b6ffdf7b7239e29b5d5711466b6"
+    "environment_instructions": [
+      "install wordpress",
+      "install theme where name is twentynineteen"
+    ]
 }

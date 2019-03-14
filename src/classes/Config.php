@@ -93,6 +93,10 @@ class Config implements ArrayAccess {
 			$config['snapshot_id'] = false;
 		}
 
+		if ( empty( $config['environment_instructions'] ) ) {
+			$config['environment_instructions'] = false;
+		}
+
 		asort( $config );
 
 		return new self( $config );

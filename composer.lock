@@ -4,8 +4,60 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "fd6acf277288da172818316c023d1fa8",
+    "content-hash": "26372c4f444c91e726d018d5d5f476bb",
     "packages": [
+        {
+            "name": "10up/wpinstructions",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/10up/wpinstructions.git",
+                "reference": "8cc697eca140a2c01c26e00db2effdc7226ca5b8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/10up/wpinstructions/zipball/8cc697eca140a2c01c26e00db2effdc7226ca5b8",
+                "reference": "8cc697eca140a2c01c26e00db2effdc7226ca5b8",
+                "shasum": ""
+            },
+            "require": {
+                "10up/wpsnapshots": "^1.5",
+                "php": ">=7.2",
+                "rmccue/requests": "^1.7",
+                "symfony/console": "^3.3",
+                "symfony/process": "^4.2"
+            },
+            "require-dev": {
+                "10up/phpcs-composer": "dev-master"
+            },
+            "bin": [
+                "bin/wpinstructions"
+            ],
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "src/utils.php"
+                ],
+                "psr-4": {
+                    "WPInstructions\\": "./src/classes"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Taylor Lovett",
+                    "email": "taylor.lovett@10up.com"
+                }
+            ],
+            "description": "Run human-readable WordPress commands",
+            "keywords": [
+                "create wordpress environment"
+            ],
+            "time": "2019-03-13T19:39:35+00:00"
+        },
         {
             "name": "10up/wpsnapshots",
             "version": "1.5.3",
@@ -4433,6 +4485,7 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
+        "10up/wpinstructions": 20,
         "10up/phpcs-composer": 20
     },
     "prefer-stable": false,

@@ -156,11 +156,7 @@ class EnvironmentFactory {
 				return false;
 			}
 
-			if ( ! $environment->pullSnapshot() ) {
-				return false;
-			}
-
-			if ( ! $environment->setupHosts() ) {
+			if ( ! $environment->setupWordPressEnvironment() ) {
 				return false;
 			}
 

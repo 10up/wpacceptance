@@ -22,6 +22,7 @@ use Docker\Docker;
 use GrantLucas\PortFinder;
 use WPAcceptance\Utils as Utils;
 use WPSnapshots\Snapshot;
+use WPInstructions\Instructions;
 
 /**
  * Create and manage the docker environment
@@ -489,12 +490,35 @@ class Environment {
 		return true;
 	}
 
+	public function setupWordPressEnvironment() {
+		Log::instance()->write( 'Setting up WordPress environment...', 1 );
+
+		if ( ! empty( $this->suite_config['snapshot_id'] ) ) {
+			return $this->pullSnapshot();
+		} elseif ( ! empty( $this->suite_config['environment_instructions'] ) ) {
+			return $this->createFromInstructions();
+		} else {
+			Log::instance()->write( 'No environment instructions or snapshot.', 0, 'error' );
+
+			return false;
+		}
+	}
+
+	protected function createFromInstructions() {
+		Log::instance()->write( 'Running environment instructions...', 1 );
+
+		$raw_instructions = implode( "\n", (array) $this->suite_config['environment_instructions'] );
+
+		$instructions = new Instructions( $raw_instructions, $args );
+		$instructions->runAll();
+	}
+
 	/**
 	 * Pull WP Snapshot into container
 	 *
 	 * @return  bool
 	 */
-	public function pullSnapshot() {
+	protected function pullSnapshot() {
 		/**
 		 * Pulling snapshot
 		 */
