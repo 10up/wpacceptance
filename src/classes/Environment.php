@@ -505,12 +505,93 @@ class Environment {
 	}
 
 	protected function createFromInstructions() {
-		Log::instance()->write( 'Running environment instructions...', 1 );
+		Log::instance()->write( 'Saving instructions to container...', 1 );
 
-		$raw_instructions = implode( "\n", (array) $this->suite_config['environment_instructions'] );
+		$command = 'touch /var/www/html/WPInstructions && echo "' . addslashes( implode( "\n", (array) $this->suite_config['environment_instructions'] ) ) . '" >> /var/www/html/WPInstructions';
 
-		$instructions = new Instructions( $raw_instructions, $args );
-		$instructions->runAll();
+		Log::instance()->write( $command, 2 );
+
+		$exec_config = new ContainersIdExecPostBody();
+		$exec_config->setTty( true );
+		$exec_config->setAttachStdout( true );
+		$exec_config->setAttachStderr( true );
+		$exec_config->setCmd( [ '/bin/sh', '-c', $command ] );
+
+		$exec_command      = EnvironmentFactory::$docker->containerExec( $this->environment_id . '-wordpress', $exec_config );
+		$exec_id           = $exec_command->getId();
+		$exec_start_config = new ExecIdStartPostBody();
+		$exec_start_config->setDetach( false );
+
+		$stream = EnvironmentFactory::$docker->execStart( $exec_id, $exec_start_config );
+
+		$stream->onStdout(
+			function( $stdout ) {
+				Log::instance()->write( $stdout, 1 );
+			}
+		);
+
+		$stream->onStderr(
+			function( $stderr ) {
+				Log::instance()->write( $stderr, 1 );
+			}
+		);
+
+		$stream = $stream->wait();
+
+		Log::instance()->write( 'Running instructions in container...', 1 );
+
+		$mysql_creds = $this->getMySQLCredentials();
+
+		$verbose = '';
+
+		if ( 1 === Log::instance()->getVerbosity() ) {
+			$verbose = '-v';
+		} elseif ( 2 === Log::instance()->getVerbosity() ) {
+			$verbose = '-vv';
+		} elseif ( 3 === Log::instance()->getVerbosity() ) {
+			$verbose = '-vvv';
+		}
+
+		$command = '/root/.composer/vendor/bin/wpinstructions run --config_db_name="' . $mysql_creds['DB_NAME'] . '" --config_db_user="' . $mysql_creds['DB_USER'] . '" --config_db_password="' . $mysql_creds['DB_PASSWORD'] . '" --config_db_host="' . $mysql_creds['DB_HOST'] . '" ' . $verbose;
+
+		Log::instance()->write( 'Running command:', 1 );
+		Log::instance()->write( $command, 1 );
+
+		$exec_config = new ContainersIdExecPostBody();
+		$exec_config->setTty( true );
+		$exec_config->setAttachStdout( true );
+		$exec_config->setAttachStderr( true );
+		$exec_config->setCmd( [ '/bin/sh', '-c', $command ] );
+
+		$exec_command      = EnvironmentFactory::$docker->containerExec( $this->environment_id . '-wordpress', $exec_config );
+		$exec_id           = $exec_command->getId();
+		$exec_start_config = new ExecIdStartPostBody();
+		$exec_start_config->setDetach( false );
+
+		$stream = EnvironmentFactory::$docker->execStart( $exec_id, $exec_start_config );
+
+		$stream->onStdout(
+			function( $stdout ) {
+				Log::instance()->write( $stdout, 1 );
+			}
+		);
+
+		$stream->onStderr(
+			function( $stderr ) {
+				Log::instance()->write( $stderr, 1 );
+			}
+		);
+
+		$stream->wait();
+
+		$exit_code = EnvironmentFactory::$docker->execInspect( $exec_id )->getExitCode();
+
+		if ( 0 !== $exit_code ) {
+			Log::instance()->write( 'Failed to run environment instructions in WordPress container.', 0, 'error' );
+			return false;
+		}
+
+		return true;
 	}
 
 	/**
@@ -1065,7 +1146,7 @@ class Environment {
 		$container_port_map           = new \ArrayObject();
 		$container_port_map['80/tcp'] = new \stdClass();
 
-		$container_config->setImage( '10up/wpacceptance-wordpress' );
+		$container_config->setImage( 'test-wpa:latest' );
 		$container_config->setAttachStdin( true );
 		$container_config->setAttachStdout( true );
 		$container_config->setExposedPorts( $container_port_map );
