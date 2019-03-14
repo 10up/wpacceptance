@@ -11,6 +11,8 @@ RUN docker-php-ext-configure intl \
 
 RUN composer global require 10up/wpsnapshots:dev-master
 
+RUN composer global require 10up/wpinstructions:dev-master
+
 RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
 ENV NVM_DIR /usr/local/nvm
