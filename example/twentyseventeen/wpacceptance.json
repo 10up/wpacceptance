@@ -4,7 +4,8 @@
         "tests\/*.php"
     ],
     "environment_instructions": [
-      "install wordpress",
-      "install theme where name is twentynineteen"
-    ]
+      "install wordpress where site url is http://wpacceptance.test and home url is http://wpacceptance.test",
+      "install theme where name is twentyseventeen"
+    ],
+    "project_path": "%WP_ROOT%/wp-content/themes/twentyseventeen"
 }

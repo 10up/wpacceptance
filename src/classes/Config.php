@@ -67,28 +67,6 @@ class Config implements ArrayAccess {
 		// $config['path'] === path to wpacceptance.json direcfory in host machine
 		$config['path'] = Utils\trailingslash( dirname( $file_path ) );
 
-		if ( empty( $config['repo_path'] ) ) {
-			$config['host_repo_path'] = $config['path'];
-		} else {
-			if ( '.' === trim( $config['repo_path'] ) || './' === trim( $config['repo_path'] ) ) {
-				$config['host_repo_path'] = $config['path'];
-
-				unset( $config['repo_path'] );
-			} else {
-				if ( preg_match( '#.*/.$#', $config['repo_path'] ) ) {
-					$config['repo_path'] = preg_replace( '#(.*)/.$#', '$1', $config['repo_path'] );
-				}
-
-				if ( false === stripos( $config['repo_path'], '%WP_ROOT%' ) ) {
-					$config['host_repo_path'] = Utils\trailingslash( realpath( $config['path'] . $config['repo_path'] ) );
-				} else {
-					$wp_dir = Utils\trailingslash( realpath( Utils\get_wordpress_path( $config['path'] ) ) );
-
-					$config['host_repo_path'] = Utils\trailingslash( $wp_dir . preg_replace( '#^/?%WP_ROOT%/?(.*)$#i', '$1', $config['repo_path'] ) );
-				}
-			}
-		}
-
 		if ( empty( $config['snapshot_id'] ) ) {
 			$config['snapshot_id'] = false;
 		}

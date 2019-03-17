@@ -2,7 +2,7 @@
 
 *(Beta) A team scalable solution for reliable WordPress acceptance testing.*
 
-WP Acceptance is a toolkit that empowers developers and CI pipelines to test codebases using version controlled acceptance tests and sharable, defined file and database snapshots.
+WP Acceptance is a toolkit that empowers developers and CI pipelines to test codebases using version controlled acceptance tests and sharable environments.
 
 ---
 

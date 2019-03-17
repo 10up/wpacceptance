@@ -125,7 +125,7 @@ class EnvironmentFactory {
 				return false;
 			}
 
-			if ( ! $environment->insertRepo() ) {
+			if ( ! $environment->insertProject() ) {
 				return false;
 			}
 
@@ -168,7 +168,7 @@ class EnvironmentFactory {
 				return false;
 			}
 
-			if ( ! $environment->insertRepo() ) {
+			if ( ! $environment->insertProject() ) {
 				return false;
 			}
 

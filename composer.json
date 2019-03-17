@@ -2,6 +2,7 @@
   "name": "10up/wpacceptance",
   "description": "Test code using acceptance tests and sharable, defined file and database snapshots.",
   "keywords": ["wordpress", "testing", "acceptance tests"],
+  "minimum-stability": "dev",
   "license": ["MIT"],
   "authors": [
     {
@@ -10,8 +11,8 @@
     }
   ],
   "require": {
-    "symfony/console": "^3.3",
-    "10up/wpsnapshots": "~1.5",
+    "symfony/console": "^4.1",
+    "10up/wpsnapshots": "dev-master",
     "facebook/webdriver": "^1.6",
     "docker-php/docker-php": "^2.0",
     "phpunit/phpunit": "^7.5",
