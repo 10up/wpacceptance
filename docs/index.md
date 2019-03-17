@@ -51,7 +51,7 @@ Navigate to `wp-content` in the command line. Run the following command:
 
 3\. You will be presented with some command prompts. Choose a project slug and select the defaults for the other options. When the command is finished, there will be a `wpacceptance.json` file in `wp-content` as well as a `tests` directory and an example test, `tests/ExampleTest.php`.
 
-WP Acceptance reads `wpacceptance.json` every time tests are run. The file must contain both `name` and `tests` properties in JSON format. `name` is the name of your test suite, and it must be unique. `wpacceptance.json` can define `environment_instructions` OR `snapshot_id`. This is explained in [Workflow and Snapshots](https://wpacceptance.readthedocs.io/en/latest/workflow-snapshots/). `tests` points to your test files. WP Acceptance tests are written in PHP and PHPUnit based.
+WP Acceptance reads `wpacceptance.json` every time tests are run. The file must contain both `name` and `tests` properties in JSON format. `name` is the name of your test suite, and it must be unique. `wpacceptance.json` can define `environment_instructions` OR `snapshot_id`. This is explained in [Workflow, Environmental Instructions, and Snapshots](https://wpacceptance.readthedocs.io/en/latest/workflow-snapshots/). `tests` points to your test files. WP Acceptance tests are written in PHP and PHPUnit based.
 
 *There are a few important rules for wpacceptance.json:*
 
@@ -394,3 +394,5 @@ exit $EXIT_CODE
 WP Acceptance works well with GitLab as well. The only difference is when running `wpsnapshots configure`, you need to prefix the command with an environmental variable `WPSNAPSHOTS_DIR`: `WPSNAPSHOTS_DIR=/builds/${CI_PROJECT_NAMESPACE}/.wpsnapshots/ wpsnapshots configure`.
 
 ## Snapshots vs. Environment Instructions
+
+Snapshots and environmental instructions are two different tools for creating shareable environments that empower team members and/or CI processes to test consistently against the same environment. Read more about the two workflows [above](https://wpacceptance.readthedocs.io/en/latest/workflow-snapshots/).
