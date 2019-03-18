@@ -1244,7 +1244,7 @@ class Environment {
 		$container_port_map           = new \ArrayObject();
 		$container_port_map['80/tcp'] = new \stdClass();
 
-		$container_config->setImage( 'test-wpa:latest' );
+		$container_config->setImage( '10up/wpacceptance-wordpress' );
 		$container_config->setAttachStdin( true );
 		$container_config->setAttachStdout( true );
 		$container_config->setExposedPorts( $container_port_map );
