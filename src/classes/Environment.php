@@ -526,14 +526,33 @@ class Environment {
 			return false;
 		}
 
+		if ( empty( $options['site url'] ) && ! empty( $options['home url'] ) ) {
+			$options['site url'] = $options['home url'];
+		}
+
+		if ( ! empty( $options['site url'] ) && empty( $options['home url'] ) ) {
+			$options['home url'] = $options['site url'];
+		}
+
 		if ( empty( $options['home url'] ) || empty( $options['site url'] ) ) {
 			Log::instance()->write( 'Your install WordPress instruction must set a home url and site url. Try using wpacceptance.test', 0, 'error' );
 
 			return false;
 		}
 
+		$replaced_hosts = [];
+
 		$home_host = parse_url( $options['home url'], PHP_URL_HOST );
 		$site_host = parse_url( $options['site url'], PHP_URL_HOST );
+
+		$raw_instructions = preg_replace( '#https?://' . $home_host . '#i', 'http://' . $home_host . ':' . $this->wordpress_port, $raw_instructions );
+		$replaced_hosts[] = $home_host;
+
+		if ( ! in_array( $site_host, $replaced_hosts, true ) ) {
+			$raw_instructions = preg_replace( '#https?://' . $site_host . '#i', 'http://' . $site_host . ':' . $this->wordpress_port, $raw_instructions );
+
+			$replaced_hosts[] = $site_host;
+		}
 
 		$this->sites = [
 			[
@@ -543,6 +562,42 @@ class Environment {
 				'main_domain' => true,
 			],
 		];
+
+		foreach ( $instruction_array as $instruction ) {
+			if ( 'add site' === $instruction->getAction() ) {
+				$options = $instruction_array[0]->getPreparedOptions();
+
+				if ( empty( $options['site url'] ) && ! empty( $options['home url'] ) ) {
+					$options['site url'] = $options['home url'];
+				}
+
+				if ( ! empty( $options['site url'] ) && empty( $options['home url'] ) ) {
+					$options['home url'] = $options['site url'];
+				}
+
+				$home_host = parse_url( $options['home url'], PHP_URL_HOST );
+				$site_host = parse_url( $options['site url'], PHP_URL_HOST );
+
+				if ( ! in_array( $home_host, $replaced_hosts, true ) ) {
+					$raw_instructions = preg_replace( '#https?://' . $home_host . '#i', 'http://' . $home_host . ':' . $this->wordpress_port, $raw_instructions );
+
+					$replaced_hosts[] = $home_host;
+				}
+
+				if ( ! in_array( $site_host, $replaced_hosts, true ) ) {
+					$raw_instructions = preg_replace( '#https?://' . $site_host . '#i', 'http://' . $site_host . ':' . $this->wordpress_port, $raw_instructions );
+
+					$replaced_hosts[] = $site_host;
+				}
+
+				$this->sites[] = [
+					'home_url'    => preg_replace( '#^https?://' . $home_host . '(.*)$#i', 'http://' . $home_host . ':' . $this->wordpress_port . '$1', $options['home url'] ),
+					'site_url'    => preg_replace( '#^https?://' . $site_host . '(.*)$#i', 'http://' . $site_host . ':' . $this->wordpress_port . '$1', $options['site url'] ),
+					'blog_id'     => count( $this->sites ) + 1,
+					'main_domain' => false,
+				];
+			}
+		}
 
 		$command = 'touch /var/www/html/WPInstructions && echo "' . addslashes( $raw_instructions ) . '" >> /var/www/html/WPInstructions';
 
@@ -589,7 +644,7 @@ class Environment {
 			$verbose = '-vvv';
 		}
 
-		$command = '/root/.composer/vendor/bin/wpinstructions run --site_url="' . $this->sites[0]['site_url'] . '" --home_url="' . $this->sites[0]['home_url'] . '" --config_db_name="' . $mysql_creds['DB_NAME'] . '" --config_db_user="' . $mysql_creds['DB_USER'] . '" --config_db_password="' . $mysql_creds['DB_PASSWORD'] . '" --config_db_host="' . $mysql_creds['DB_HOST'] . '" ' . $verbose;
+		$command = '/root/.composer/vendor/bin/wpinstructions run --config_db_name="' . $mysql_creds['DB_NAME'] . '" --config_db_user="' . $mysql_creds['DB_USER'] . '" --config_db_password="' . $mysql_creds['DB_PASSWORD'] . '" --config_db_host="' . $mysql_creds['DB_HOST'] . '" ' . $verbose;
 
 		Log::instance()->write( 'Running command:', 1 );
 		Log::instance()->write( $command, 1 );
