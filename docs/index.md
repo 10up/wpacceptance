@@ -350,25 +350,7 @@ WP Acceptance is a great addition to your CI process.
 
 ### Travis CI
 
-Here is an example `.travis.yml` that includes WP Acceptance:
-```yaml
-language: php
-php:
-  - 7.2
-env:
-  global:
-  - WP_VERSION=master
-  - WP_VERSION=4.7
-before_script:
-  - composer install
-script:
-  - if [ -n "$AWS_ACCESS_KEY" ]; then ./vendor/bin/wpsnapshots configure 10up --aws_key=$AWS_ACCESS_KEY --aws_secret=$SECRET_ACCESS_KEY --user_name=Travis --user_email=travis@10up.com; fi
-  - if [ -n "$AWS_ACCESS_KEY" ]; then bash run-wpacceptance.sh; fi
-sudo: required
-services: docker
-```
-
-Make sure you replace `REPO_NAME` with your WP Snapshots repository name. You will also need to define `AWS_ACCESS_KEY` and `SECRET_ACCESS_KEY` as hidden Travis environmental variables in your Travis project settings.
+Here are examples of `.travis.yml` that includes WP Acceptance:
 
 Here is `run-wpacceptance.sh` which will retry WP Acceptance up to 3 times if environment errors occur:
 ```bash
@@ -388,9 +370,48 @@ done
 exit $EXIT_CODE
 ```
 
+### Travis with Environment Instructions
+
+```yaml
+language: php
+php:
+  - 7.2
+env:
+  global:
+  - WP_VERSION=master
+  - WP_VERSION=4.7
+before_script:
+  - composer install
+script:
+  - bash run-wpacceptance.sh; fi
+sudo: required
+services: docker
+```
+
+### Travis with Snapshots
+
+```yaml
+language: php
+php:
+  - 7.2
+env:
+  global:
+  - WP_VERSION=master
+  - WP_VERSION=4.7
+before_script:
+  - composer install
+script:
+  - if [ -n "$AWS_ACCESS_KEY" ]; then ./vendor/bin/wpsnapshots configure 10up --aws_key=$AWS_ACCESS_KEY --aws_secret=$SECRET_ACCESS_KEY --user_name=Travis --user_email=travis@10up.com; fi
+  - if [ -n "$AWS_ACCESS_KEY" ]; then bash run-wpacceptance.sh; fi
+sudo: required
+services: docker
+```
+
+Make sure you replace `REPO_NAME` with your WP Snapshots repository name. You will also need to define `AWS_ACCESS_KEY` and `SECRET_ACCESS_KEY` as hidden Travis environmental variables in your Travis project settings.
+
 ### GitLab
 
-WP Acceptance works well with GitLab as well. The only difference is when running `wpsnapshots configure`, you need to prefix the command with an environmental variable `WPSNAPSHOTS_DIR`: `WPSNAPSHOTS_DIR=/builds/${CI_PROJECT_NAMESPACE}/.wpsnapshots/ wpsnapshots configure`.
+WP Acceptance works well with GitLab as well. The only difference is, if using snapshots, when running `wpsnapshots configure`, you need to prefix the command with an environmental variable `WPSNAPSHOTS_DIR`: `WPSNAPSHOTS_DIR=/builds/${CI_PROJECT_NAMESPACE}/.wpsnapshots/ wpsnapshots configure`.
 
 ## Snapshots vs. Environment Instructions
 
