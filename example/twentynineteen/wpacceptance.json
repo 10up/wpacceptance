@@ -1,0 +1,12 @@
+{
+    "name": "twentynineteen-example",
+    "tests": [
+        "tests\/*.php"
+    ],
+    "environment_instructions": [
+      "install wordpress where url is http://wpacceptance.test and type is multisite",
+      "add site where url is http://wpacceptance.test/two and title is Site Two",
+      "install theme where name is twentynineteen"
+    ],
+    "project_path": "%WP_ROOT%/wp-content/themes/twentynineteen"
+}
