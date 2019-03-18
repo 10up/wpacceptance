@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/10up/wpinstructions.git",
-                "reference": "2eaf8a03a1cebbd6ea295e0f6328d4ccbb80cfd8"
+                "reference": "19b2696f4d89b8dff4866f999c12bf839c0690fa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/10up/wpinstructions/zipball/2eaf8a03a1cebbd6ea295e0f6328d4ccbb80cfd8",
-                "reference": "2eaf8a03a1cebbd6ea295e0f6328d4ccbb80cfd8",
+                "url": "https://api.github.com/repos/10up/wpinstructions/zipball/19b2696f4d89b8dff4866f999c12bf839c0690fa",
+                "reference": "19b2696f4d89b8dff4866f999c12bf839c0690fa",
                 "shasum": ""
             },
             "require": {
@@ -57,7 +57,7 @@
             "keywords": [
                 "create wordpress environment"
             ],
-            "time": "2019-03-18T19:35:00+00:00"
+            "time": "2019-03-18T20:20:55+00:00"
         },
         {
             "name": "10up/wpsnapshots",

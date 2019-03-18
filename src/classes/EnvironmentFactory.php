@@ -160,15 +160,15 @@ class EnvironmentFactory {
 				return false;
 			}
 
+			if ( ! $environment->chmodUploads() ) {
+				return false;
+			}
+
 			if ( ! $environment->setupHosts() ) {
 				return false;
 			}
 
 			if ( ! $environment->setupMySQL() ) {
-				return false;
-			}
-
-			if ( ! $environment->insertProject() ) {
 				return false;
 			}
 

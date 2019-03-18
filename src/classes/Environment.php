@@ -484,12 +484,31 @@ class Environment {
 		return true;
 	}
 
+	/**
+	 * Setup WP environment via snapshot or instructions
+	 *
+	 * @return boolean
+	 */
 	public function setupWordPressEnvironment() {
 		Log::instance()->write( 'Setting up WordPress environment...', 1 );
 
+		$env_setup = true;
+
 		if ( ! empty( $this->suite_config['snapshot_id'] ) ) {
-			return $this->pullSnapshot();
+			$env_setup = $this->pullSnapshot();
+
+			if ( ! $env_setup ) {
+				return false;
+			}
+
+			return $this->insertProject();
 		} elseif ( ! empty( $this->suite_config['environment_instructions'] ) ) {
+			$insert_project = $this->insertProject();
+
+			if ( ! $insert_project ) {
+				return false;
+			}
+
 			return $this->createFromInstructions();
 		} else {
 			Log::instance()->write( 'No environment instructions or snapshot.', 0, 'error' );
@@ -498,6 +517,11 @@ class Environment {
 		}
 	}
 
+	/**
+	 * Create WP environment from instructions
+	 *
+	 * @return boolean
+	 */
 	protected function createFromInstructions() {
 		Log::instance()->write( 'Saving instructions to container...', 1 );
 
@@ -979,7 +1003,7 @@ class Environment {
 			}
 		}
 
-		$rsync_command = 'rsync -a -I --exclude=".git" ' . $excludes . ' ' . $this->getWPContainerRepoRoot() . '/ ' . $this->container_project_path;
+		$rsync_command = 'mkdir -p ' . $this->container_project_path . ' && rsync -a -I --exclude=".git" ' . $excludes . ' ' . $this->getWPContainerRepoRoot() . '/ ' . $this->container_project_path;
 
 		Log::instance()->write( $rsync_command, 2 );
 
@@ -1016,6 +1040,15 @@ class Environment {
 			return false;
 		}
 
+		return true;
+	}
+
+	/**
+	 * Chmod uploads dir
+	 *
+	 * @return boolean
+	 */
+	public function chmodUploads() {
 		/**
 		 * Chmod uploads dir
 		 */
