@@ -34,7 +34,7 @@ composer require 10up/wpacceptance:dev-master --dev
 ./vendor/bin/wpacceptance
 ```
 
-After installation, you will want to [setup WP Acceptance on a project](https://wpacceptance.readthedocs.io/en/latest/project-setup/).
+After installation, you will want to [setup WP Acceptance on a project](#project-setup).
 
 ## Project Setup
 
@@ -51,7 +51,7 @@ Navigate to `wp-content` in the command line. Run the following command:
 
 3\. You will be presented with some command prompts. Choose a project slug and select the defaults for the other options. When the command is finished, there will be a `wpacceptance.json` file in `wp-content` as well as a `tests` directory and an example test, `tests/ExampleTest.php`.
 
-WP Acceptance reads `wpacceptance.json` every time tests are run. The file must contain both `name` and `tests` properties in JSON format. `name` is the name of your test suite, and it must be unique. `wpacceptance.json` can define `environment_instructions` OR `snapshot_id`. This is explained in [Workflow, Environmental Instructions, and Snapshots](https://wpacceptance.readthedocs.io/en/latest/workflow-snapshots/). `tests` points to your test files. WP Acceptance tests are written in PHP and PHPUnit based.
+WP Acceptance reads `wpacceptance.json` every time tests are run. The file must contain both `name` and `tests` properties in JSON format. `name` is the name of your test suite, and it must be unique. `wpacceptance.json` can define `environment_instructions` OR `snapshot_id`. This is explained in [Workflow, Environment Instructions, and Snapshots](#workflow-environment-instructions-and-snapshots). `tests` points to your test files. WP Acceptance tests are written in PHP and PHPUnit based.
 
 *There are a few important rules for wpacceptance.json:*
 
@@ -67,7 +67,7 @@ WP Acceptance reads `wpacceptance.json` every time tests are run. The file must 
 
 You should see your tests passing.
 
-If you just want to run tests locally, you are done. If you want to have a teammate run your test suite or integrate with a CI process, you will need to decide on using either environment instrutions or snapshots (check out [Snapshots vs. Environment Instructions](https://wpacceptance.readthedocs.io/en/latest/snapshots-vs-environment-instructions/)).
+If you just want to run tests locally, you are done. If you want to have a teammate run your test suite or integrate with a CI process, you will need to decide on using either environment instrutions or snapshots (check out [Snapshots vs. Environment Instructions](#snapshots-vs-environment-instructions)).
 
 ### Environment Instructions
 
@@ -84,7 +84,7 @@ If you just want to run tests locally, you are done. If you want to have a teamm
 
 The first instruction MUST be installing WordPress. Install wordpress must include a site and home url which can be anything. For documentation and usage on supported instructions, see [WP Instructions](https://github.com/10up/wpinstructions).
 
-6. Next you need to tell WP Acceptance where your project should be mounted. For example, if my `wpacceptance.json` is the root of `wp-content`, I would set `project_path` like so:
+6\. Next you need to tell WP Acceptance where your project should be mounted. For example, if my `wpacceptance.json` is the root of `wp-content`, I would set `project_path` like so:
 
 ```
 {
@@ -129,7 +129,7 @@ There are three scenarios or workflows for running WP Acceptance:
 
 The power of WP Acceptance is working with a team or CI process that is testing it's code against one set of environment instructions or *primary snapshot*. Of course, in order for this to be successful the environment instructions or primary snapshot must be kept relevant which is the responsiblity of the development team. For example, when new content types are added, content should be added via new environment instructions or a new primary snapshot created.
 
-Environment instructions are a simple set of instructions for defining an environment e.g. install WordPress, download twentynineteen theme, activate plugin, etc. A snapshot is a database/file package where everything e.g. WP version, theme, plugins, are preset. You can use environment instructions OR snapshots, not both. Read [Snapshots vs. Environment Instructions](https://wpacceptance.readthedocs.io/en/latest/snapshots-vs-environment-instructions/).
+Environment instructions are a simple set of instructions for defining an environment e.g. install WordPress, download twentynineteen theme, activate plugin, etc (supported instructions are documented in [WP Instructions](https://github.com/10up/wpinstructions)). A snapshot is a database/file package where everything e.g. WP version, theme, plugins, are preset. You can use environment instructions OR snapshots, not both. Read [Snapshots vs. Environment Instructions](#snapshots-vs-environment-instructions).
 
 To test a codebase on your local environment, you would run the following command in the directory of `wpacceptance.json`:
 ```
@@ -164,16 +164,15 @@ Here's what `wpacceptance.json` looks like
  	],
 	"snapshot_id": "...",
 	"environment_instructions": "...",
-	"project_path": "...",
+	"project_path": "%WP_ROOT%/wp-conten",
 	"exclude": [
-		"%REPO_ROOT%/node_modules",
-		"%REPO_ROOT%/vendor"
+		"node_modules",
+		"vendor"
 	],
 	"enforce_clean_db": true,
 	"disable_clean_db": false,
 	"repository": "10up",
 	"bootstrap": "./bootstrap.php",
-	"repo_path": "%WP_ROOT%/wp-content",
 	"before_scripts": [
 		"composer install",
 		"npm run build"
@@ -186,7 +185,7 @@ Here's what `wpacceptance.json` looks like
 * `environment_instructions` - Instructions for creating environment to test against. If the `run` command is executed without the `--local` flag, these instructions will be used to create the environment assuming no `snapshot_id` is set. Supported instructions are documented in [WP Instructions](https://github.com/10up/wpinstructions).
 * `project_path` - Absolute path to your `wpacceptance.json` directory where the path to your WP directory is `%WP_ROOT%`. This should like something like `%WP_ROOT%/wp-content`. This property is required when using environment instructions.
 * `snapshot_id` - "Primary" snapshot to test against. If the `run` command is executed without the `--local` flag, this snapshot ID will be used (if no `environment_instructions` are defined).
-* `exclude` - WP Acceptance copys all the files in your repository into the snapshot for testing. There may be directories you want to include to speed things up e.g. `node_modules` and `vendor`. Should be relative `wp_assure.json` or use variable `%REPO_ROOT%` to make absolute.
+* `exclude` - WP Acceptance copys all the files in your repository into the snapshot for testing. There may be directories you want to include to speed things up e.g. `node_modules` and `vendor`. Should be relative `wpacceptance.json`.
 * `enforce_clean_db` - If set to `true`, a "clean" DB will be used for each test in the suite. "clean" means the untampered DB from the snapshot.
 * `disable_clean_db` - Will force WP Snapshots to disable "clean" DB functionality. By default, a clean DB is created even if `enforce_clean_db` is false since there is a test method for refreshing the DB.
 * `bootstrap` - Path to bootstrap file. This file will be executed before test execution begins. Should be relative to `wpacceptance.json`.
@@ -395,4 +394,9 @@ WP Acceptance works well with GitLab as well. The only difference is when runnin
 
 ## Snapshots vs. Environment Instructions
 
-Snapshots and environmental instructions are two different tools for creating shareable environments that empower team members and/or CI processes to test consistently against the same environment. Read more about the two workflows [above](https://wpacceptance.readthedocs.io/en/latest/workflow-snapshots/).
+Snapshots and environmental instructions are two different tools for creating shareable environments that empower team members and/or CI processes to test consistently against the same environment. Read more about the two workflows [above](#workflow-environment-instructions-and-snapshots). Here are some reasons to use one workflow over the other:
+
+* If you don't have access to AWS or don't want to deal with the complexities of AWS, use environment instructions.
+* If you need non-authenticated, public contributors to run tests against your environment, use environment instructions.
+* If you are building a website for a client and the code isn't public, use snapshots.
+* If your environment requires highly specific data e.g. menus, options, certain post set, etc, use snapshots.

@@ -11,7 +11,7 @@ This test creates a post and makes sure it's published.
 function testPostPublish() {
 	$I = $this->openBrowserPage();
 
-	$I->loginAs( 'wpsnapshots' );
+	$I->loginAs( 'wpsnapshots' ); // The username would be `admin` if using instructions.
 
 	$I->moveTo( 'wp-admin/post-new.php' );
 
@@ -27,7 +27,7 @@ function testPostPublish() {
 }
 ```
 
-Note that the `wpsnapshots` user is always available as a super admin.
+Note that the `wpsnapshots` user is always available as a super admin when using a snapshot. If using instructions, `admin` user is always available.
 
 This test tests adding media to a post and setting it as the featured image:
 
@@ -38,7 +38,7 @@ This test tests adding media to a post and setting it as the featured image:
 function testFeaturedImage() {
 	$I = $this->openBrowserPage();
 
-	$I->loginAs( 'wpsnapshots' );
+	$I->loginAs( 'wpsnapshots' ); // The username would be `admin` if using instructions.
 
 	$I->moveTo( 'wp-admin/post-new.php' );
 
