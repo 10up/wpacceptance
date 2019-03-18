@@ -125,7 +125,7 @@ class EnvironmentFactory {
 				return false;
 			}
 
-			if ( ! $environment->insertRepo() ) {
+			if ( ! $environment->insertProject() ) {
 				return false;
 			}
 
@@ -156,11 +156,7 @@ class EnvironmentFactory {
 				return false;
 			}
 
-			if ( ! $environment->pullSnapshot() ) {
-				return false;
-			}
-
-			if ( ! $environment->setupHosts() ) {
+			if ( ! $environment->setupWordPressEnvironment() ) {
 				return false;
 			}
 
@@ -172,7 +168,7 @@ class EnvironmentFactory {
 				return false;
 			}
 
-			if ( ! $environment->insertRepo() ) {
+			if ( ! $environment->insertProject() ) {
 				return false;
 			}
 

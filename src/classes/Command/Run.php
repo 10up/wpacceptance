@@ -158,6 +158,7 @@ class Run extends Command {
 			$suite_config['screenshot_on_failure'] = true;
 		}
 
+		// Override with command line snapshot id if one exists
 		if ( empty( $local ) ) {
 			$option_snapshot_id = $input->getOption( 'snapshot_id' );
 
@@ -167,24 +168,27 @@ class Run extends Command {
 		}
 
 		if ( empty( $local ) ) {
-			if ( empty( $suite_config['snapshot_id'] ) ) {
-				Log::instance()->write( 'You must either provide --snapshot_id, have a snapshot ID in wpacceptance.json, or provide the --local parameter.', 0, 'error' );
+			if ( empty( $suite_config['snapshot_id'] ) && empty( $suite_config['environment_instructions'] ) ) {
+				Log::instance()->write( 'You must either have environment isntructions in wpacceptance.json, have a snapshot ID in wpacceptance.json, provide --snapshot_id, or provide the --local parameter.', 0, 'error' );
+
 				return 3;
 			}
 
-			if ( ! \WPSnapshots\Utils\is_snapshot_cached( $suite_config['snapshot_id'] ) ) {
-				$snapshot = Snapshot::download( $suite_config['snapshot_id'], $repository->getName() );
+			if ( empty( $suite_config['environment_instructions'] ) ) {
+				if ( ! \WPSnapshots\Utils\is_snapshot_cached( $suite_config['snapshot_id'] ) ) {
+					$snapshot = Snapshot::download( $suite_config['snapshot_id'], $repository->getName() );
 
-				if ( ! is_a( $snapshot, '\WPSnapshots\Snapshot' ) ) {
-					Log::instance()->write( 'Could not download snapshot ' . $suite_config['snapshot_id'] . '. Does it exist?', 0, 'error' );
-					return 2;
-				}
-			} else {
-				$snapshot = Snapshot::get( $suite_config['snapshot_id'] );
+					if ( ! is_a( $snapshot, '\WPSnapshots\Snapshot' ) ) {
+						Log::instance()->write( 'Could not download snapshot ' . $suite_config['snapshot_id'] . '. Does it exist?', 0, 'error' );
+						return 2;
+					}
+				} else {
+					$snapshot = Snapshot::get( $suite_config['snapshot_id'] );
 
-				if ( ! is_a( $snapshot, '\WPSnapshots\Snapshot' ) ) {
-					Log::instance()->write( 'Could not find cached snapshot ' . $suite_config['snapshot_id'] . '. Does it exist?', 0, 'error' );
-					return 2;
+					if ( ! is_a( $snapshot, '\WPSnapshots\Snapshot' ) ) {
+						Log::instance()->write( 'Could not find cached snapshot ' . $suite_config['snapshot_id'] . '. Does it exist?', 0, 'error' );
+						return 2;
+					}
 				}
 			}
 		} else {

@@ -22,6 +22,7 @@ use Docker\Docker;
 use GrantLucas\PortFinder;
 use WPAcceptance\Utils as Utils;
 use WPSnapshots\Snapshot;
+use WPInstructions;
 
 /**
  * Create and manage the docker environment
@@ -109,18 +110,11 @@ class Environment {
 	protected $current_mysql_db = 'wordpress_clean';
 
 	/**
-	 * Path to wpacceptance.json in snapshot
+	 * Path to wpacceptance.json directory in container
 	 *
 	 * @var string
 	 */
-	protected $snapshot_wpacceptance_path;
-
-	/**
-	 * Path to repo in snapshot
-	 *
-	 * @var string
-	 */
-	protected $snapshot_repo_path;
+	protected $container_project_path;
 
 	/**
 	 * Sites referenced by WordPress
@@ -309,14 +303,13 @@ class Environment {
 
 		$environment_meta = json_decode( $environment_meta, true );
 
-		$this->suite_config               = $environment_meta['suite_config'];
-		$this->wordpress_port             = $environment_meta['wordpress_port'];
-		$this->mysql_port                 = $environment_meta['mysql_port'];
-		$this->gateway_ip                 = $environment_meta['gateway_ip'];
-		$this->snapshot_wpacceptance_path = $environment_meta['snapshot_wpacceptance_path'];
-		$this->snapshot_repo_path         = $environment_meta['snapshot_repo_path'];
-		$this->sites                      = $environment_meta['sites'];
-		$this->snapshot                   = Snapshot::get( $this->suite_config['snapshot_id'] );
+		$this->suite_config           = $environment_meta['suite_config'];
+		$this->wordpress_port         = $environment_meta['wordpress_port'];
+		$this->mysql_port             = $environment_meta['mysql_port'];
+		$this->gateway_ip             = $environment_meta['gateway_ip'];
+		$this->container_project_path = $environment_meta['container_project_path'];
+		$this->sites                  = $environment_meta['sites'];
+		$this->snapshot               = ( ! empty( $this->suite_config['snapshot_id'] ) ) ? Snapshot::get( $this->suite_config['snapshot_id'] ) : null;
 
 		return true;
 	}
@@ -382,7 +375,9 @@ class Environment {
 			return false;
 		}
 
-		$this->mysql_client = new MySQL( $this->getMySQLCredentials(), $this->getLocalIP(), $this->mysql_port, $this->snapshot->meta['table_prefix'] );
+		$table_prefix = ( ! empty( $this->suite_config['snapshot_id'] ) ) ? $this->snapshot->meta['table_prefix'] : 'wp_';
+
+		$this->mysql_client = new MySQL( $this->getMySQLCredentials(), $this->getLocalIP(), $this->mysql_port, $table_prefix );
 
 		return $this->current_mysql_db;
 	}
@@ -450,7 +445,7 @@ class Environment {
 		foreach ( $this->suite_config['before_scripts'] as $script ) {
 			Log::instance()->write( 'Running script: ' . $script, 1 );
 
-			$command = 'cd ' . $this->snapshot_wpacceptance_path . ' && ' . $script;
+			$command = 'cd ' . $this->container_project_path . ' && ' . $script;
 
 			$exec_config = new ContainersIdExecPostBody();
 			$exec_config->setTty( true );
@@ -489,12 +484,214 @@ class Environment {
 		return true;
 	}
 
+	public function setupWordPressEnvironment() {
+		Log::instance()->write( 'Setting up WordPress environment...', 1 );
+
+		if ( ! empty( $this->suite_config['snapshot_id'] ) ) {
+			return $this->pullSnapshot();
+		} elseif ( ! empty( $this->suite_config['environment_instructions'] ) ) {
+			return $this->createFromInstructions();
+		} else {
+			Log::instance()->write( 'No environment instructions or snapshot.', 0, 'error' );
+
+			return false;
+		}
+	}
+
+	protected function createFromInstructions() {
+		Log::instance()->write( 'Saving instructions to container...', 1 );
+
+		$raw_instructions = implode( "\n", (array) $this->suite_config['environment_instructions'] );
+
+		WPInstructions\Instruction::registerInstructionType( new WPInstructions\InstructionTypes\InstallWordPress() );
+
+		$instructions = new WPInstructions\Instructions( $raw_instructions );
+		$instructions->prepare();
+
+		$instruction_array = $instructions->getInstructions();
+
+		if ( empty( $instruction_array ) ) {
+			Log::instance()->write( 'No valid environment instructions.', 0, 'error' );
+
+			return false;
+		}
+
+		$instruction_array[0]->prepare();
+
+		$options = $instruction_array[0]->getPreparedOptions();
+
+		if ( 'install wordpress' !== $instruction_array[0]->getAction() ) {
+			Log::instance()->write( 'Your first environment instruction must be installing WordPress.', 0, 'error' );
+
+			return false;
+		}
+
+		if ( empty( $options['site url'] ) && ! empty( $options['home url'] ) ) {
+			$options['site url'] = $options['home url'];
+		}
+
+		if ( ! empty( $options['site url'] ) && empty( $options['home url'] ) ) {
+			$options['home url'] = $options['site url'];
+		}
+
+		if ( empty( $options['home url'] ) || empty( $options['site url'] ) ) {
+			Log::instance()->write( 'Your install WordPress instruction must set a home url and site url. Try using wpacceptance.test', 0, 'error' );
+
+			return false;
+		}
+
+		$replaced_hosts = [];
+
+		$home_host = parse_url( $options['home url'], PHP_URL_HOST );
+		$site_host = parse_url( $options['site url'], PHP_URL_HOST );
+
+		$raw_instructions = preg_replace( '#https?://' . $home_host . '#i', 'http://' . $home_host . ':' . $this->wordpress_port, $raw_instructions );
+		$replaced_hosts[] = $home_host;
+
+		if ( ! in_array( $site_host, $replaced_hosts, true ) ) {
+			$raw_instructions = preg_replace( '#https?://' . $site_host . '#i', 'http://' . $site_host . ':' . $this->wordpress_port, $raw_instructions );
+
+			$replaced_hosts[] = $site_host;
+		}
+
+		$this->sites = [
+			[
+				'home_url'    => preg_replace( '#^https?://' . $home_host . '(.*)$#i', 'http://' . $home_host . ':' . $this->wordpress_port . '$1', $options['home url'] ),
+				'site_url'    => preg_replace( '#^https?://' . $site_host . '(.*)$#i', 'http://' . $site_host . ':' . $this->wordpress_port . '$1', $options['site url'] ),
+				'blog_id'     => 1,
+				'main_domain' => true,
+			],
+		];
+
+		foreach ( $instruction_array as $instruction ) {
+			if ( 'add site' === $instruction->getAction() ) {
+				$options = $instruction_array[0]->getPreparedOptions();
+
+				if ( empty( $options['site url'] ) && ! empty( $options['home url'] ) ) {
+					$options['site url'] = $options['home url'];
+				}
+
+				if ( ! empty( $options['site url'] ) && empty( $options['home url'] ) ) {
+					$options['home url'] = $options['site url'];
+				}
+
+				$home_host = parse_url( $options['home url'], PHP_URL_HOST );
+				$site_host = parse_url( $options['site url'], PHP_URL_HOST );
+
+				if ( ! in_array( $home_host, $replaced_hosts, true ) ) {
+					$raw_instructions = preg_replace( '#https?://' . $home_host . '#i', 'http://' . $home_host . ':' . $this->wordpress_port, $raw_instructions );
+
+					$replaced_hosts[] = $home_host;
+				}
+
+				if ( ! in_array( $site_host, $replaced_hosts, true ) ) {
+					$raw_instructions = preg_replace( '#https?://' . $site_host . '#i', 'http://' . $site_host . ':' . $this->wordpress_port, $raw_instructions );
+
+					$replaced_hosts[] = $site_host;
+				}
+
+				$this->sites[] = [
+					'home_url'    => preg_replace( '#^https?://' . $home_host . '(.*)$#i', 'http://' . $home_host . ':' . $this->wordpress_port . '$1', $options['home url'] ),
+					'site_url'    => preg_replace( '#^https?://' . $site_host . '(.*)$#i', 'http://' . $site_host . ':' . $this->wordpress_port . '$1', $options['site url'] ),
+					'blog_id'     => count( $this->sites ) + 1,
+					'main_domain' => false,
+				];
+			}
+		}
+
+		$command = 'touch /var/www/html/WPInstructions && echo "' . addslashes( $raw_instructions ) . '" >> /var/www/html/WPInstructions';
+
+		Log::instance()->write( $command, 2 );
+
+		$exec_config = new ContainersIdExecPostBody();
+		$exec_config->setTty( true );
+		$exec_config->setAttachStdout( true );
+		$exec_config->setAttachStderr( true );
+		$exec_config->setCmd( [ '/bin/sh', '-c', $command ] );
+
+		$exec_command      = EnvironmentFactory::$docker->containerExec( $this->environment_id . '-wordpress', $exec_config );
+		$exec_id           = $exec_command->getId();
+		$exec_start_config = new ExecIdStartPostBody();
+		$exec_start_config->setDetach( false );
+
+		$stream = EnvironmentFactory::$docker->execStart( $exec_id, $exec_start_config );
+
+		$stream->onStdout(
+			function( $stdout ) {
+				Log::instance()->write( $stdout, 1 );
+			}
+		);
+
+		$stream->onStderr(
+			function( $stderr ) {
+				Log::instance()->write( $stderr, 1 );
+			}
+		);
+
+		$stream = $stream->wait();
+
+		Log::instance()->write( 'Running instructions in container...', 1 );
+
+		$mysql_creds = $this->getMySQLCredentials();
+
+		$verbose = '';
+
+		if ( 1 === Log::instance()->getVerbosity() ) {
+			$verbose = '-v';
+		} elseif ( 2 === Log::instance()->getVerbosity() ) {
+			$verbose = '-vv';
+		} elseif ( 3 === Log::instance()->getVerbosity() ) {
+			$verbose = '-vvv';
+		}
+
+		$command = '/root/.composer/vendor/bin/wpinstructions run --config_db_name="' . $mysql_creds['DB_NAME'] . '" --config_db_user="' . $mysql_creds['DB_USER'] . '" --config_db_password="' . $mysql_creds['DB_PASSWORD'] . '" --config_db_host="' . $mysql_creds['DB_HOST'] . '" ' . $verbose;
+
+		Log::instance()->write( 'Running command:', 1 );
+		Log::instance()->write( $command, 1 );
+
+		$exec_config = new ContainersIdExecPostBody();
+		$exec_config->setTty( true );
+		$exec_config->setAttachStdout( true );
+		$exec_config->setAttachStderr( true );
+		$exec_config->setCmd( [ '/bin/sh', '-c', $command ] );
+
+		$exec_command      = EnvironmentFactory::$docker->containerExec( $this->environment_id . '-wordpress', $exec_config );
+		$exec_id           = $exec_command->getId();
+		$exec_start_config = new ExecIdStartPostBody();
+		$exec_start_config->setDetach( false );
+
+		$stream = EnvironmentFactory::$docker->execStart( $exec_id, $exec_start_config );
+
+		$stream->onStdout(
+			function( $stdout ) {
+				Log::instance()->write( $stdout, 1 );
+			}
+		);
+
+		$stream->onStderr(
+			function( $stderr ) {
+				Log::instance()->write( $stderr, 1 );
+			}
+		);
+
+		$stream->wait();
+
+		$exit_code = EnvironmentFactory::$docker->execInspect( $exec_id )->getExitCode();
+
+		if ( 0 !== $exit_code ) {
+			Log::instance()->write( 'Failed to run environment instructions in WordPress container.', 0, 'error' );
+			return false;
+		}
+
+		return true;
+	}
+
 	/**
 	 * Pull WP Snapshot into container
 	 *
 	 * @return  bool
 	 */
-	public function pullSnapshot() {
+	protected function pullSnapshot() {
 		/**
 		 * Pulling snapshot
 		 */
@@ -629,7 +826,9 @@ class Environment {
 	 * @return boolean
 	 */
 	public function setupMySQL() {
-		$this->mysql_client = new MySQL( $this->getMySQLCredentials(), $this->getLocalIP(), $this->mysql_port, $this->snapshot->meta['table_prefix'] );
+		$table_prefix = ( ! empty( $this->snapshot ) ) ? $this->snapshot->meta['table_prefix'] : 'wp_';
+
+		$this->mysql_client = new MySQL( $this->getMySQLCredentials(), $this->getLocalIP(), $this->mysql_port, $table_prefix );
 
 		// Enable general logging
 		$this->mysql_client->query( 'SET global general_log = 1' );
@@ -646,15 +845,15 @@ class Environment {
 	}
 
 	/**
-	 * Mount repository to container
+	 * Find wpacceptance.json in WP container
 	 *
-	 * @return boolean
+	 * @return string|boolean
 	 */
-	public function insertRepo() {
+	protected function findWPAcceptanceFile() {
 		/**
 		 * Determine where codebase is located in snapshot
 		 */
-		Log::instance()->write( 'Finding codebase in snapshot...', 1 );
+		Log::instance()->write( 'Finding wpacceptance.json in container...', 1 );
 
 		$exec_config = new ContainersIdExecPostBody();
 		$exec_config->setTty( true );
@@ -695,10 +894,12 @@ class Environment {
 		$exit_code = EnvironmentFactory::$docker->execInspect( $exec_id )->getExitCode();
 
 		if ( 0 !== $exit_code ) {
-			Log::instance()->write( 'Failed to find codebase in snapshot.', 0, 'error' );
 			return false;
 		}
 
+		/**
+		 * Finding matching wpacceptance project names
+		 */
 		foreach ( $suite_config_files as $suite_config_file ) {
 			$exec_config = new ContainersIdExecPostBody();
 			$exec_config->setTty( true );
@@ -730,33 +931,43 @@ class Environment {
 			$stream->wait();
 
 			if ( trim( $suite_config_name ) === trim( $this->suite_config['name'] ) ) {
-				$this->snapshot_wpacceptance_path = Utils\trailingslash( dirname( $suite_config_file ) );
-				break;
+				return Utils\trailingslash( dirname( $suite_config_file ) );
 			}
 		}
 
-		if ( empty( $this->snapshot_wpacceptance_path ) ) {
-			Log::instance()->write( 'Could not copy codebase files into snapshot. The snapshot must contain a codebase with a wpacceptance.json file.', 0, 'error' );
-			return false;
-		}
+		return false;
+	}
 
-		// If no repo_path or repo_path is relative
-		if ( empty( $this->suite_config['repo_path'] ) ) {
-			$this->snapshot_repo_path = $this->snapshot_wpacceptance_path;
+	/**
+	 * Mount project to container
+	 *
+	 * @return boolean
+	 */
+	public function insertProject() {
+		if ( ! empty( $this->snapshot ) ) {
+			$this->container_project_path = $this->findWPAcceptanceFile();
+
+			if ( empty( $this->container_project_path ) ) {
+				Log::instance()->write( 'Could not copy codebase files into snapshot. The snapshot must contain a codebase with a wpacceptance.json file.', 0, 'error' );
+
+				return false;
+			}
 		} else {
-			if ( false === stripos( $this->suite_config['repo_path'], '%WP_ROOT%' ) ) {
-				$this->snapshot_repo_path = $this->snapshot_wpacceptance_path . $this->suite_config['repo_path'];
-			} else {
-				$this->snapshot_repo_path = preg_replace( '#^/?%WP_ROOT%/?(.*)$#i', '/var/www/html/$1', $this->suite_config['repo_path'] );
+			if ( empty( $this->suite_config['project_path'] ) ) {
+				Log::instance()->write( 'No project path set in wpacceptance.json.', 0, 'error' );
+
+				return false;
 			}
+
+			$this->container_project_path = preg_replace( '#^/?%WP_ROOT%/?(.*)$#i', '/var/www/html/$1', $this->suite_config['project_path'] );
 		}
 
 		/**
-		 * Copy repo files into container
+		 * Copy project files into container
 		 */
 
 		Log::instance()->write( 'Copying codebase into container...', 1 );
-		Log::instance()->write( 'Repo path in snapshot: ' . $this->snapshot_repo_path, 2 );
+		Log::instance()->write( 'Container project path: ' . $this->container_project_path, 2 );
 
 		$excludes = '';
 
@@ -764,23 +975,11 @@ class Environment {
 			foreach ( $this->suite_config['exclude'] as $exclude ) {
 				$exclude = preg_replace( '#^\.?/(.*)$#i', '$1', $exclude );
 
-				if ( false !== stripos( $exclude, '%REPO_ROOT%' ) ) {
-					// Exclude contains %REPO_ROOT%
-					$excludes .= '--exclude="' . preg_replace( '#^/?%REPO_ROOT%/?(.*)$#i', '$1', $exclude ) . '" ';
-				} else {
-					// Exclude is relative
-					if ( $this->snapshot_repo_path === $this->snapshot_wpacceptance_path ) {
-						$excludes .= '--exclude="' . $exclude . '" ';
-					} else {
-						$abs_exclude = Utils\resolve_absolute_path( $this->snapshot_wpacceptance_path . $exclude );
-
-						$excludes .= '--exclude="' . str_replace( Utils\trailingslash( $this->snapshot_repo_path ), '', $abs_exclude ) . '" ';
-					}
-				}
+				$excludes .= '--exclude="' . $exclude . '" ';
 			}
 		}
 
-		$rsync_command = 'rsync -a -I --exclude=".git" ' . $excludes . ' ' . $this->getWPContainerRepoRoot() . '/ ' . $this->snapshot_repo_path;
+		$rsync_command = 'rsync -a -I --exclude=".git" ' . $excludes . ' ' . $this->getWPContainerRepoRoot() . '/ ' . $this->container_project_path;
 
 		Log::instance()->write( $rsync_command, 2 );
 
@@ -1028,20 +1227,24 @@ class Environment {
 			];
 		} else {
 			$binds = [
-				\WPSnapshots\Utils\get_snapshot_directory() . $this->suite_config['snapshot_id'] . ':/root/.wpsnapshots/' . $this->suite_config['snapshot_id'],
-				\WPSnapshots\Utils\get_snapshot_directory() . 'config.json:/root/.wpsnapshots/config.json',
-				$this->suite_config['host_repo_path'] . ':/root/repo',
+				$this->suite_config['path'] . ':/root/repo',
 			];
+
+			if ( ! empty( $this->suite_config['snapshot_id'] ) ) {
+				$binds[] = \WPSnapshots\Utils\get_snapshot_directory() . $this->suite_config['snapshot_id'] . ':/root/.wpsnapshots/' . $this->suite_config['snapshot_id'];
+
+				$binds[] = \WPSnapshots\Utils\get_snapshot_directory() . 'config.json:/root/.wpsnapshots/config.json';
+			}
 		}
 
 		$host_config->setBinds( $binds );
 
-		Log::instance()->write( 'Mapping ' . $this->suite_config['host_repo_path'] . ' to ' . $this->getWPContainerRepoRoot(), 2 );
+		Log::instance()->write( 'Mapping ' . $this->suite_config['path'] . ' to ' . $this->getWPContainerRepoRoot(), 2 );
 
 		$container_port_map           = new \ArrayObject();
 		$container_port_map['80/tcp'] = new \stdClass();
 
-		$container_config->setImage( '10up/wpacceptance-wordpress' );
+		$container_config->setImage( 'test-wpa:latest' );
 		$container_config->setAttachStdin( true );
 		$container_config->setAttachStdout( true );
 		$container_config->setExposedPorts( $container_port_map );
@@ -1350,15 +1553,14 @@ class Environment {
 	 */
 	public function getEnvironmentMeta() {
 		return [
-			'suite_config'               => $this->suite_config->toArray(),
-			'wordpress_port'             => $this->wordpress_port,
-			'mysql_port'                 => $this->mysql_port,
-			'snapshot_id'                => $this->suite_config['snapshot_id'],
-			'environment_id'             => $this->environment_id,
-			'gateway_ip'                 => $this->gateway_ip,
-			'snapshot_wpacceptance_path' => $this->snapshot_wpacceptance_path,
-			'snapshot_repo_path'         => $this->snapshot_repo_path,
-			'sites'                      => $this->sites,
+			'suite_config'                => $this->suite_config->toArray(),
+			'wordpress_port'              => $this->wordpress_port,
+			'mysql_port'                  => $this->mysql_port,
+			'snapshot_id'                 => $this->suite_config['snapshot_id'],
+			'environment_id'              => $this->environment_id,
+			'gateway_ip'                  => $this->gateway_ip,
+			'container_project_path'      => $this->container_project_path,
+			'sites'                       => $this->sites,
 		];
 	}
 
@@ -1418,7 +1620,7 @@ class Environment {
 	 * @return string
 	 */
 	public static function generateEnvironmentId( $suite_config ) {
-		$string = 'name=' . $suite_config['name'] . ',snapshot_id=' . $suite_config['snapshot_id'] . ',host_repo_path=' . $suite_config['host_repo_path'] . ',repo_path=' . $suite_config['repo_path'] . ',repository=' . (int) $suite_config['repository'];
+		$string = 'name=' . $suite_config['name'] . ',snapshot_id=' . $suite_config['snapshot_id'] . ',path=' . $suite_config['path'] . ',project_path=' . $suite_config['project_path'] . ',repository=' . (int) $suite_config['repository'];
 
 		if ( isset( $suite_config['enforce_clean_db'] ) ) {
 			$string .= ',enforce_clean_db=' . (int) $suite_config['enforce_clean_db'];
