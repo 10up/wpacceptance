@@ -508,6 +508,8 @@ class Environment {
 				if ( ! $this->pullSnapshot( $snapshot_id_or_environment_instructions ) ) {
 					return false;
 				}
+			} else {
+				Log::instance()->write( 'WordPress environment found in cache.', 1 );
 			}
 
 			$this->current_environment_key = $new_environment_key;
@@ -527,6 +529,8 @@ class Environment {
 				if ( ! $this->createFromInstructions( $snapshot_id_or_environment_instructions ) ) {
 					return false;
 				}
+			} else {
+				Log::instance()->write( 'WordPress environment found in cache.', 1 );
 			}
 
 			$this->current_environment_key = $new_environment_key;
