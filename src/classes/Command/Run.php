@@ -368,14 +368,27 @@ class Run extends Command {
 				if ( $result ) {
 					if ( $input->getOption( 'local' ) ) {
 						if ( ( $result && $input->getOption( 'save' ) ) || $input->getOption( 'force_save' ) ) {
+							$snapshot = Snapshot::get( $snapshot_array['snapshot_id'] );
+
 							Log::instance()->write( 'Pushing snapshot to repository...', 1 );
-							Log::instance()->write( 'Snapshot ID - ' . $suite_config['snapshot_id'], 1 );
+							Log::instance()->write( 'Snapshot ID - ' . $snapshot_array['snapshot_id'], 1 );
 							Log::instance()->write( 'Snapshot Project Slug - ' . $snapshot->meta['project'], 1 );
 
 							if ( $snapshot->push() ) {
-								Log::instance()->write( 'Snapshot ID saved to wpacceptance.json', 0, 'success' );
+								Log::instance()->write( 'Snapshot saved to wpacceptance.json', 0, 'success' );
 
-								$suite_config['snapshot_id'] = $suite_config['snapshot_id'];
+								$new_snapshots = [];
+
+								if ( ! empty( $suite_config['snapshots'] ) ) {
+									$new_snapshots = $suite_config['snapshots'];
+								}
+
+								$new_snapshots[] = [
+									'snapshot_id' => $suite_config['snapshot_id'],
+								];
+
+								$suite_config['snapshots'] = $new_snapshots;
+
 								$suite_config->write();
 							} else {
 								Log::instance()->write( 'Could not push snapshot to repository.', 0, 'error' );
@@ -388,11 +401,11 @@ class Run extends Command {
 				}
 
 				if ( ! $result ) {
-					$output->writeln( 'Done with errors.', 0, 'error' );
+					Log::instance()->write( 'Done with errors.', 0, 'error' );
 
 					$test_execution = 1;
 				} else {
-					$output->writeln( 'Done.', 0, 'success' );
+					Log::instance()->write( 'Done.', 0, 'success' );
 				}
 			}
 		} else {
@@ -402,11 +415,11 @@ class Run extends Command {
 				$result = $this->runTests( $suite_config, $input, $output );
 
 				if ( ! $result ) {
-					$output->writeln( 'Done with errors.', 0, 'error' );
+					Log::instance()->write( 'Done with errors.', 0, 'error' );
 
 					$test_execution = 1;
 				} else {
-					$output->writeln( 'Done.', 0, 'success' );
+					Log::instance()->write( 'Done.', 0, 'success' );
 				}
 			}
 		}
