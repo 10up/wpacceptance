@@ -293,8 +293,9 @@ class Actor {
 	 *
 	 * @param string $url_or_path Path (relative to main site in network) or full url
 	 * @param int    $blog_id Optional blog id
+	 * @param array  $wait_until Conditions to wait for to determine if new page is loaded
 	 */
-	public function moveTo( string $url_or_path, int $blog_id = null ) {
+	public function moveTo( string $url_or_path, int $blog_id = null, array $wait_until = [ 'domcontentloaded', 'networkidle2', 'load' ] ) {
 
 		$url_parts = parse_url( $url_or_path );
 
@@ -313,7 +314,7 @@ class Actor {
 			$url .= '?' . $url_parts['query'];
 		}
 
-		$this->page_response = $this->page->goto( $url, [ 'waitUntil' => 'domcontentloaded' ] );
+		$this->page_response = $this->page->goto( $url, [ 'waitUntil' => $wait_until ] );
 
 		Log::instance()->write( 'Navigating to URL: ' . $url, 1 );
 	}
@@ -370,7 +371,9 @@ class Actor {
 	 *
 	 * @param  string $condition Navigation condition to check
 	 */
-	public function waitUntilNavigation( $condition = 'networkidle0' ) {
+	public function waitUntilNavigation( $condition = [ 'domcontentloaded', 'networkidle2', 'load' ] ) {
+		usleep( 500 );
+
 		$this->getPage()->waitForNavigation( [ 'waitUntil' => $condition ] );
 	}
 
