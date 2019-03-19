@@ -86,14 +86,20 @@ class Config implements ArrayAccess {
 	public function write() {
 		Log::instance()->write( 'Writing config.', 1 );
 
-		// Get current config and merge
-		$raw_config_file = file_get_contents( Utils\trailingslash( $this->config['path'] ) . 'wpacceptance.json' );
-		$file_config     = json_decode( $raw_config_file, true );
+		if ( file_exists( Utils\trailingslash( $this->config['path'] ) . 'wpacceptance.json' ) ) {
+			// Get current config and merge
+			$raw_config_file = file_get_contents( Utils\trailingslash( $this->config['path'] ) . 'wpacceptance.json' );
+			$file_config     = json_decode( $raw_config_file, true );
 
-		foreach ( $file_config as $key => $value ) {
-			if ( ! empty( $this->config[ $key ] ) ) {
-				$file_config[ $key ] = $this->config[ $key ];
+			foreach ( $file_config as $key => $value ) {
+				if ( ! empty( $this->config[ $key ] ) ) {
+					$file_config[ $key ] = $this->config[ $key ];
+				}
 			}
+		} else {
+			$file_config = $this->config;
+
+			unset( $file_config['path'] );
 		}
 
 		file_put_contents( Utils\trailingslash( $this->config['path'] ) . 'wpacceptance.json', json_encode( $file_config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) );
