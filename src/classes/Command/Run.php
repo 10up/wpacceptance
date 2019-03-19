@@ -361,7 +361,13 @@ class Run extends Command {
 
 		if ( ! empty( $suite_config['snapshots'] ) ) {
 			foreach ( $suite_config['snapshots'] as $snapshot_array ) {
-				$environment->setupWordPressEnvironment( $snapshot_array['snapshot_id'], 'snapshot' );
+				if ( ! $environment->setupWordPressEnvironment( $snapshot_array['snapshot_id'], 'snapshot' ) ) {
+					Log::instance()->write( 'Could not setup WordPress environment.', 0, 'error' );
+
+					$test_execution = 1;
+
+					continue;
+				}
 
 				$result = $this->runTests( $suite_config, $input, $output );
 
@@ -410,7 +416,13 @@ class Run extends Command {
 			}
 		} else {
 			foreach ( $suite_config['environment_instructions'] as $environment_instructions ) {
-				$environment->setupWordPressEnvironment( implode( "\n", $environment_instructions ), 'environment_instructions' );
+				if ( ! $environment->setupWordPressEnvironment( implode( "\n", $environment_instructions ), 'environment_instructions' ) ) {
+					Log::instance()->write( 'Could not setup WordPress environment.', 0, 'error' );
+
+					$test_execution = 1;
+
+					continue;
+				}
 
 				$result = $this->runTests( $suite_config, $input, $output );
 
