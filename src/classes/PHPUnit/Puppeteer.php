@@ -42,10 +42,11 @@ trait Puppeteer {
 	/**
 	 * Setup and initialize puppeteer
 	 *
+	 * @param boolean $force Force creation even if cached
 	 * @return object
 	 */
-	protected function setupPuppeteer() {
-		if ( empty( $this->puppeteer ) ) {
+	protected function setupPuppeteer( $force = false ) {
+		if ( empty( $this->puppeteer ) || $force ) {
 			$this->puppeteer = new Puphpeteer();
 		}
 
@@ -55,10 +56,11 @@ trait Puppeteer {
 	/**
 	 * Setup Browser with user defined options
 	 *
+	 * @param boolean $force Force creation even if cached
 	 * @return object Browser instance
 	 */
-	protected function setupBrowser() {
-		if ( empty( $this->browser ) ) {
+	protected function setupBrowser( $force = false ) {
+		if ( empty( $this->browser ) || $force ) {
 			$browser_args = [];
 			$config       = EnvironmentFactory::get()->getSuiteConfig();
 
@@ -112,7 +114,14 @@ trait Puppeteer {
 
 		$height = 0;
 
-		$page = $this->browser->newPage( $page_args );
+		try {
+			$page = $this->browser->newPage( $page_args );
+		} catch ( \Nesk\Rialto\Exceptions\Node\FatalException $exception ) {
+			$this->setupPuppeteer( true );
+			$this->setupBrowser( true );
+
+			$page = $this->browser->newPage( $page_args );
+		}
 
 		$actor = new Actor( 'Anonymous User' );
 		$actor->setPage( $page );

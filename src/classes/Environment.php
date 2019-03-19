@@ -47,6 +47,13 @@ class Environment {
 	protected $environment_id;
 
 	/**
+	 * This key represents the current snapshot/environment instruction set by the environment.
+	 *
+	 * @var string
+	 */
+	protected $current_environment_key;
+
+	/**
 	 * WordPress port
 	 *
 	 * @var int
@@ -303,13 +310,12 @@ class Environment {
 
 		$environment_meta = json_decode( $environment_meta, true );
 
-		$this->suite_config           = $environment_meta['suite_config'];
-		$this->wordpress_port         = $environment_meta['wordpress_port'];
-		$this->mysql_port             = $environment_meta['mysql_port'];
-		$this->gateway_ip             = $environment_meta['gateway_ip'];
-		$this->container_project_path = $environment_meta['container_project_path'];
-		$this->sites                  = $environment_meta['sites'];
-		$this->snapshot               = ( ! empty( $this->suite_config['snapshot_id'] ) ) ? Snapshot::get( $this->suite_config['snapshot_id'] ) : null;
+		$this->suite_config            = $environment_meta['suite_config'];
+		$this->wordpress_port          = $environment_meta['wordpress_port'];
+		$this->mysql_port              = $environment_meta['mysql_port'];
+		$this->gateway_ip              = $environment_meta['gateway_ip'];
+		$this->current_environment_key = $environment_meta['current_environment_key'];
+		$this->sites                   = $environment_meta['sites'];
 
 		return true;
 	}
@@ -487,32 +493,66 @@ class Environment {
 	/**
 	 * Setup WP environment via snapshot or instructions
 	 *
+	 * @param string $snapshot_id_or_environment_instructions Either snapshot ID or instructions
+	 * @param  string $environment_type Either snapshot or environment_instructions
 	 * @return boolean
 	 */
-	public function setupWordPressEnvironment() {
+	public function setupWordPressEnvironment( $snapshot_id_or_environment_instructions, string $environment_type ) {
 		Log::instance()->write( 'Setting up WordPress environment...', 1 );
 
-		$env_setup = true;
+		if ( 'snapshot' === $environment_type ) {
+			$new_environment_key = $snapshot_id_or_environment_instructions;
 
-		if ( ! empty( $this->suite_config['snapshot_id'] ) ) {
-			$env_setup = $this->pullSnapshot();
+			// We don't need to pull the snapshot if it's already loaded in the environment
+			if ( $new_environment_key !== $this->current_environment_key ) {
+				if ( ! $this->pullSnapshot( $snapshot_id_or_environment_instructions ) ) {
+					return false;
+				}
+			} else {
+				$this->current_environment_key = $new_environment_key;
+			}
 
-			if ( ! $env_setup ) {
+			if ( ! $this->insertProject() ) {
+				return false;
+			}
+		} elseif ( 'environment_instructions' === $environment_type ) {
+			if ( ! $this->insertProject() ) {
 				return false;
 			}
 
-			return $this->insertProject();
-		} elseif ( ! empty( $this->suite_config['environment_instructions'] ) ) {
-			$insert_project = $this->insertProject();
+			$new_environment_key = $snapshot_id_or_environment_instructions;
 
-			if ( ! $insert_project ) {
-				return false;
+			// We don't need to run the instructions if it's already loaded in the environment
+			if ( $new_environment_key !== $this->current_environment_key ) {
+				if ( ! $this->createFromInstructions( $snapshot_id_or_environment_instructions ) ) {
+					return false;
+				}
+			} else {
+				$this->current_environment_key = $new_environment_key;
 			}
-
-			return $this->createFromInstructions();
 		} else {
 			Log::instance()->write( 'No environment instructions or snapshot.', 0, 'error' );
 
+			return false;
+		}
+
+		if ( ! $this->chmodUploads() ) {
+			return false;
+		}
+
+		if ( ! $this->setupHosts() ) {
+			return false;
+		}
+
+		if ( ! $this->setupMySQL() ) {
+			return false;
+		}
+
+		if ( ! $this->runBeforeScripts() ) {
+			return false;
+		}
+
+		if ( ! $this->writeMetaToWPContainer() ) {
 			return false;
 		}
 	}
@@ -520,12 +560,11 @@ class Environment {
 	/**
 	 * Create WP environment from instructions
 	 *
+	 * @param  string $raw_instructions Instructions to run
 	 * @return boolean
 	 */
-	protected function createFromInstructions() {
+	protected function createFromInstructions( $raw_instructions ) {
 		Log::instance()->write( 'Saving instructions to container...', 1 );
-
-		$raw_instructions = implode( "\n", (array) $this->suite_config['environment_instructions'] );
 
 		WPInstructions\Instruction::registerInstructionType( new WPInstructions\InstructionTypes\InstallWordPress() );
 
@@ -720,7 +759,7 @@ class Environment {
 		 * Pulling snapshot
 		 */
 
-		Log::instance()->write( 'Pulling snapshot...', 1 );
+		Log::instance()->write( 'Pulling snapshot ' . $this->suite_config['snapshot_id'] . '...', 1 );
 
 		$this->snapshot = Snapshot::get( $this->suite_config['snapshot_id'] );
 
@@ -850,6 +889,8 @@ class Environment {
 	 * @return boolean
 	 */
 	public function setupMySQL() {
+		Log::instance()->write( 'Setting up MySQL...', 1 );
+
 		$table_prefix = ( ! empty( $this->snapshot ) ) ? $this->snapshot->meta['table_prefix'] : 'wp_';
 
 		$this->mysql_client = new MySQL( $this->getMySQLCredentials(), $this->getLocalIP(), $this->mysql_port, $table_prefix );
@@ -1586,14 +1627,13 @@ class Environment {
 	 */
 	public function getEnvironmentMeta() {
 		return [
-			'suite_config'                => $this->suite_config->toArray(),
-			'wordpress_port'              => $this->wordpress_port,
-			'mysql_port'                  => $this->mysql_port,
-			'snapshot_id'                 => $this->suite_config['snapshot_id'],
-			'environment_id'              => $this->environment_id,
-			'gateway_ip'                  => $this->gateway_ip,
-			'container_project_path'      => $this->container_project_path,
-			'sites'                       => $this->sites,
+			'suite_config'            => $this->suite_config->toArray(),
+			'wordpress_port'          => $this->wordpress_port,
+			'mysql_port'              => $this->mysql_port,
+			'environment_id'          => $this->environment_id,
+			'gateway_ip'              => $this->gateway_ip,
+			'current_environment_key' => $this->current_environment_key,
+			'sites'                   => $this->sites,
 		];
 	}
 
@@ -1653,15 +1693,7 @@ class Environment {
 	 * @return string
 	 */
 	public static function generateEnvironmentId( $suite_config ) {
-		$string = 'name=' . $suite_config['name'] . ',snapshot_id=' . $suite_config['snapshot_id'] . ',path=' . $suite_config['path'] . ',project_path=' . $suite_config['project_path'] . ',repository=' . (int) $suite_config['repository'];
-
-		if ( isset( $suite_config['enforce_clean_db'] ) ) {
-			$string .= ',enforce_clean_db=' . (int) $suite_config['enforce_clean_db'];
-		}
-
-		if ( isset( $suite_config['disable_clean_db'] ) ) {
-			$string .= ',disable_clean_db=' . (int) $suite_config['disable_clean_db'];
-		}
+		$string = 'name=' . $suite_config['name'] . ',path=' . $suite_config['path'] . ',project_path=' . $suite_config['project_path'];
 
 		return md5( $string );
 	}

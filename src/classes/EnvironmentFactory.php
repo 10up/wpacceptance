@@ -120,22 +120,6 @@ class EnvironmentFactory {
 
 		if ( $environment->populateEnvironmentFromCache() ) {
 			self::$environments[] = $environment;
-
-			if ( ! $environment->setupHosts() ) {
-				return false;
-			}
-
-			if ( ! $environment->insertProject() ) {
-				return false;
-			}
-
-			if ( ! $environment->setupMySQL() ) {
-				return false;
-			}
-
-			if ( ! $environment->runBeforeScripts() ) {
-				return false;
-			}
 		} else {
 
 			if ( ! $environment->createNetwork() ) {
@@ -153,30 +137,6 @@ class EnvironmentFactory {
 			}
 
 			if ( ! $environment->startContainers() ) {
-				return false;
-			}
-
-			if ( ! $environment->setupWordPressEnvironment() ) {
-				return false;
-			}
-
-			if ( ! $environment->chmodUploads() ) {
-				return false;
-			}
-
-			if ( ! $environment->setupHosts() ) {
-				return false;
-			}
-
-			if ( ! $environment->setupMySQL() ) {
-				return false;
-			}
-
-			if ( ! $environment->writeMetaToWPContainer() ) {
-				return false;
-			}
-
-			if ( ! $environment->runBeforeScripts() ) {
 				return false;
 			}
 		}

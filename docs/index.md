@@ -84,6 +84,21 @@ If you just want to run tests locally, you are done. If you want to have a teamm
 
 The first instruction MUST be installing WordPress. Install wordpress must include a site and home url which can be anything. For documentation and usage on supported instructions, see [WP Instructions](https://github.com/10up/wpinstructions).
 
+`environment_instructions` can also take an array of arrays of instructions. This is useful if you want to run your tests across multiple environments:
+
+```
+{
+	"environment_instructions": [
+		[
+			"install wordpress where version is 4.9 and site url is http://wpacceptance.test and home url is http://wpacceptance.test"
+		],
+		[
+			"install wordpress where version is latest and site url is http://wpacceptance.test and home url is http://wpacceptance.test"
+		]
+	]
+}
+```
+
 6\. Next you need to tell WP Acceptance where your project should be mounted. For example, if my `wpacceptance.json` is the root of `wp-content`, I would set `project_path` like so:
 
 ```
@@ -127,7 +142,7 @@ There are three scenarios or workflows for running WP Acceptance:
 2. Testing a codebase against a set of environment instructions.
 3. Testing a codebase against a "primary" snapshot.
 
-The power of WP Acceptance is working with a team or CI process that is testing it's code against one set of environment instructions or *primary snapshot*. Of course, in order for this to be successful the environment instructions or primary snapshot must be kept relevant which is the responsiblity of the development team. For example, when new content types are added, content should be added via new environment instructions or a new primary snapshot created.
+The power of WP Acceptance is working with a team or CI process that is testing it's code against a set of environment instructions or snapshot (you can also test against multiple sets of environment instructions or snapshots). Of course, in order for this to be successful the environment instructions or snapshot(s) must be kept relevant which is the responsiblity of the development team. For example, when new content types are added, content should be added via new environment instructions or a new snapshot created.
 
 Environment instructions are a simple set of instructions for defining an environment e.g. install WordPress, download twentynineteen theme, activate plugin, etc (supported instructions are documented in [WP Instructions](https://github.com/10up/wpinstructions)). A snapshot is a database/file package where everything e.g. WP version, theme, plugins, are preset. You can use environment instructions OR snapshots, not both. Read [Snapshots vs. Environment Instructions](#snapshots-vs-environment-instructions).
 
@@ -136,19 +151,19 @@ To test a codebase on your local environment, you would run the following comman
 wpacceptance run --local
 ```
 
-The `--local` flag will force WP Acceptance to ignore environment instructions or snapshot ID defined in `wpacceptance.json`. If you are using a snapshot workflow, you can use the `--save_snapshot` flag which will make WP Acceptance create a new snapshot from your local and save the ID to `wpacceptance.json` (overwritting any old ID). After saving a new primary snapshot to `wpacceptance.json`, you will want to commit and push the change upstream.
+The `--local` flag will force WP Acceptance to ignore environment instructions or snapshot ID defined in `wpacceptance.json`. If you are using a snapshot workflow, you can use the `--save_snapshot` flag which will make WP Acceptance create a new snapshot from your local and save the ID to `wpacceptance.json`. After saving a new snapshot to `wpacceptance.json`, you will want to commit and push the change upstream.
 
-To test a codebase against environment instructions (assuming `environment_instructions` and `project_path` is defined in `wpacceptance.json`), you would run the following command in the directory of `wpacceptance.json`:
+To test a codebase against environment instructions (assuming `environment_instructions` and `project_path` are defined in `wpacceptance.json`), you would run the following command in the directory of `wpacceptance.json`:
 ```
 wpacceptance run
 ```
 
-To test a codebase against a primary snapshot (assuming `snapshot_id` is defined in `wpacceptance.json`), you would simply run the following command in the directory of `wpacceptance.json`:
+To test a codebase against snapshot(s) (assuming `snapshot_id` or `snapshots` is defined in `wpacceptance.json`), you would simply run the following command in the directory of `wpacceptance.json`:
 ```
 wpacceptance run
 ```
 
-You can only run WP Acceptance against snapshots that contain some version of the codebase your are testing. This means the snapshot must contain `wpacceptance.json` with the same `name` as the one you are running.
+You can only run WP Acceptance against snapshots that contain some version of the codebase your are testing. This means snapshots must contain `wpacceptance.json` with the same `name` as the one you are running.
 
 ## wpacceptance.json File
 
@@ -163,8 +178,18 @@ Here's what `wpacceptance.json` looks like
 		"tests\/*.php"
  	],
 	"snapshot_id": "...",
-	"environment_instructions": "...",
-	"project_path": "%WP_ROOT%/wp-conten",
+	"snapshots": [
+		{
+			"snapshot_name": "name",
+			"snapshot_id": "ID"
+		}
+	],
+	"environment_instructions": [
+		[
+			"..."
+		]
+	],
+	"project_path": "%WP_ROOT%/wp-content",
 	"exclude": [
 		"node_modules",
 		"vendor"
@@ -182,9 +207,11 @@ Here's what `wpacceptance.json` looks like
 
 * `name` (required) - Name of test suite.
 * `tests` (required) - This is an array of path(s) to tests. Each path in the array is processed via PHP `glob`. `*.php` will include every PHP file in the directory. Sholud be relative to `wpacceptance.json`.
-* `environment_instructions` - Instructions for creating environment to test against. If the `run` command is executed without the `--local` flag, these instructions will be used to create the environment assuming no `snapshot_id` is set. Supported instructions are documented in [WP Instructions](https://github.com/10up/wpinstructions).
+* `snapshot_id` - Snapshot to test against. If the `run` command is executed without the `--local` flag, this snapshot ID will be used (if no `environment_instructions` are defined). This will override `snapshots` if set.
+* `snapshot_name` - Snapshot name to test against. If the `run` command is executed without the `--local` flag, this snapshot would be used. Must reference a snapshot name in `snapshots`.
+* `snapshots` - You can specify multiple snapshots to test your code against.
+* `environment_instructions` - Instructions for creating environment to test against. If the `run` command is executed without the `--local` flag, these instructions will be used to create the environment assuming no `snapshot_id` is set. Supported instructions are documented in [WP Instructions](https://github.com/10up/wpinstructions). This can be an array of array to test against multiple environments.
 * `project_path` - Absolute path to your `wpacceptance.json` directory where the path to your WP directory is `%WP_ROOT%`. This should like something like `%WP_ROOT%/wp-content`. This property is required when using environment instructions.
-* `snapshot_id` - "Primary" snapshot to test against. If the `run` command is executed without the `--local` flag, this snapshot ID will be used (if no `environment_instructions` are defined).
 * `exclude` - WP Acceptance copys all the files in your repository into the snapshot for testing. There may be directories you want to exclude to speed things up e.g. `node_modules` and `vendor`. Should be relative to `wpacceptance.json`.
 * `enforce_clean_db` - If set to `true`, a "clean" DB will be used for each test in the suite. "clean" means the untampered DB from the snapshot.
 * `disable_clean_db` - Will force WP Snapshots to disable "clean" DB functionality. By default, a clean DB is created even if `enforce_clean_db` is false since there is a test method for refreshing the DB.
@@ -252,7 +279,7 @@ $I->checkOptions( '.checkbox-or-radio' );
 $I->selectOptions( '.select', 'value-to-select' );
 ```
 
-Since WP Acceptance is built on WP Snapshots, the `wpsnapshots` user is always available as a super admin with password, `password`.
+If using snapshots, the `wpsnapshots` user is always available as a super admin with password, `password`. If using environment instructions, the `admin` user is always available as a super admin with password, `password`.
 
 Since `$I` is literally interacting with a browser, we can do anything a browser can: click on elements, follow links, get specific DOM elements, run JavaScript, resize the browser, refresh the page, interact with forms, move the mouse, interact with the keyboard, etc.
 
@@ -305,6 +332,7 @@ For detailed test examples, look at the [example test suite](https://github.com/
 	* `--force_save` - Save snapshot ID to `wpacceptance.json` and push snapshot upstream no matter what.
 	* `--wp_directory` - Path to WordPress. If unset, will search up the directory tree until wp-config.php is found
 	* `--snapshot_id` - Optionally run tests against a snapshot ID.
+	* `--snapshot_name` - Optionally run tests against a named snapshot from the snapshots array.
 	* `--enforce_clean_db` - Use clean database for each test.
 	* `--cache_environment` - Keep the environment alive so it can be reused later. A cache environment can be used if the config being run is the exact same.
 	* `--skip_environment_cache` - Ensures a fresh environment is used on each run even if a cached one exists. This also will prevent environment caching. This is useful if you are running WP Acceptance multiple times on the same server e.g. shared GitLab runner.
@@ -316,7 +344,7 @@ For detailed test examples, look at the [example test suite](https://github.com/
 	* `--mysql_wait_time` - Set how long WP Acceptance should wait for MySQL to become available in seconds.
 	* `--show_browser` - Show browser during tests. This is very useful for debugging failing tests.
 	* `--slowmo` - Slow testing down so interactions can be more easily viewed in browser. Specify value in milliseconds.
-  
+
 * __wpacceptance init__ [--path] - Initialize a new test suite.
 	* `--path` - Optional path to init directory.
 

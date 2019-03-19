@@ -52,6 +52,8 @@ class Run extends Command {
 		$this->addOption( 'show_browser', false, InputOption::VALUE_NONE, 'Show the browser where testing is occuring.' );
 
 		$this->addOption( 'snapshot_id', null, InputOption::VALUE_REQUIRED, 'WP Snapshot ID.' );
+		$this->addOption( 'snapshot_name', null, InputOption::VALUE_REQUIRED, 'WP Snapshot Name.' );
+		$this->addOption( 'environment_instructions_key', null, InputOption::VALUE_REQUIRED, 'Specify a set of environment instructions within an array of environment instructions. 0 would be the first set of instructions.' );
 		$this->addOption( 'environment_id', null, InputOption::VALUE_REQUIRED, 'Manually set environment ID.' );
 		$this->addOption( 'repository', null, InputOption::VALUE_REQUIRED, 'WP Snapshots repository to use.' );
 		$this->addOption( 'wp_directory', null, InputOption::VALUE_REQUIRED, 'Path to WordPress wp-config.php directory.' );
@@ -158,36 +160,86 @@ class Run extends Command {
 			$suite_config['screenshot_on_failure'] = true;
 		}
 
+		// Prepare environment instructions
+		if ( ! empty( $suite_config['environment_instructions'] ) && is_string( $suite_config['environment_instructions'][0] ) ) {
+			$suite_config['environment_instructions'] = [
+				$suite_config['environment_instructions'],
+			];
+		}
+
 		// Override with command line snapshot id if one exists
 		if ( empty( $local ) ) {
-			$option_snapshot_id = $input->getOption( 'snapshot_id' );
+			if ( empty( $suite_config['environment_instructions'] ) ) {
+				$option_snapshot_name = $input->getOption( 'snapshot_name' );
 
-			if ( ! empty( $option_snapshot_id ) ) {
-				$suite_config['snapshot_id'] = $option_snapshot_id;
+				if ( ! empty( $option_snapshot_name ) && ! empty( $suite_config['snapshots'] ) ) {
+					$snapshot_match = array_filter( $snapshots, function( $snapshot ) {
+						return $snapshot['snapshot_name'] === $option_snapshot_name;
+					} );
+
+					if ( ! empty( $snapshot_match ) ) {
+						$suite_config['snapshot_id'] = $snapshot_match['snapshot_id'];
+					}
+				}
+
+				$option_snapshot_id = $input->getOption( 'snapshot_id' );
+
+				if ( ! empty( $option_snapshot_id ) ) {
+					$suite_config['snapshot_id'] = $option_snapshot_id;
+				}
+			} else {
+				$option_environment_instructions_key = $input->getOption( 'environment_instructions_key' );
+
+				if ( ! empty( $option_snapshot_id ) ) {
+					$suite_config['environment_instructions'] = [
+						$suite_config['environment_instructions'][ $option_environment_instructions_key ],
+					];
+				}
 			}
 		}
 
+		// Add snapshot_id to snapshots
+		if ( ! empty( $suite_config['snapshot_id'] ) ) {
+			$new_snapshots = [];
+
+			if ( ! empty( $suite_config['snapshots'] ) ) {
+				foreach ( $suite_config['snapshots'] as $key => $snapshot_array ) {
+					if ( $snapshot_array['snapshot_id'] !== $suite_config['snapshot_id'] ) {
+						$new_snapshots[] = $snapshot_array;
+					}
+				}
+			}
+
+			$new_snapshots[] = [
+				'snapshot_id' => $suite_config['snapshot_id'],
+			];
+
+			$suite_config['snapshots'] = $new_snapshots;
+		}
+
 		if ( empty( $local ) ) {
-			if ( empty( $suite_config['snapshot_id'] ) && empty( $suite_config['environment_instructions'] ) ) {
-				Log::instance()->write( 'You must either have environment isntructions in wpacceptance.json, have a snapshot ID in wpacceptance.json, provide --snapshot_id, or provide the --local parameter.', 0, 'error' );
+			if ( empty( $suite_config['snapshots'] ) && empty( $suite_config['environment_instructions'] ) ) {
+				Log::instance()->write( 'You must either have environment isntructions in wpacceptance.json, have a snapshot ID or snapshots in wpacceptance.json, provide --snapshot_id, or provide the --local parameter.', 0, 'error' );
 
 				return 3;
 			}
 
 			if ( empty( $suite_config['environment_instructions'] ) ) {
-				if ( ! \WPSnapshots\Utils\is_snapshot_cached( $suite_config['snapshot_id'] ) ) {
-					$snapshot = Snapshot::download( $suite_config['snapshot_id'], $repository->getName() );
+				foreach ( $suite_config['snapshots'] as $snapshot_array ) {
+					if ( ! \WPSnapshots\Utils\is_snapshot_cached( $snapshot_array['snapshot_id'] ) ) {
+						$snapshot = Snapshot::download( $snapshot_array['snapshot_id'], $repository->getName() );
 
-					if ( ! is_a( $snapshot, '\WPSnapshots\Snapshot' ) ) {
-						Log::instance()->write( 'Could not download snapshot ' . $suite_config['snapshot_id'] . '. Does it exist?', 0, 'error' );
-						return 2;
-					}
-				} else {
-					$snapshot = Snapshot::get( $suite_config['snapshot_id'] );
+						if ( ! is_a( $snapshot, '\WPSnapshots\Snapshot' ) ) {
+							Log::instance()->write( 'Could not download snapshot ' . $snapshot_array['snapshot_id'] . '. Does it exist?', 0, 'error' );
+							return 2;
+						}
+					} else {
+						$snapshot = Snapshot::get( $snapshot_array['snapshot_id'] );
 
-					if ( ! is_a( $snapshot, '\WPSnapshots\Snapshot' ) ) {
-						Log::instance()->write( 'Could not find cached snapshot ' . $suite_config['snapshot_id'] . '. Does it exist?', 0, 'error' );
-						return 2;
+						if ( ! is_a( $snapshot, '\WPSnapshots\Snapshot' ) ) {
+							Log::instance()->write( 'Could not find cached snapshot ' . $snapshot_array['snapshot_id'] . '. Does it exist?', 0, 'error' );
+							return 2;
+						}
 					}
 				}
 			}
@@ -219,9 +271,13 @@ class Run extends Command {
 				return 2;
 			}
 
-			$suite_config['snapshot_id'] = $snapshot->id;
+			if ( empty( $suite_config['snapshots'] ) ) {
+				$suite_config['snapshots'] = [];
+			}
 
-			Log::instance()->write( 'Snapshot ID is ' . $suite_config['snapshot_id'], 1 );
+			$suite_config['snapshots'][] = $snapshot->id;
+
+			Log::instance()->write( 'Snapshot ID is ' . $snapshot->id, 1 );
 		}
 
 		Log::instance()->write( 'Creating environment...' );
@@ -233,6 +289,8 @@ class Run extends Command {
 		}
 
 		Log::instance()->write( 'Running tests...' );
+
+		$test_execution = 0;
 
 		$test_files = [];
 		$test_dirs  = ! empty( $suite_config['tests'] ) && is_array( $suite_config['tests'] )
@@ -277,62 +335,104 @@ class Run extends Command {
 			}
 		}
 
-		$suite = new PHPUnitTestSuite();
+		$this->suite = new PHPUnitTestSuite();
 
 		foreach ( $test_files as $test_file ) {
 			if ( empty( $filter_test_files ) || in_array( basename( $test_file ), $filter_test_files, true ) ) {
-				$suite->addTestFile( $test_file );
+				$this->suite->addTestFile( $test_file );
 			}
 		}
 
-		$suite_args = array();
+		$this->suite_args = array();
 
 		$colors = $input->getOption( 'colors' );
 
-		$suite_args['colors'] = $colors ?: PHPUnitResultPrinter::COLOR_AUTO;
+		$this->suite_args['colors'] = $colors ?: PHPUnitResultPrinter::COLOR_AUTO;
 
 		if ( ! empty( $filter_tests ) ) {
-			$suite_args['filter'] = $filter_tests;
+			$this->suite_args['filter'] = $filter_tests;
 		}
 
-		$suite_args['testdox'] = true;
+		$this->suite_args['testdox'] = true;
 
 		if ( class_exists( CliTestDoxPrinter::class ) ) {
-			$suite_args['printer'] = CliTestDoxPrinter::class;
+			$this->suite_args['printer'] = CliTestDoxPrinter::class;
 		}
 
-		$runner      = new \PHPUnit\TextUI\TestRunner();
-		$test_result = $runner->doRun( $suite, $suite_args, false );
+		if ( ! empty( $suite_config['snapshots'] ) ) {
+			foreach ( $suite_config['snapshots'] as $snapshot_array ) {
+				$environment->setupWordPressEnvironment( $snapshot_array['snapshot_id'], 'snapshot' );
 
-		$error = ! $test_result->wasSuccessful();
+				$result = $this->runTests( $suite_config, $input, $output );
 
-		if ( $local ) {
-			if ( ( ! $error && $input->getOption( 'save' ) ) || $input->getOption( 'force_save' ) ) {
-				Log::instance()->write( 'Pushing snapshot to repository...', 1 );
-				Log::instance()->write( 'Snapshot ID - ' . $suite_config['snapshot_id'], 1 );
-				Log::instance()->write( 'Snapshot Project Slug - ' . $snapshot->meta['project'], 1 );
+				if ( $result ) {
+					if ( $input->getOption( 'local' ) ) {
+						if ( ( $result && $input->getOption( 'save' ) ) || $input->getOption( 'force_save' ) ) {
+							Log::instance()->write( 'Pushing snapshot to repository...', 1 );
+							Log::instance()->write( 'Snapshot ID - ' . $suite_config['snapshot_id'], 1 );
+							Log::instance()->write( 'Snapshot Project Slug - ' . $snapshot->meta['project'], 1 );
 
-				if ( $snapshot->push() ) {
-					Log::instance()->write( 'Snapshot ID saved to wpacceptance.json', 0, 'success' );
+							if ( $snapshot->push() ) {
+								Log::instance()->write( 'Snapshot ID saved to wpacceptance.json', 0, 'success' );
 
-					$suite_config['snapshot_id'] = $suite_config['snapshot_id'];
-					$suite_config->write();
+								$suite_config['snapshot_id'] = $suite_config['snapshot_id'];
+								$suite_config->write();
+							} else {
+								Log::instance()->write( 'Could not push snapshot to repository.', 0, 'error' );
+								$environment->destroy();
+
+								return 4;
+							}
+						}
+					}
+				}
+
+				if ( ! $result ) {
+					$output->writeln( 'Done with errors.', 0, 'error' );
+
+					$test_execution = 1;
 				} else {
-					Log::instance()->write( 'Could not push snapshot to repository.', 0, 'error' );
-					$environment->destroy();
+					$output->writeln( 'Done.', 0, 'success' );
+				}
+			}
+		} else {
+			foreach ( $suite_config['environment_instructions'] as $environment_instructions ) {
+				$environment->setupWordPressEnvironment( implode( "\n", $environment_instructions ), 'environment_instructions' );
 
-					return 4;
+				$result = $this->runTests( $suite_config, $input, $output );
+
+				if ( ! $result ) {
+					$output->writeln( 'Done with errors.', 0, 'error' );
+
+					$test_execution = 1;
+				} else {
+					$output->writeln( 'Done.', 0, 'success' );
 				}
 			}
 		}
 
-		if ( $error ) {
-			$output->writeln( 'Done with errors.', 0, 'error' );
-			return 1;
-		} else {
-			$output->writeln( 'Done.', 0, 'success' );
-			return 0;
+		// If we are running more than one environment, output a final message on status of all environments
+		if ( ( ! empty( $suite_config['environment_instructions'] ) && 1 < count( $suite_config['environment_instructions'] ) ) || ( ! empty( $suite_config['snapshots'] ) && 1 < count( $suite_config['snapshots'] ) ) ) {
+			if ( 0 !== $test_execution ) {
+				$output->writeln( 'All tests finished. Errors occurred.', 0, 'error' );
+			} else {
+				$output->writeln( 'All tests finished successful.', 0, 'success' );
+			}
 		}
+
+		return $test_execution;
+	}
+
+	/**
+	 * Run test suite with current environment
+	 *
+	 * @return boolean
+	 */
+	protected function runTests() {
+		$runner      = new \PHPUnit\TextUI\TestRunner();
+		$test_result = $runner->doRun( $this->suite, $this->suite_args, false );
+
+		return $test_result->wasSuccessful();
 	}
 
 }
