@@ -759,7 +759,7 @@ class Environment {
 		 * Pulling snapshot
 		 */
 
-		Log::instance()->write( 'Pulling snapshot...', 1 );
+		Log::instance()->write( 'Pulling snapshot ' . $this->suite_config['snapshot_id'] . '...', 1 );
 
 		$this->snapshot = Snapshot::get( $this->suite_config['snapshot_id'] );
 

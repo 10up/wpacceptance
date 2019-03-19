@@ -292,34 +292,6 @@ class Run extends Command {
 
 		$test_execution = 0;
 
-		$filter_test_files = $input->getOption( 'filter_test_files' );
-		$filter_tests      = $input->getOption( 'filter_tests' );
-
-		if ( ! empty( $suite_config['snapshots'] ) ) {
-			foreach ( $suite_config['snapshots'] as $snapshot_array ) {
-				$environment->setupWordPressEnvironment( $snapshot_array['snapshot_id'], 'snapshot' );
-
-				$test_execution = $this->run_tests( $filter_test_files, $filter_tests );
-			}
-		} else {
-			foreach ( $suite_config['environment_instructions'] as $environment_instructions ) {
-				$environment->setupWordPressEnvironment( implode( "\n", $environment_instructions ), 'environment_instructions' );
-
-				$test_execution = $this->run_tests( $filter_test_files, $filter_tests );
-			}
-		}
-
-		return $test_execution;
-	}
-
-	/**
-	 * Run test suite with current environment
-	 *
-	 * @param  string $filter_test_files Specify specific files to run tests inside
-	 * @param  string $filter_tests Specify specific test methods to run
-	 * @return integer
-	 */
-	protected function run_tests( $filter_test_files = null, $filter_tests = null ) {
 		$test_files = [];
 		$test_dirs  = ! empty( $suite_config['tests'] ) && is_array( $suite_config['tests'] )
 			? $suite_config['tests']
@@ -341,6 +313,9 @@ class Run extends Command {
 		$error      = false;
 		$test_files = array_unique( $test_files );
 
+		$filter_test_files = $input->getOption( 'filter_test_files' );
+		$filter_tests      = $input->getOption( 'filter_tests' );
+
 		if ( ! empty( $filter_test_files ) ) {
 			$filter_test_files = explode( ',', trim( $filter_test_files ) );
 		}
@@ -360,62 +335,95 @@ class Run extends Command {
 			}
 		}
 
-		$suite = new PHPUnitTestSuite();
+		$this->suite = new PHPUnitTestSuite();
 
 		foreach ( $test_files as $test_file ) {
 			if ( empty( $filter_test_files ) || in_array( basename( $test_file ), $filter_test_files, true ) ) {
-				$suite->addTestFile( $test_file );
+				$this->suite->addTestFile( $test_file );
 			}
 		}
 
-		$suite_args = array();
+		$this->suite_args = array();
 
 		$colors = $input->getOption( 'colors' );
 
-		$suite_args['colors'] = $colors ?: PHPUnitResultPrinter::COLOR_AUTO;
+		$this->suite_args['colors'] = $colors ?: PHPUnitResultPrinter::COLOR_AUTO;
 
 		if ( ! empty( $filter_tests ) ) {
-			$suite_args['filter'] = $filter_tests;
+			$this->suite_args['filter'] = $filter_tests;
 		}
 
-		$suite_args['testdox'] = true;
+		$this->suite_args['testdox'] = true;
 
 		if ( class_exists( CliTestDoxPrinter::class ) ) {
-			$suite_args['printer'] = CliTestDoxPrinter::class;
+			$this->suite_args['printer'] = CliTestDoxPrinter::class;
 		}
 
-		$runner      = new \PHPUnit\TextUI\TestRunner();
-		$test_result = $runner->doRun( $suite, $suite_args, false );
+		if ( ! empty( $suite_config['snapshots'] ) ) {
+			foreach ( $suite_config['snapshots'] as $snapshot_array ) {
+				$environment->setupWordPressEnvironment( $snapshot_array['snapshot_id'], 'snapshot' );
 
-		$error = ! $test_result->wasSuccessful();
+				$result = $this->runTests( $suite_config, $input, $output );
 
-		if ( $local ) {
-			if ( ( ! $error && $input->getOption( 'save' ) ) || $input->getOption( 'force_save' ) ) {
-				Log::instance()->write( 'Pushing snapshot to repository...', 1 );
-				Log::instance()->write( 'Snapshot ID - ' . $suite_config['snapshot_id'], 1 );
-				Log::instance()->write( 'Snapshot Project Slug - ' . $snapshot->meta['project'], 1 );
+				if ( $result ) {
+					if ( $input->getOption( 'local' ) ) {
+						if ( ( $result && $input->getOption( 'save' ) ) || $input->getOption( 'force_save' ) ) {
+							Log::instance()->write( 'Pushing snapshot to repository...', 1 );
+							Log::instance()->write( 'Snapshot ID - ' . $suite_config['snapshot_id'], 1 );
+							Log::instance()->write( 'Snapshot Project Slug - ' . $snapshot->meta['project'], 1 );
 
-				if ( $snapshot->push() ) {
-					Log::instance()->write( 'Snapshot ID saved to wpacceptance.json', 0, 'success' );
+							if ( $snapshot->push() ) {
+								Log::instance()->write( 'Snapshot ID saved to wpacceptance.json', 0, 'success' );
 
-					$suite_config['snapshot_id'] = $suite_config['snapshot_id'];
-					$suite_config->write();
+								$suite_config['snapshot_id'] = $suite_config['snapshot_id'];
+								$suite_config->write();
+							} else {
+								Log::instance()->write( 'Could not push snapshot to repository.', 0, 'error' );
+								$environment->destroy();
+
+								return 4;
+							}
+						}
+					}
+				}
+
+				if ( ! $result ) {
+					$output->writeln( 'Done with errors.', 0, 'error' );
+
+					$test_execution = 1;
 				} else {
-					Log::instance()->write( 'Could not push snapshot to repository.', 0, 'error' );
-					$environment->destroy();
+					$output->writeln( 'Done.', 0, 'success' );
+				}
+			}
+		} else {
+			foreach ( $suite_config['environment_instructions'] as $environment_instructions ) {
+				$environment->setupWordPressEnvironment( implode( "\n", $environment_instructions ), 'environment_instructions' );
 
-					return 4;
+				$result = $this->runTests( $suite_config, $input, $output );
+
+				if ( ! $result ) {
+					$output->writeln( 'Done with errors.', 0, 'error' );
+
+					$test_execution = 1;
+				} else {
+					$output->writeln( 'Done.', 0, 'success' );
 				}
 			}
 		}
 
-		if ( $error ) {
-			$output->writeln( 'Done with errors.', 0, 'error' );
-			return 1;
-		} else {
-			$output->writeln( 'Done.', 0, 'success' );
-			return 0;
-		}
+		return $test_execution;
+	}
+
+	/**
+	 * Run test suite with current environment
+	 *
+	 * @return boolean
+	 */
+	protected function runTests() {
+		$runner      = new \PHPUnit\TextUI\TestRunner();
+		$test_result = $runner->doRun( $this->suite, $this->suite_args, false );
+
+		return $test_result->wasSuccessful();
 	}
 
 }
