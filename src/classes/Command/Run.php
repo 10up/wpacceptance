@@ -175,7 +175,7 @@ class Run extends Command {
 
 				if ( ! empty( $snapshot ) ) {
 					$suite_config['snapshot_id'] = $snapshot['snapshot_id'];
-					Log::instance()->write( 'Loading ' .  $snapshot['snapshot_name'] );
+					Log::instance()->write( 'Loading ' . $snapshot['snapshot_name'] );
 				}
 			}
 
@@ -194,11 +194,11 @@ class Run extends Command {
 			if ( ! empty( $snapshots ) ) {
 
 				// Go thru each snapshot and execute the tests.
-				foreach( $snapshots as $snapshot ) {
+				foreach ( $snapshots as $snapshot ) {
 					if ( ! \WPSnapshots\Utils\is_snapshot_cached( $snapshot['snapshot_id'] ) ) {
-						$snapshot = Snapshot::download( $snapshot['snapshot_id'], $repository->getName() );
+						$snapshot_instance = Snapshot::download( $snapshot['snapshot_id'], $repository->getName() );
 
-						if ( ! is_a( $snapshot, '\WPSnapshots\Snapshot' ) ) {
+						if ( ! is_a( $snapshot_instance, '\WPSnapshots\Snapshot' ) ) {
 							Log::instance()->write( 'Could not download snapshot ' . $snapshot['snapshot_id'] . '. Does it exist?', 0, 'error' );
 							return 2;
 						}
@@ -214,7 +214,6 @@ class Run extends Command {
 					return 3;
 				}
 
-
 				if ( ! \WPSnapshots\Utils\is_snapshot_cached( $suite_config['snapshot_id'] ) ) {
 					$snapshot = Snapshot::download( $suite_config['snapshot_id'], $repository->getName() );
 
@@ -222,7 +221,7 @@ class Run extends Command {
 						Log::instance()->write( 'Could not download snapshot ' . $suite_config['snapshot_id'] . '. Does it exist?', 0, 'error' );
 						return 2;
 					} else {
-						self::execute_tests_in_snapshot( $input, $output, $suite_config);
+						return $this->execute_tests_in_snapshot( $input, $output, $suite_config );
 					}
 				} else {
 					$snapshot = Snapshot::get( $suite_config['snapshot_id'] );
@@ -231,7 +230,7 @@ class Run extends Command {
 						Log::instance()->write( 'Could not find cached snapshot ' . $suite_config['snapshot_id'] . '. Does it exist?', 0, 'error' );
 						return 2;
 					} else {
-						self::execute_tests_in_snapshot( $input, $output, $suite_config);
+						return $this->execute_tests_in_snapshot( $input, $output, $suite_config );
 					}
 				}
 			}
@@ -266,7 +265,7 @@ class Run extends Command {
 
 			Log::instance()->write( 'Snapshot ID is ' . $suite_config['snapshot_id'], 1 );
 
-			self::execute_tests_in_snapshot( $input, $output, $suite_config);
+			return $this->execute_tests_in_snapshot( $input, $output, $suite_config );
 		}
 	}
 
