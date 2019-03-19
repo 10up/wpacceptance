@@ -310,7 +310,7 @@ class Environment {
 
 		$environment_meta = json_decode( $environment_meta, true );
 
-		$this->suite_config            = $environment_meta['suite_config'];
+		$this->suite_config            = new Config( $environment_meta['suite_config'] );
 		$this->wordpress_port          = $environment_meta['wordpress_port'];
 		$this->mysql_port              = $environment_meta['mysql_port'];
 		$this->gateway_ip              = $environment_meta['gateway_ip'];
@@ -508,9 +508,9 @@ class Environment {
 				if ( ! $this->pullSnapshot( $snapshot_id_or_environment_instructions ) ) {
 					return false;
 				}
-			} else {
-				$this->current_environment_key = $new_environment_key;
 			}
+
+			$this->current_environment_key = $new_environment_key;
 
 			if ( ! $this->insertProject() ) {
 				return false;
@@ -520,16 +520,16 @@ class Environment {
 				return false;
 			}
 
-			$new_environment_key = $snapshot_id_or_environment_instructions;
+			$new_environment_key = preg_replace( '#[\n\r\s]+#s', '', $snapshot_id_or_environment_instructions );
 
 			// We don't need to run the instructions if it's already loaded in the environment
 			if ( $new_environment_key !== $this->current_environment_key ) {
 				if ( ! $this->createFromInstructions( $snapshot_id_or_environment_instructions ) ) {
 					return false;
 				}
-			} else {
-				$this->current_environment_key = $new_environment_key;
 			}
+
+			$this->current_environment_key = $new_environment_key;
 		} else {
 			Log::instance()->write( 'No environment instructions or snapshot.', 0, 'error' );
 
@@ -1652,7 +1652,7 @@ class Environment {
 	public function writeMetaToWPContainer() {
 		Log::instance()->write( 'Saving environment meta data to container...', 1 );
 
-		$command = 'touch /root/environment_meta.json && echo "' . addslashes( json_encode( $this->getEnvironmentMeta() ) ) . '" >> /root/environment_meta.json';
+		$command = 'rm -f /root/environment_meta.json && touch /root/environment_meta.json && echo "' . addslashes( json_encode( $this->getEnvironmentMeta() ) ) . '" >> /root/environment_meta.json';
 
 		Log::instance()->write( $command, 2 );
 
