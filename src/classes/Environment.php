@@ -559,6 +559,8 @@ class Environment {
 		if ( ! $this->writeMetaToWPContainer() ) {
 			return false;
 		}
+
+		return true;
 	}
 
 	/**
