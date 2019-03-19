@@ -17,7 +17,7 @@ WP Acceptance is a toolkit that empowers developers and CI pipelines to test cod
 
 ## How It Works
 
-There are many acceptance tests frameworks out there. They all have one major flaw - everyone executing the acceptance tests must be running the exact same code on the exact same database and environment to guarantee the same results. Ensuring a team of developers (and a CI pipeline) are all using the same database in the same environment has been nearly impossible until now. WP Acceptance is unique in that it allows you to run your acceptance tests against a codebase in a defined and shareable environment.
+There are many acceptance tests frameworks out there. They all have one major flaw - everyone executing the acceptance tests must be running the exact same code on the exact same database and environment to guarantee the same results. Ensuring a team of developers (and a CI pipeline) are all using the same database in the same environment has been nearly impossible until now. WP Acceptance is unique in that it allows you to run your acceptance tests against a codebase in defined and shareable environments.
 
 ## Install
 
