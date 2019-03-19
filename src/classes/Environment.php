@@ -524,7 +524,7 @@ class Environment {
 
 			// We don't need to run the instructions if it's already loaded in the environment
 			if ( $new_environment_key !== $this->current_environment_key ) {
-				if ( $this->createFromInstructions( $snapshot_id_or_environment_instructions ) ) {
+				if ( ! $this->createFromInstructions( $snapshot_id_or_environment_instructions ) ) {
 					return false;
 				}
 			} else {
@@ -889,6 +889,8 @@ class Environment {
 	 * @return boolean
 	 */
 	public function setupMySQL() {
+		Log::instance()->write( 'Setting up MySQL...', 1 );
+
 		$table_prefix = ( ! empty( $this->snapshot ) ) ? $this->snapshot->meta['table_prefix'] : 'wp_';
 
 		$this->mysql_client = new MySQL( $this->getMySQLCredentials(), $this->getLocalIP(), $this->mysql_port, $table_prefix );
