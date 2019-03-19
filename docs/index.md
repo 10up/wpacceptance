@@ -332,7 +332,7 @@ For detailed test examples, look at the [example test suite](https://github.com/
 	* `--force_save` - Save snapshot ID to `wpacceptance.json` and push snapshot upstream no matter what.
 	* `--wp_directory` - Path to WordPress. If unset, will search up the directory tree until wp-config.php is found
 	* `--snapshot_id` - Optionally run tests against a snapshot ID.
-	* `--snapshot_name` - Optionally run tests against a names snapshot from the snapshots array.
+	* `--snapshot_name` - Optionally run tests against a named snapshot from the snapshots array.
 	* `--enforce_clean_db` - Use clean database for each test.
 	* `--cache_environment` - Keep the environment alive so it can be reused later. A cache environment can be used if the config being run is the exact same.
 	* `--skip_environment_cache` - Ensures a fresh environment is used on each run even if a cached one exists. This also will prevent environment caching. This is useful if you are running WP Acceptance multiple times on the same server e.g. shared GitLab runner.
