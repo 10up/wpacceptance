@@ -411,6 +411,15 @@ class Run extends Command {
 			}
 		}
 
+		// If we are running more than one environment, output a final message on status of all environments
+		if ( ( ! empty( $suite_config['environment_instructions'] ) && 1 < count( $suite_config['environment_instructions'] ) ) || ( ! empty( $suite_config['snapshots'] ) && 1 < count( $suite_config['snapshots'] ) ) ) {
+			if ( 0 !== $test_execution ) {
+				$output->writeln( 'All tests finished. Errors occurred.', 0, 'error' );
+			} else {
+				$output->writeln( 'All tests finished successful.', 0, 'success' );
+			}
+		}
+
 		return $test_execution;
 	}
 
