@@ -314,10 +314,8 @@ class Environment {
 		$this->wordpress_port          = $environment_meta['wordpress_port'];
 		$this->mysql_port              = $environment_meta['mysql_port'];
 		$this->gateway_ip              = $environment_meta['gateway_ip'];
-		$this->container_project_path  = $environment_meta['container_project_path'];
 		$this->current_environment_key = $environment_meta['current_environment_key'];
 		$this->sites                   = $environment_meta['sites'];
-		$this->snapshot                = ( ! empty( $this->suite_config['snapshot_id'] ) ) ? Snapshot::get( $this->suite_config['snapshot_id'] ) : null;
 
 		return true;
 	}
@@ -1627,15 +1625,13 @@ class Environment {
 	 */
 	public function getEnvironmentMeta() {
 		return [
-			'suite_config'                => $this->suite_config->toArray(),
-			'wordpress_port'              => $this->wordpress_port,
-			'mysql_port'                  => $this->mysql_port,
-			'snapshot_id'                 => $this->suite_config['snapshot_id'],
-			'environment_id'              => $this->environment_id,
-			'gateway_ip'                  => $this->gateway_ip,
-			'container_project_path'      => $this->container_project_path,
-			'current_environment_key'     => $this->current_environment_key,
-			'sites'                       => $this->sites,
+			'suite_config'            => $this->suite_config->toArray(),
+			'wordpress_port'          => $this->wordpress_port,
+			'mysql_port'              => $this->mysql_port,
+			'environment_id'          => $this->environment_id,
+			'gateway_ip'              => $this->gateway_ip,
+			'current_environment_key' => $this->current_environment_key,
+			'sites'                   => $this->sites,
 		];
 	}
 

@@ -200,17 +200,21 @@ class Run extends Command {
 
 		// Add snapshot_id to snapshots
 		if ( ! empty( $suite_config['snapshot_id'] ) ) {
-			if ( empty( $suite_config['snapshots'] ) ) {
-				$suite_config['snapshots'] = [];
-			} else {
+			$new_snapshots = [];
+
+			if ( ! empty( $suite_config['snapshots'] ) ) {
 				foreach ( $suite_config['snapshots'] as $key => $snapshot_array ) {
-					if ( $snapshot_array['snapshot_id'] === $suite_config['snapshot_id'] ) {
-						unset( $suite_config['snapshots'][ $key ] );
+					if ( $snapshot_array['snapshot_id'] !== $suite_config['snapshot_id'] ) {
+						$new_snapshots[] = $snapshot_array;
 					}
 				}
 			}
 
-			$suite_config['snapshots'][] = $suite_config['snapshot_id'];
+			$new_snapshots[] = [
+				'snapshot_id' => $suite_config['snapshot_id'],
+			];
+
+			$suite_config['snapshots'] = $new_snapshots;
 		}
 
 		if ( empty( $local ) ) {
@@ -288,17 +292,20 @@ class Run extends Command {
 
 		$test_execution = 0;
 
+		$filter_test_files = $input->getOption( 'filter_test_files' );
+		$filter_tests      = $input->getOption( 'filter_tests' );
+
 		if ( ! empty( $suite_config['snapshots'] ) ) {
 			foreach ( $suite_config['snapshots'] as $snapshot_array ) {
 				$environment->setupWordPressEnvironment( $snapshot_array['snapshot_id'], 'snapshot' );
 
-				$test_execution = $this->run_tests();
+				$test_execution = $this->run_tests( $filter_test_files, $filter_tests );
 			}
 		} else {
 			foreach ( $suite_config['environment_instructions'] as $environment_instructions ) {
 				$environment->setupWordPressEnvironment( implode( "\n", $environment_instructions ), 'environment_instructions' );
 
-				$test_execution = $this->run_tests();
+				$test_execution = $this->run_tests( $filter_test_files, $filter_tests );
 			}
 		}
 
@@ -308,9 +315,11 @@ class Run extends Command {
 	/**
 	 * Run test suite with current environment
 	 *
+	 * @param  string $filter_test_files Specify specific files to run tests inside
+	 * @param  string $filter_tests Specify specific test methods to run
 	 * @return integer
 	 */
-	protected function run_tests() {
+	protected function run_tests( $filter_test_files = null, $filter_tests = null ) {
 		$test_files = [];
 		$test_dirs  = ! empty( $suite_config['tests'] ) && is_array( $suite_config['tests'] )
 			? $suite_config['tests']
@@ -331,9 +340,6 @@ class Run extends Command {
 
 		$error      = false;
 		$test_files = array_unique( $test_files );
-
-		$filter_test_files = $input->getOption( 'filter_test_files' );
-		$filter_tests      = $input->getOption( 'filter_tests' );
 
 		if ( ! empty( $filter_test_files ) ) {
 			$filter_test_files = explode( ',', trim( $filter_test_files ) );
