@@ -11,7 +11,7 @@ use \Symfony\Component\Console\Application;
 
 $app = new Application( 'WPAcceptance', '0.13' );
 
-define( 'WPACCEPTANCE_DIR', dirname( __DIR__ ) );
+define( 'WPACCEPTANCE_DIR', escapeshellarg( dirname( __DIR__ ) ) );
 
 /**
  * Attempt to set this as WP Acceptance can consume a lot of memory.
