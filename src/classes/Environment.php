@@ -466,7 +466,7 @@ class Environment {
 			return false;
 		}
 
-		$table_prefix = ( ! empty( $this->suite_config['snapshot_id'] ) ) ? $this->snapshot->meta['table_prefix'] : 'wp_';
+		$table_prefix = ( ! empty( $this->suite_config['snapshots'] ) ) ? $this->snapshot->meta['table_prefix'] : 'wp_';
 
 		$this->mysql_client = new MySQL( $this->getMySQLCredentials(), $this->getLocalIP(), $this->mysql_port, $table_prefix );
 
@@ -848,16 +848,17 @@ class Environment {
 	/**
 	 * Pull WP Snapshot into container
 	 *
+	 * @param  string $snapshot_id Snapshot ID to use
 	 * @return  bool
 	 */
-	protected function pullSnapshot() {
+	protected function pullSnapshot( $snapshot_id ) {
 		/**
 		 * Pulling snapshot
 		 */
 
-		Log::instance()->write( 'Pulling snapshot ' . $this->suite_config['snapshot_id'] . '...', 1 );
+		Log::instance()->write( 'Pulling snapshot ' . $snapshot_id . '...', 1 );
 
-		$this->snapshot = Snapshot::get( $this->suite_config['snapshot_id'] );
+		$this->snapshot = Snapshot::get( $snapshot_id );
 
 		if ( empty( $this->snapshot ) || empty( $this->snapshot->meta ) || empty( $this->snapshot->meta['sites'] ) ) {
 			Log::instance()->write( 'Snapshot invalid.', 0, 'error' );
@@ -937,7 +938,7 @@ class Environment {
 			$verbose = '-vvv';
 		}
 
-		$command = '/root/.composer/vendor/bin/wpsnapshots pull ' . $this->suite_config['snapshot_id'] . ' --repository=' . $this->suite_config['repository'] . ' --confirm --confirm_wp_version_change --confirm_ms_constant_update --config_db_name="' . $mysql_creds['DB_NAME'] . '" --config_db_user="' . $mysql_creds['DB_USER'] . '" --config_db_password="' . $mysql_creds['DB_PASSWORD'] . '" --config_db_host="' . $mysql_creds['DB_HOST'] . '" --confirm_wp_download --confirm_config_create ' . $main_domain_param . ' --site_mapping="' . addslashes( json_encode( $site_mapping ) ) . '" ' . $verbose;
+		$command = '/root/.composer/vendor/bin/wpsnapshots pull ' . $snapshot_id . ' --repository=' . $this->suite_config['repository'] . ' --confirm --confirm_wp_version_change --confirm_ms_constant_update --config_db_name="' . $mysql_creds['DB_NAME'] . '" --config_db_user="' . $mysql_creds['DB_USER'] . '" --config_db_password="' . $mysql_creds['DB_PASSWORD'] . '" --config_db_host="' . $mysql_creds['DB_HOST'] . '" --confirm_wp_download --confirm_config_create ' . $main_domain_param . ' --site_mapping="' . addslashes( json_encode( $site_mapping ) ) . '" ' . $verbose;
 
 		Log::instance()->write( 'Running command:', 1 );
 		Log::instance()->write( $command, 1 );
@@ -1400,8 +1401,10 @@ class Environment {
 				$this->suite_config['path'] . ':/root/repo',
 			];
 
-			if ( ! empty( $this->suite_config['snapshot_id'] ) ) {
-				$binds[] = \WPSnapshots\Utils\get_snapshot_directory() . $this->suite_config['snapshot_id'] . ':/root/.wpsnapshots/' . $this->suite_config['snapshot_id'];
+			if ( ! empty( $this->suite_config['snapshots'] ) ) {
+				foreach ( $this->suite_config['snapshots'] as $snap ) {
+					$binds[] = \WPSnapshots\Utils\get_snapshot_directory() . $snap['snapshot_id'] . ':/root/.wpsnapshots/' . $snap['snapshot_id'];
+				}
 
 				$binds[] = \WPSnapshots\Utils\get_snapshot_directory() . 'config.json:/root/.wpsnapshots/config.json';
 			}

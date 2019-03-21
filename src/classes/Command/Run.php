@@ -118,12 +118,14 @@ class Run extends Command {
 		$repository = RepositoryManager::instance()->setup( $repository_name );
 
 		if ( ! $repository ) {
-			Log::instance()->write( 'Could not setup WP Snapshots repository.', 0, 'error' );
+			if ( ! empty( $repository_name ) ) {
+				Log::instance()->write( 'Could not setup WP Snapshots repository.', 0, 'error' );
 
-			return 2;
+				return 2;
+			}
 		}
 
-		$suite_config['repository'] = $repository->getName();
+		$suite_config['repository'] = ( ! empty( $repository ) ) ? $repository->getName() : '';
 
 		$suite_config['show_browser'] = $input->getOption( 'show_browser' );
 
@@ -275,7 +277,17 @@ class Run extends Command {
 				$suite_config['snapshots'] = [];
 			}
 
-			$suite_config['snapshots'][] = $snapshot->id;
+			if ( empty( $suite_config['snapshots'] ) ) {
+				$suite_config['snapshots'] = [];
+			}
+
+			$new_snapshots = $suite_config['snapshots'];
+
+			$new_snapshots[] = [
+				'snapshot_id' => $snapshot->id,
+			];
+
+			$suite_config['snapshots'] = $new_snapshots;
 
 			Log::instance()->write( 'Snapshot ID is ' . $snapshot->id, 1 );
 		}
