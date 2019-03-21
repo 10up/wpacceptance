@@ -87,10 +87,10 @@ class Run extends Command {
 		WPSnapshotsLog::instance()->setOutput( $output );
 		WPSnapshotsLog::instance()->setVerbosityOffset( 1 );
 
-		putenv( 'NODE_PATH=' . WPACCEPTANCE_DIR . '/node_modules' );
+		putenv( 'NODE_PATH="' . WPACCEPTANCE_DIR . '/node_modules"' );
 		$_ENV['NODE_PATH'] = WPACCEPTANCE_DIR . '/node_modules';
 
-		exec( 'cd ' . WPACCEPTANCE_DIR . ' && npm install' );
+		exec( 'cd ' . escapeshellarg( WPACCEPTANCE_DIR ) . ' && npm install' );
 
 		if ( ! function_exists( 'mysqli_init' ) ) {
 			Log::instance()->write( 'WP Acceptance requires the mysqli PHP extension is installed.', 0, 'error' );

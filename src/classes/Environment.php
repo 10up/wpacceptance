@@ -114,7 +114,7 @@ class Environment {
 	 *
 	 * @var string
 	 */
-	protected $current_mysql_db = 'wordpress_clean';
+	protected $current_mysql_db;
 
 	/**
 	 * Path to wpacceptance.json directory in container
@@ -321,6 +321,91 @@ class Environment {
 	}
 
 	/**
+	 * Drop all WP databases
+	 *
+	 * @return boolean
+	 */
+	public function dropDatabases() {
+		Log::instance()->write( 'Dropping MySQL databases...', 1 );
+
+		$command = 'mysql --password=password -e "show databases" -s | egrep "^wordpress" |  xargs -I "@@" mysql --password=password -e "DROP DATABASE @@"';
+
+		$exec_config = new ContainersIdExecPostBody();
+		$exec_config->setTty( true );
+		$exec_config->setAttachStdout( true );
+		$exec_config->setAttachStderr( true );
+		$exec_config->setCmd( [ '/bin/sh', '-c', $command ] );
+
+		$exec_command      = EnvironmentFactory::$docker->containerExec( $this->environment_id . '-mysql', $exec_config );
+		$exec_id           = $exec_command->getId();
+		$exec_start_config = new ExecIdStartPostBody();
+		$exec_start_config->setDetach( false );
+
+		$stream = EnvironmentFactory::$docker->execStart( $exec_id, $exec_start_config );
+
+		$stream->onStdout(
+			function( $stdout ) {
+				Log::instance()->write( $stdout, 2 );
+			}
+		);
+
+		$stream->onStderr(
+			function( $stderr ) {
+				Log::instance()->write( $stderr, 2 );
+			}
+		);
+
+		$stream->wait();
+
+		$exit_code = EnvironmentFactory::$docker->execInspect( $exec_id )->getExitCode();
+
+		if ( 0 !== $exit_code ) {
+			Log::instance()->write( 'Could not MySQL drop databases.', 0, 'error' );
+			return false;
+		}
+
+		Log::instance()->write( 'Creating wordpress_clean database...', 1 );
+
+		$command = 'mysql --password=password -e "create database wordpress_clean"';
+
+		$exec_config = new ContainersIdExecPostBody();
+		$exec_config->setTty( true );
+		$exec_config->setAttachStdout( true );
+		$exec_config->setAttachStderr( true );
+		$exec_config->setCmd( [ '/bin/sh', '-c', $command ] );
+
+		$exec_command      = EnvironmentFactory::$docker->containerExec( $this->environment_id . '-mysql', $exec_config );
+		$exec_id           = $exec_command->getId();
+		$exec_start_config = new ExecIdStartPostBody();
+		$exec_start_config->setDetach( false );
+
+		$stream = EnvironmentFactory::$docker->execStart( $exec_id, $exec_start_config );
+
+		$stream->onStdout(
+			function( $stdout ) {
+				Log::instance()->write( $stdout, 2 );
+			}
+		);
+
+		$stream->onStderr(
+			function( $stderr ) {
+				Log::instance()->write( $stderr, 2 );
+			}
+		);
+
+		$stream->wait();
+
+		$exit_code = EnvironmentFactory::$docker->execInspect( $exec_id )->getExitCode();
+
+		if ( 0 !== $exit_code ) {
+			Log::instance()->write( 'Could not create wordpress_clean database.', 0, 'error' );
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
 	 * Clone the clean WordPress DB into another DB. Set the new db name as the current DB
 	 *
 	 * @return string
@@ -500,6 +585,11 @@ class Environment {
 	public function setupWordPressEnvironment( $snapshot_id_or_environment_instructions, string $environment_type ) {
 		Log::instance()->write( 'Setting up WordPress environment...', 1 );
 
+		// First drop DBs
+		$this->dropDatabases();
+
+		$this->current_mysql_db = 'wordpress_clean';
+
 		if ( 'snapshot' === $environment_type ) {
 			$new_environment_key = $snapshot_id_or_environment_instructions;
 
@@ -668,7 +758,7 @@ class Environment {
 			}
 		}
 
-		$command = 'touch /var/www/html/WPInstructions && echo "' . addslashes( $raw_instructions ) . '" >> /var/www/html/WPInstructions';
+		$command = 'rm -f /var/www/html/WPInstructions && touch /var/www/html/WPInstructions && echo "' . addslashes( $raw_instructions ) . '" >> /var/www/html/WPInstructions';
 
 		Log::instance()->write( $command, 2 );
 
