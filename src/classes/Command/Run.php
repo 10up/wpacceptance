@@ -294,7 +294,9 @@ class Run extends Command {
 
 		Log::instance()->write( 'Creating environment...' );
 
-		$environment = EnvironmentFactory::create( $suite_config, $input->getOption( 'cache_environment' ), $input->getOption( 'skip_environment_cache' ), $input->getOption( 'environment_id' ), $input->getOption( 'mysql_wait_time' ) );
+		$skip_environment_cache = ( ! empty( $local ) ) ? true : $input->getOption( 'skip_environment_cache' );
+
+		$environment = EnvironmentFactory::create( $suite_config, $input->getOption( 'cache_environment' ), $skip_environment_cache, $input->getOption( 'environment_id' ), $input->getOption( 'mysql_wait_time' ) );
 
 		if ( ! $environment ) {
 			return 2;
