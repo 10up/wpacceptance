@@ -103,6 +103,13 @@ class Environment {
 	protected $snapshot;
 
 	/**
+	 * Instructions instance
+	 *
+	 * @var WPInstructions\Instructions
+	 */
+	public $instructions;
+
+	/**
 	 * MySQL client instance
 	 *
 	 * @var MySQL
@@ -585,6 +592,9 @@ class Environment {
 	public function setupWordPressEnvironment( $snapshot_id_or_environment_instructions, string $environment_type ) {
 		Log::instance()->write( 'Setting up WordPress environment...', 1 );
 
+		$this->snapshot     = null;
+		$this->instructions = null;
+
 		// First drop DBs
 		$this->dropDatabases();
 
@@ -630,7 +640,7 @@ class Environment {
 			return false;
 		}
 
-		if ( ! $this->chmodUploads() ) {
+		if ( ! $this->updateFilePermissions() ) {
 			return false;
 		}
 
@@ -664,10 +674,10 @@ class Environment {
 
 		WPInstructions\Instruction::registerInstructionType( new WPInstructions\InstructionTypes\InstallWordPress() );
 
-		$instructions = new WPInstructions\Instructions( $raw_instructions );
-		$instructions->prepare();
+		$this->instructions = new WPInstructions\Instructions( $raw_instructions );
+		$this->instructions->prepare();
 
-		$instruction_array = $instructions->getInstructions();
+		$instruction_array = $this->instructions->getInstructions();
 
 		if ( empty( $instruction_array ) ) {
 			Log::instance()->write( 'No valid environment instructions.', 0, 'error' );
@@ -1182,22 +1192,18 @@ class Environment {
 	}
 
 	/**
-	 * Chmod uploads dir
+	 * Update file permissions
 	 *
 	 * @return boolean
 	 */
-	public function chmodUploads() {
-		/**
-		 * Chmod uploads dir
-		 */
-
-		Log::instance()->write( 'Chmoding uploads directory...', 1 );
+	public function updateFilePermissions() {
+		Log::instance()->write( 'Updating file permissions...', 1 );
 
 		$exec_config = new ContainersIdExecPostBody();
 		$exec_config->setTty( true );
 		$exec_config->setAttachStdout( true );
 		$exec_config->setAttachStderr( true );
-		$exec_config->setCmd( [ '/bin/sh', '-c', 'chmod -R 0777 /var/www/html/wp-content/uploads' ] );
+		$exec_config->setCmd( [ '/bin/sh', '-c', 'chmod -R 0777 /var/www/html/wp-content/' ] );
 
 		$exec_id           = EnvironmentFactory::$docker->containerExec( $this->environment_id . '-wordpress', $exec_config )->getId();
 		$exec_start_config = new ExecIdStartPostBody();
@@ -1224,7 +1230,7 @@ class Environment {
 		$exit_code = EnvironmentFactory::$docker->execInspect( $exec_id )->getExitCode();
 
 		if ( 0 !== $exit_code ) {
-			Log::instance()->write( 'Failed to chmod uploads directory.', 0, 'error' );
+			Log::instance()->write( 'Failed to update file permissions.', 0, 'error' );
 		}
 
 		return true;
@@ -1685,6 +1691,15 @@ class Environment {
 	 */
 	public function getSnapshot() {
 		return $this->snapshot;
+	}
+
+	/**
+	 * Get current instructions
+	 *
+	 * @return \WPInstructions\Instructions
+	 */
+	public function getInstructions() {
+		return $this->instructions;
 	}
 
 	/**

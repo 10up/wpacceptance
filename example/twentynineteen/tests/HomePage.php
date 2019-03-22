@@ -26,5 +26,4 @@ class HomePageTest extends \WPAcceptance\PHPUnit\TestCase {
 
 		$this->assertTrue( true );
 	}
-
 }

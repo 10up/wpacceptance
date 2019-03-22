@@ -6,5 +6,9 @@
 		<exclude name="WordPress.WP.CapitalPDangit.Misspelled" />
 		<exclude name="WordPress.WP.AlternativeFunctions" />
 		<exclude name="Squiz.Commenting.FunctionComment.ThrowsNotCapital" />
+		<exclude name="WordPress.PHP.DiscouragedPHPFunctions.runtime_configuration_putenv" />
+		<exclude name="WordPress.PHP.DiscouragedPHPFunctions.system_calls_exec" />
+		<exclude name="WordPress.PHP.NoSilencedErrors.Discouraged" />
+		<exclude name="PSR2.Methods.MethodDeclaration.Underscore" />
 	</rule>
 </ruleset>

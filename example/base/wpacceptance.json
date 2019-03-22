@@ -1,7 +1,0 @@
-{
-    "name": "base-tests",
-    "tests": [
-        "tests\/*.php"
-    ],
-    "snapshot_id": "7be6f5ee55fdbba5d1173b0198b41e54"
-}

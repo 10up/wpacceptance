@@ -627,6 +627,22 @@ class Actor {
 	 * @param  string $password Password
 	 */
 	public function loginAs( string $username, string $password = 'password' ) {
+		$this->login( $username, $password );
+	}
+
+	/**
+	 * Login as a user
+	 *
+	 * @param  string $username Username
+	 * @param  string $password Password
+	 */
+	public function login( string $username = null, string $password = 'password' ) {
+		if ( null === $username ) {
+			$snapshot = EnvironmentFactory::get()->getSnapshot();
+
+			$username = empty( $snapshot ) ? 'admin' : 'wpsnapshots';
+		}
+
 		$this->moveTo( 'wp-login.php' );
 
 		$this->setElementAttribute( '#user_login', 'value', $username );
