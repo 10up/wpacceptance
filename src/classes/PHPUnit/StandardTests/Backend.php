@@ -37,7 +37,7 @@ trait Backend {
 	}
 
 	/**
-	 * Test that a post actually publishes
+	 * Test that a post actually publishes pre-gutenberg
 	 */
 	protected function _testPostPublishPreGutenberg() {
 		$actor = $this->openBrowserPage();
@@ -57,6 +57,35 @@ trait Backend {
 		$actor->waitUntilElementVisible( '.notice-success' );
 
 		$actor->seeText( 'Post published', '.notice-success' );
+	}
+
+	/**
+	 * Test that a post actually publishes with gutenberg
+	 */
+	protected function _testPostPublish() {
+		$actor = $this->openBrowserPage();
+
+		$actor->login();
+
+		$actor->moveTo( 'wp-admin/post-new.php' );
+
+		$actor->click( '.nux-dot-tip__disable' );
+
+		usleep( 100 );
+
+		$actor->waitUntilElementVisible( '#post-title-0' );
+
+		$actor->setElementProperty( '#post-title-0', 'value', 'Test Post' );
+
+		$actor->click( '.editor-post-publish-panel__toggle' );
+
+		$actor->waitUntilElementVisible( '.editor-post-publish-button' );
+
+		$actor->click( '.editor-post-publish-button' );
+
+		$actor->waitUntilElementVisible( '.is-success' );
+
+		$actor->seeText( 'Post published' );
 	}
 
 	/**
