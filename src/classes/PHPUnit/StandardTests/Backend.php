@@ -71,21 +71,25 @@ trait Backend {
 
 		$actor->click( '.nux-dot-tip__disable' );
 
+		$actor->typeInField( '#post-title-0', 'Test' );
+
 		usleep( 100 );
 
-		$actor->waitUntilElementVisible( '#post-title-0' );
+		$actor->waitUntilElementVisible( '.editor-post-publish-panel__toggle' );
 
-		$actor->setElementProperty( '#post-title-0', 'value', 'Test Post' );
+		$actor->waitUntilElementEnabled( '.editor-post-publish-panel__toggle' );
 
 		$actor->click( '.editor-post-publish-panel__toggle' );
 
 		$actor->waitUntilElementVisible( '.editor-post-publish-button' );
 
+		$actor->waitUntilElementEnabled( '.editor-post-publish-button' );
+
 		$actor->click( '.editor-post-publish-button' );
 
-		$actor->waitUntilElementVisible( '.is-success' );
+		$actor->waitUntilElementVisible( '.components-notice' );
 
-		$actor->seeText( 'Post published' );
+		$actor->seeText( 'Post published', '.components-notice__content' );
 	}
 
 	/**
