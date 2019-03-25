@@ -47,7 +47,11 @@ trait Puppeteer {
 	 */
 	protected function setupPuppeteer( $force = false ) {
 		if ( empty( $this->puppeteer ) || $force ) {
-			$this->puppeteer = new Puphpeteer();
+			$options = [
+				'idle_timeout' => 300,
+			];
+
+			$this->puppeteer = new Puphpeteer( $options );
 		}
 
 		return $this->puppeteer;
@@ -116,7 +120,7 @@ trait Puppeteer {
 
 		try {
 			$page = $this->browser->newPage( $page_args );
-		} catch ( \Nesk\Rialto\Exceptions\Node\FatalException $exception ) {
+		} catch ( \Nesk\Rialto\Exceptions\Node\FatalException | \Nesk\Rialto\Exceptions\IdleTimeoutException $exception ) {
 			$this->setupPuppeteer( true );
 			$this->setupBrowser( true );
 
