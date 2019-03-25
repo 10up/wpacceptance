@@ -1484,12 +1484,29 @@ class Environment {
 			$exit_code = EnvironmentFactory::$docker->execInspect( $exec_id )->getExitCode();
 
 			if ( 0 === $exit_code ) {
-				Log::instance()->write( 'MySQL connection available after ' . ( $i + 2 ) . ' seconds.', 2 );
-
-				return true;
+				break;
 			}
 
 			sleep( 1 );
+		}
+
+		$logs = (string) EnvironmentFactory::$docker->containerLogs(
+			$this->environment_id . '-mysql',
+			[
+				'stdout' => true,
+				'stderr' => true,
+				'follow' => false,
+			],
+			Docker::FETCH_RESPONSE
+		)->getBody();
+
+		Log::instance()->write( 'MySQL Logs:', 2 );
+		Log::instance()->write( $logs, 2 );
+
+		if ( 0 === $exit_code ) {
+			Log::instance()->write( 'MySQL connection available after ' . ( $i + 2 ) . ' seconds.', 2 );
+
+			return true;
 		}
 
 		Log::instance()->write( 'MySQL Host: ' . $mysql_creds['DB_HOST'], 2 );
