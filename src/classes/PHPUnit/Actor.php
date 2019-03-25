@@ -314,7 +314,12 @@ class Actor {
 			$url .= '?' . $url_parts['query'];
 		}
 
-		$this->page_response = $this->page->goto( $url, [ 'waitUntil' => $wait_until ] );
+		$args = [
+			'waitUntil' => $wait_until,
+			'timeout'   => 90000,
+		];
+
+		$this->page_response = $this->page->goto( $url, $args );
 
 		Log::instance()->write( 'Navigating to URL: ' . $url, 1 );
 	}
@@ -374,7 +379,12 @@ class Actor {
 	public function waitUntilNavigation( $condition = [ 'domcontentloaded', 'networkidle2', 'load' ] ) {
 		usleep( 500 );
 
-		$this->getPage()->waitForNavigation( [ 'waitUntil' => $condition ] );
+		$args = [
+			'waitUntil' => $condition,
+			'timeout'   => 90000,
+		];
+
+		$this->getPage()->waitForNavigation( $args );
 	}
 
 	/**
@@ -383,7 +393,7 @@ class Actor {
 	 * @param  string $element_path Path to element to check
 	 */
 	public function waitUntilElementEnabled( string $element_path ) {
-		$this->getPage()->waitForFunction( JsFunction::createWithBody( 'return ! document.querySelector("' . addcslashes( $element_path, '"' ) . '").disabled' ) );
+		$this->getPage()->waitForFunction( JsFunction::createWithBody( 'return ! document.querySelector("' . addcslashes( $element_path, '"' ) . '").disabled' ), [ 'timeout' => 90000 ] );
 	}
 
 	/**
@@ -397,7 +407,7 @@ class Actor {
 		$this->getPage()->waitForSelector( $element_path );
 
 		// Wait for element to contain text
-		$this->getPage()->waitForFunction( JsFunction::createWithBody( 'return document.querySelector("' . addcslashes( $element_path, '"' ) . '").innerText.includes("' . addcslashes( $text, '"' ) . '")' ) );
+		$this->getPage()->waitForFunction( JsFunction::createWithBody( 'return document.querySelector("' . addcslashes( $element_path, '"' ) . '").innerText.includes("' . addcslashes( $text, '"' ) . '")' ), [ 'timeout' => 90000 ] );
 	}
 
 	/**
@@ -406,7 +416,7 @@ class Actor {
 	 * @param  string $title Title to wait for
 	 */
 	public function waitUntilTitleContains( $title ) {
-		$this->getPage()->waitForFunction( JsFunction::createWithBody( 'return document.title.includes("' . addcslashes( $title, '"' ) . '")' ) );
+		$this->getPage()->waitForFunction( JsFunction::createWithBody( 'return document.title.includes("' . addcslashes( $title, '"' ) . '")' ), [ 'timeout' => 90000 ] );
 	}
 
 	/**
@@ -415,7 +425,12 @@ class Actor {
 	 * @param  string $element_path Path to element to check
 	 */
 	public function waitUntilElementVisible( string $element_path ) {
-		$this->getPage()->waitForSelector( $element_path, [ 'visible' => true ] );
+		$args = [
+			'visible' => true,
+			'timeout' => 90000,
+		];
+
+		$this->getPage()->waitForSelector( $element_path, $args );
 	}
 
 	/**
@@ -424,7 +439,7 @@ class Actor {
 	 * @param  string $text Text to wait for
 	 */
 	public function waitUntilPageSourceContains( $text ) {
-		$this->getPage()->waitForFunction( JsFunction::createWithBody( 'return document.documentElement.outerHTML.includes("' . addcslashes( $text, '"' ) . '")' ) );
+		$this->getPage()->waitForFunction( JsFunction::createWithBody( 'return document.documentElement.outerHTML.includes("' . addcslashes( $text, '"' ) . '")' ), [ 'timeout' => 90000 ] );
 	}
 
 	/**
@@ -435,7 +450,7 @@ class Actor {
 	 * @param  string $property Property name
 	 */
 	public function waitUntilPropertyContains( $value, string $element_path, $property ) {
-		$this->getPage()->waitForFunction( JsFunction::createWithBody( 'return document.querySelector("' . addcslashes( $element_path, '"' ) . '").' . $property . '.includes("' . addcslashes( $value, '"' ) . '")' ) );
+		$this->getPage()->waitForFunction( JsFunction::createWithBody( 'return document.querySelector("' . addcslashes( $element_path, '"' ) . '").' . $property . '.includes("' . addcslashes( $value, '"' ) . '")' ), [ 'timeout' => 90000 ] );
 	}
 
 	/**
@@ -653,7 +668,27 @@ class Actor {
 
 		usleep( 100 );
 
-		$this->click( '#wp-submit', true );
+		$this->click( '#wp-submit' );
+
+		usleep( 200 );
+
+		$this->waitUntilNavigation( [ 'domcontentloaded' ] );
+
+		try {
+			$login_error = $this->getElement( '#login_error' );
+
+			$this->setElementAttribute( '#user_login', 'value', $username );
+
+			usleep( 100 );
+
+			$this->setElementAttribute( '#user_pass', 'value', $password );
+
+			usleep( 100 );
+
+			$this->click( '#wp-submit' );
+		} catch ( ElementNotFound $exception ) {
+			// Do nothing
+		}
 
 		$this->waitUntilElementVisible( '#wpadminbar' );
 	}

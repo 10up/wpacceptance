@@ -1400,19 +1400,19 @@ class Environment {
 			$container_config->setEnv( [ 'WPSNAPSHOTS_DIR=/gitlab/.wpsnapshots/' ] );
 
 			$binds = [
-				GitLab::get()->getVolumeName() . ':/gitlab',
+				GitLab::get()->getVolumeName() . ':/gitlab:cached',
 			];
 		} else {
 			$binds = [
-				$this->suite_config['path'] . ':/root/repo',
+				$this->suite_config['path'] . ':/root/repo:cached',
 			];
 
 			if ( ! empty( $this->suite_config['snapshots'] ) ) {
 				foreach ( $this->suite_config['snapshots'] as $snap ) {
-					$binds[] = \WPSnapshots\Utils\get_snapshot_directory() . $snap['snapshot_id'] . ':/root/.wpsnapshots/' . $snap['snapshot_id'];
+					$binds[] = \WPSnapshots\Utils\get_snapshot_directory() . $snap['snapshot_id'] . ':/root/.wpsnapshots/' . $snap['snapshot_id'] . ':cached';
 				}
 
-				$binds[] = \WPSnapshots\Utils\get_snapshot_directory() . 'config.json:/root/.wpsnapshots/config.json';
+				$binds[] = \WPSnapshots\Utils\get_snapshot_directory() . 'config.json:/root/.wpsnapshots/config.json:cached';
 			}
 		}
 

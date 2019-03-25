@@ -49,6 +49,7 @@ trait Puppeteer {
 		if ( empty( $this->puppeteer ) || $force ) {
 			$options = [
 				'idle_timeout' => 300,
+				'read_timeout' => 120,
 			];
 
 			$this->puppeteer = new Puphpeteer( $options );
