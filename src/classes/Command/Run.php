@@ -273,21 +273,11 @@ class Run extends Command {
 				return 2;
 			}
 
-			if ( empty( $suite_config['snapshots'] ) ) {
-				$suite_config['snapshots'] = [];
-			}
-
-			if ( empty( $suite_config['snapshots'] ) ) {
-				$suite_config['snapshots'] = [];
-			}
-
-			$new_snapshots = $suite_config['snapshots'];
-
-			$new_snapshots[] = [
-				'snapshot_id' => $snapshot->id,
+			$suite_config['snapshots'] = [
+				[
+					'snapshot_id' => $snapshot->id,
+				],
 			];
-
-			$suite_config['snapshots'] = $new_snapshots;
 
 			Log::instance()->write( 'Snapshot ID is ' . $snapshot->id, 1 );
 		}
