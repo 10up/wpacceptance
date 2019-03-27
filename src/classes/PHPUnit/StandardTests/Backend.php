@@ -127,15 +127,37 @@ trait Backend {
 
 		$actor->click( '.plugin-install-popular' );
 
-		$actor->waitUntilElementVisible( '.plugin-card-wordpress-importer .install-now' );
+		$actor->waitUntilElementVisible( '#the-list' );
 
-		$actor->click( '.plugin-card-wordpress-importer .install-now' );
+		$plugins = $actor->getElements( '.plugin-card' );
 
-		$actor->waitUntilElementVisible( '.plugin-card-wordpress-importer .activate-now' );
+		$slug = null;
 
-		$actor->click( '.plugin-card-wordpress-importer .activate-now' );
+		foreach ( $plugins as $plugin ) {
+			$first_button = $actor->getElement( '.button', $plugin );
 
-		$actor->waitUntilElementVisible( 'tr[data-slug="wordpress-importer"] .deactivate' );
+			if ( is_array( $first_button ) ) {
+				$first_button = $first_button[0];
+			}
+
+			$button_classes = $actor->getElementAttribute( $first_button, 'class' );
+
+			if ( false !== strpos( $button_classes, 'install' ) ) {
+				$slug = preg_replace( '#^.*plugin-card-([^\s]+).*$#', '$1', $actor->getElementAttribute( $plugin, 'class' ) );
+			}
+		}
+
+		if ( empty( $slug ) ) {
+			$this->fail();
+		}
+
+		$actor->click( '.plugin-card-' . $slug . ' .install-now' );
+
+		$actor->waitUntilElementVisible( '.plugin-card-' . $slug . ' .activate-now' );
+
+		$actor->click( '.plugin-card-' . $slug . ' .activate-now' );
+
+		$actor->waitUntilElementVisible( 'tr[data-slug="' . $slug . '"] .deactivate' );
 
 		$this->assertTrue( true );
 	}
