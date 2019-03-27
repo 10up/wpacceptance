@@ -192,7 +192,7 @@ class Run extends Command {
 			} else {
 				$option_environment_instructions_key = $input->getOption( 'environment_instructions_key' );
 
-				if ( false !== $option_snapshot_id ) {
+				if ( false !== $option_environment_instructions_key ) {
 					$suite_config['environment_instructions'] = [
 						$suite_config['environment_instructions'][ (int) $option_environment_instructions_key ],
 					];
