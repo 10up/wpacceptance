@@ -36,4 +36,30 @@ trait Frontend {
 
 		$actor->seeTextInSource( '<title>', '<title> not found in page source.' );
 	}
+
+	/**
+	 * Test that a post shows with the proper permalink structure
+	 */
+	protected function _testPostShows() {
+		$this->createPost();
+
+		$actor = $this->openBrowserPage();
+
+		// First set permalinks
+		$actor->login();
+
+		$actor->moveTo( 'wp-admin/options-permalink.php' );
+
+		$actor->click( 'input[value="/%postname%/"]' );
+
+		$actor->click( '#submit' );
+
+		$actor->waitUntilElementVisible( '#wpadminbar' );
+
+		$actor->moveTo( 'test-post' );
+
+		$actor->seeText( 'Test post content' );
+
+		$actor->seeElement( 'body.single' );
+	}
 }

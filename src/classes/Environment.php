@@ -601,6 +601,8 @@ class Environment {
 		$this->current_mysql_db = 'wordpress_clean';
 
 		if ( 'snapshot' === $environment_type ) {
+			Log::instance()->write( 'Setting up WordPress test environment from snapshot.' );
+
 			$new_environment_key = $snapshot_id_or_environment_instructions;
 
 			// We don't need to pull the snapshot if it's already loaded in the environment
@@ -618,6 +620,8 @@ class Environment {
 				return false;
 			}
 		} elseif ( 'environment_instructions' === $environment_type ) {
+			Log::instance()->write( 'Setting up WordPress test environment from instructions.' );
+
 			if ( ! $this->insertProject() ) {
 				return false;
 			}

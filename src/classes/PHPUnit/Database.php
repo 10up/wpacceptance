@@ -298,4 +298,55 @@ trait Database {
 		static::assertGreaterThan( 0, (int) $post_id, $message );
 	}
 
+	/**
+	 * Create a WP post
+	 *
+	 * @param  array $args Post table column args
+	 * @return boolean
+	 */
+	public static function createPost( array $args = [] ) {
+		$mysql = EnvironmentFactory::get()->getMySQLClient();
+
+		$table = static::getTableName( 'posts' );
+
+		$defaults = [
+			'post_author'           => 1,
+			'post_date'             => date( 'Y-m-d H:i:s' ),
+			'post_date_gmt'         => date( 'Y-m-d H:i:s' ),
+			'post_modified'         => date( 'Y-m-d H:i:s' ),
+			'post_modified_gmt'     => date( 'Y-m-d H:i:s' ),
+			'post_content'          => 'Test post content',
+			'post_content_filtered' => 'Test post content',
+			'post_title'            => 'Test Post',
+			'post_name'             => 'test-post',
+			'post_excerpt'          => 'Test post excerpt',
+			'post_status'           => 'publish',
+			'post_type'             => 'post',
+			'to_ping'               => '',
+			'ping'                  => '',
+		];
+
+		if ( ! empty( $args['post_content'] ) && empty( $args['post_content_filtered'] ) ) {
+			$args['post_content_filtered'] = $args['post_content'];
+		}
+
+		$values = '';
+
+		foreach ( $defaults as $key => $value ) {
+			if ( isset( $args[ $key ] ) ) {
+				$value = $args[ $value ];
+			}
+
+			if ( ! empty( $values ) ) {
+				$values .= ', ';
+			}
+
+			$values .= '"' . $mysql->escape( $value ) . '"';
+		}
+
+		$query = "INSERT INTO {$table} (post_author, post_date, post_date_gmt, post_modified, post_modified_gmt, post_content, post_content_filtered, post_title, post_name, post_excerpt, post_status, post_type, to_ping, pinged) VALUES ({$values})";
+
+		return self::query( $query );
+	}
+
 }

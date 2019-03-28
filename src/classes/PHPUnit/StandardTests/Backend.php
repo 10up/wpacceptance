@@ -180,4 +180,31 @@ trait Backend {
 
 		$actor->seeText( 'Updated Title', '#wp-admin-bar-site-name a' );
 	}
+
+	/**
+	 * Test that permalinks can be changed in the backend
+	 */
+	protected function _testChangePermalinks() {
+		$actor = $this->openBrowserPage();
+
+		$actor->login();
+
+		$actor->moveTo( 'wp-admin/options-permalink.php' );
+
+		$actor->checkOptions( 'input[value="/%year%/%monthnum%/%day%/%postname%/"]' );
+
+		$actor->click( '#submit' );
+
+		$actor->waitUntilElementVisible( '#wpadminbar' );
+
+		$actor->seeCheckboxIsChecked( 'input[value="/%year%/%monthnum%/%day%/%postname%/"]' );
+
+		$actor->click( 'input[value="/%postname%/"]' );
+
+		$actor->click( '#submit' );
+
+		$actor->waitUntilElementVisible( '#wpadminbar' );
+
+		$actor->seeCheckboxIsChecked( 'input[value="/%postname%/"]' );
+	}
 }
