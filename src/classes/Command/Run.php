@@ -214,13 +214,13 @@ class Run extends Command {
 						'snapshot_name' => 'Snapshot from snapshot_id',
 					];
 
-			}
+				}
 
 			} else {
-			$new_snapshots[] = [
-				'snapshot_id' => $suite_config['snapshot_id'],
+					$new_snapshots[] = [
+						'snapshot_id' => $suite_config['snapshot_id'],
 						'snapshot_name' => 'Snapshot from snapshot_id',
-			];
+					];
 			}
 
 			$suite_config['snapshots'] = $new_snapshots;
@@ -379,6 +379,7 @@ class Run extends Command {
 
 					continue;
 				}
+				Log::instance()->write( sprintf( 'Running test for %s.', $snapshot_array['snapshot_name'] ), 0, 'success' );
 
 				$result = $this->runTests( $suite_config, $input, $output );
 
