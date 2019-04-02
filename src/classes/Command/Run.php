@@ -379,7 +379,7 @@ class Run extends Command {
 
 					continue;
 				}
-				Log::instance()->write( sprintf( 'Running test for %s.', $snapshot_array['snapshot_name'] ), 0, 'success' );
+				Log::instance()->write( sprintf( 'Running tests for %s.', $snapshot_array['snapshot_name'] ), 0, 'success' );
 
 				$result = $this->runTests( $suite_config, $input, $output );
 
