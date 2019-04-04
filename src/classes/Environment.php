@@ -583,6 +583,55 @@ class Environment {
 	}
 
 	/**
+	 * Remove WordPress install
+	 *
+	 * @return boolean
+	 */
+	public function removeWordPressInstall() {
+		Log::instance()->write( 'Removing WordPress install...', 1 );
+
+		$command = 'cd /var/www/html && rm -rf *';
+
+		Log::instance()->write( 'Running command: ' . $command, 2 );
+
+		$exec_config = new ContainersIdExecPostBody();
+		$exec_config->setTty( true );
+		$exec_config->setAttachStdout( true );
+		$exec_config->setAttachStderr( true );
+		$exec_config->setCmd( [ '/bin/sh', '-c', $command ] );
+
+		$exec_command      = EnvironmentFactory::$docker->containerExec( $this->environment_id . '-wordpress', $exec_config );
+		$exec_id           = $exec_command->getId();
+		$exec_start_config = new ExecIdStartPostBody();
+		$exec_start_config->setDetach( false );
+
+		$stream = EnvironmentFactory::$docker->execStart( $exec_id, $exec_start_config );
+
+		$stream->onStdout(
+			function( $stdout ) {
+				Log::instance()->write( $stdout, 1 );
+			}
+		);
+
+		$stream->onStderr(
+			function( $stderr ) {
+				Log::instance()->write( $stderr, 1 );
+			}
+		);
+
+		$stream->wait();
+
+		$exit_code = EnvironmentFactory::$docker->execInspect( $exec_id )->getExitCode();
+
+		if ( 0 !== $exit_code ) {
+			Log::instance()->write( 'Failed to remove WordPress install.', 0, 'error' );
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
 	 * Setup WP environment via snapshot or instructions
 	 *
 	 * @param string $snapshot_id_or_environment_instructions Either snapshot ID or instructions
@@ -597,6 +646,9 @@ class Environment {
 
 		// First drop DBs
 		$this->dropDatabases();
+
+		// Remove an existing WP install if it's there
+		$this->removeWordPressInstall();
 
 		$this->current_mysql_db = 'wordpress_clean';
 
