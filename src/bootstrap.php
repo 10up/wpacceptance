@@ -9,7 +9,7 @@ namespace WPAcceptance;
 
 use \Symfony\Component\Console\Application;
 
-$app = new Application( 'WPAcceptance', '0.14' );
+$app = new Application( 'WPAcceptance', '0.14.1' );
 
 define( 'WPACCEPTANCE_DIR', dirname( __DIR__ ) );
 
@@ -19,7 +19,9 @@ define( 'WPACCEPTANCE_DIR', dirname( __DIR__ ) );
 ini_set( 'memory_limit', '-1' );
 
 if ( GitLab::get()->isGitLab() ) {
-	putenv( 'WPSNAPSHOTS_DIR="' . GitLab::get()->getSnapshotsDirectory() . '"' );
+	$snapshots_dir = str_replace( ' ', '\ ', GitLab::get()->getSnapshotsDirectory() );
+
+	putenv( 'WPSNAPSHOTS_DIR=' . $snapshots_dir );
 }
 
 EnvironmentFactory::init();
