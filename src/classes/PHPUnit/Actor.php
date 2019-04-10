@@ -301,7 +301,7 @@ class Actor {
 
 		if ( ! empty( $url_parts['host'] ) ) {
 			// If we have full url
-			$url = $url_parts['scheme'] . '://' . $url_parts['host'] . ':' . intval( EnvironmentFactory::get()->getWordPressPort() );
+			$url = 'http://' . $url_parts['host'] . ':' . intval( EnvironmentFactory::get()->getWordPressPort() );
 		} else {
 			$url = $this->test->getWPHomeUrl( (int) $blog_id );
 		}
