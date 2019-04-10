@@ -9,6 +9,7 @@ namespace WPAcceptance\PHPUnit;
 
 use WPAcceptance\Log;
 use WPAcceptance\EnvironmentFactory;
+use WPAcceptance\GitLab;
 use WPAcceptance\PHPUnit\Actor;
 
 use Nesk\Puphpeteer\Puppeteer as Puphpeteer;
@@ -77,6 +78,13 @@ trait Puppeteer {
 
 			if ( ! empty( $config['slowmo'] ) ) {
 				$browser_args['slowMo'] = (int) $config['slowmo'];
+			}
+
+			if ( GitLab::get()->isGitLab() ) {
+				$browser_args['args'] = [
+					'--no-sandbox',
+					'--disable-setuid-sandbox',
+				];
 			}
 
 			$this->browser = $this->puppeteer->launch( $browser_args );
