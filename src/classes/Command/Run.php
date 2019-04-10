@@ -202,19 +202,26 @@ class Run extends Command {
 
 		// Add snapshot_id to snapshots
 		if ( ! empty( $suite_config['snapshot_id'] ) ) {
-			$new_snapshots = [];
-
 			if ( ! empty( $suite_config['snapshots'] ) ) {
-				foreach ( $suite_config['snapshots'] as $key => $snapshot_array ) {
-					if ( $snapshot_array['snapshot_id'] !== $suite_config['snapshot_id'] ) {
-						$new_snapshots[] = $snapshot_array;
-					}
-				}
-			}
+				$new_snapshots = $suite_config['snapshots'];
+				$snapshot_ids = array_column( $suite_config['snapshots'], 'snapshot_id' );
+				$snapshot_id_in_snapshots = in_array( $suite_config['snapshot_id'], $snapshot_ids, true );
 
-			$new_snapshots[] = [
-				'snapshot_id' => $suite_config['snapshot_id'],
-			];
+				// Add the snapshot_id if not already in the array.
+				if ( ! $snapshot_id_in_snapshots ) {
+					$new_snapshots[] = [
+						'snapshot_id' => $suite_config['snapshot_id'],
+						'snapshot_name' => 'Snapshot from snapshot_id',
+					];
+
+				}
+
+			} else {
+					$new_snapshots[] = [
+						'snapshot_id' => $suite_config['snapshot_id'],
+						'snapshot_name' => 'Snapshot from snapshot_id',
+					];
+			}
 
 			$suite_config['snapshots'] = $new_snapshots;
 		}
@@ -372,6 +379,7 @@ class Run extends Command {
 
 					continue;
 				}
+				Log::instance()->write( sprintf( 'Running tests for %s.', $snapshot_array['snapshot_name'] ), 0, 'success' );
 
 				$result = $this->runTests( $suite_config, $input, $output );
 
