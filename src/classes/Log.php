@@ -83,6 +83,8 @@ class Log {
 				$message = '<info>' . $message . '</info>';
 			} elseif ( 'error' === $type ) {
 				$message = '<error>' . $message . '</error>';
+			} elseif ( 'notice' === $type ) {
+				$message = '<fg=cyan;options=bold>' . $message . '</>';
 			}
 
 			$console_verbosity_level = OutputInterface::VERBOSITY_NORMAL;
