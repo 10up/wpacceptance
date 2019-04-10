@@ -208,7 +208,7 @@ class Environment {
 			$host_line .= ' ' . $host;
 		}
 
-		$this->host_file->add( '127.0.0.1', array_keys( $hosts ) );
+		$this->host_file->add( $this->getLocalIP(), array_keys( $hosts ) );
 
 		Log::instance()->write( 'Hosts insert: ' . $host_line, 2 );
 
