@@ -159,6 +159,13 @@ class Environment {
 	protected $host_file;
 
 	/**
+	 * True if WP setup is happening
+	 *
+	 * @var boolean
+	 */
+	protected $wp_setup_in_process = false;
+
+	/**
 	 * Environment constructor
 	 *
 	 * @param  Config  $suite_config Config array
@@ -632,6 +639,17 @@ class Environment {
 	}
 
 	/**
+	 * Destroy WP environment in between test executions
+	 */
+	public function destroyWordPressEnvironment() {
+		// First drop DBs
+		$this->dropDatabases();
+
+		// Remove an existing WP install if it's there
+		$this->removeWordPressInstall();
+	}
+
+	/**
 	 * Setup WP environment via snapshot or instructions
 	 *
 	 * @param string $snapshot_id_or_environment_instructions Either snapshot ID or instructions
@@ -641,14 +659,10 @@ class Environment {
 	public function setupWordPressEnvironment( $snapshot_id_or_environment_instructions, string $environment_type ) {
 		Log::instance()->write( 'Setting up WordPress environment...', 1 );
 
+		$this->wp_setup_in_process = true;
+
 		$this->snapshot     = null;
 		$this->instructions = null;
-
-		// First drop DBs
-		$this->dropDatabases();
-
-		// Remove an existing WP install if it's there
-		$this->removeWordPressInstall();
 
 		$this->current_mysql_db = 'wordpress_clean';
 
@@ -659,30 +673,46 @@ class Environment {
 
 			// We don't need to pull the snapshot if it's already loaded in the environment
 			if ( $new_environment_key !== $this->current_environment_key ) {
+				$this->destroyWordPressEnvironment();
+
 				if ( ! $this->pullSnapshot( $snapshot_id_or_environment_instructions ) ) {
+					$this->wp_setup_in_process = false;
+
 					return false;
 				}
 			} else {
 				Log::instance()->write( 'WordPress environment found in cache.', 1 );
+
+				$this->snapshot = Snapshot::get( $snapshot_id_or_environment_instructions );
 			}
 
 			$this->current_environment_key = $new_environment_key;
 
 			if ( ! $this->insertProject() ) {
+				$this->wp_setup_in_process = false;
+
 				return false;
 			}
 		} elseif ( 'environment_instructions' === $environment_type ) {
 			Log::instance()->write( 'Setting up WordPress test environment from instructions.' );
 
-			if ( ! $this->insertProject() ) {
-				return false;
+			$new_environment_key = preg_replace( '#[\n\r\s]+#s', '', $snapshot_id_or_environment_instructions );
+
+			if ( $new_environment_key !== $this->current_environment_key ) {
+				$this->destroyWordPressEnvironment();
 			}
 
-			$new_environment_key = preg_replace( '#[\n\r\s]+#s', '', $snapshot_id_or_environment_instructions );
+			if ( ! $this->insertProject() ) {
+				$this->wp_setup_in_process = false;
+
+				return false;
+			}
 
 			// We don't need to run the instructions if it's already loaded in the environment
 			if ( $new_environment_key !== $this->current_environment_key ) {
 				if ( ! $this->createFromInstructions( $snapshot_id_or_environment_instructions ) ) {
+					$this->wp_setup_in_process = false;
+
 					return false;
 				}
 			} else {
@@ -693,8 +723,12 @@ class Environment {
 		} else {
 			Log::instance()->write( 'No environment instructions or snapshot.', 0, 'error' );
 
+			$this->wp_setup_in_process = false;
+
 			return false;
 		}
+
+		$this->wp_setup_in_process = false;
 
 		if ( ! $this->updateFilePermissions() ) {
 			return false;
@@ -1298,7 +1332,7 @@ class Environment {
 	 * @return  bool
 	 */
 	public function destroy() {
-		if ( $this->cache_environment && ! $this->skip_environment_cache ) {
+		if ( $this->cache_environment && ! $this->skip_environment_cache && ! $this->wp_setup_in_process ) {
 			Log::instance()->write( 'Caching environment.' );
 			return false;
 		}
@@ -1839,7 +1873,7 @@ class Environment {
 	public function writeMetaToWPContainer() {
 		Log::instance()->write( 'Saving environment meta data to container...', 1 );
 
-		$command = 'rm -f /root/environment_meta.json && touch /root/environment_meta.json && echo "' . addslashes( json_encode( $this->getEnvironmentMeta() ) ) . '" >> /root/environment_meta.json';
+		$command = 'rm -f /root/environment_meta.json && touch /root/environment_meta.json && echo "' . addslashes( json_encode( $this->getEnvironmentMeta(), JSON_UNESCAPED_SLASHES ) ) . '" >> /root/environment_meta.json';
 
 		Log::instance()->write( $command, 2 );
 
