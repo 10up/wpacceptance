@@ -565,7 +565,7 @@ class Actor {
 	/**
 	 * Return elements based on CSS selector.
 	 *
-	 * @param  array $elements Elements to get
+	 * @param  array|string $elements Elements to get
 	 * @return  array Array of ElementHandle
 	 */
 	public function getElements( $elements ) {
@@ -576,7 +576,7 @@ class Actor {
 				if ( $element instanceof ElementHandle ) {
 					$items[] = $element;
 				} else {
-					$items[] = $this->getElement( $lement );
+					$items[] = $this->getElement( $element );
 				}
 			}
 
@@ -696,7 +696,7 @@ class Actor {
 	/**
 	 * Check a checkbox or radio input.
 	 *
-	 * @param  array $elements Array of ElementHandle or selector string
+	 * @param  array|string $elements Array of ElementHandle or selector string
 	 */
 	public function checkOptions( $elements ) {
 		$elements = $this->getElements( $elements );
