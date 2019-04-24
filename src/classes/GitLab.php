@@ -115,6 +115,15 @@ class GitLab {
 	}
 
 	/**
+	 * Get gitlab pipeline ID
+	 *
+	 * @return  string
+	 */
+	public function getPipelineId() {
+		return getenv( 'CI_PIPELINE_ID' );
+	}
+
+	/**
 	 * Get singleton GitLab instance
 	 *
 	 * @return self

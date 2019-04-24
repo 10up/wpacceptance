@@ -292,7 +292,13 @@ class Run extends Command {
 
 		$skip_environment_cache = ( ! empty( $local ) ) ? true : $input->getOption( 'skip_environment_cache' );
 
-		$environment = EnvironmentFactory::create( $suite_config, $input->getOption( 'cache_environment' ), $skip_environment_cache, $input->getOption( 'environment_id' ), $input->getOption( 'mysql_wait_time' ) );
+		$environment_id = $input->getOption( 'environment_id' );
+
+		if ( empty( $environment_id ) && GitLab::get()->isGitLab() ) {
+			$environment_id = GitLab::get()->getPipelineId();
+		}
+
+		$environment = EnvironmentFactory::create( $suite_config, $input->getOption( 'cache_environment' ), $skip_environment_cache, $environment_id, $input->getOption( 'mysql_wait_time' ) );
 
 		if ( ! $environment ) {
 			return 2;
