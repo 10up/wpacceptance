@@ -9,6 +9,8 @@ RUN apt-get update && apt-get install -y \
 RUN docker-php-ext-configure intl \
     && docker-php-ext-install intl
 
+RUN composer config --global discard-changes true
+
 RUN composer global require 10up/wpsnapshots:dev-master
 
 RUN composer global require 10up/wpinstructions:dev-master
