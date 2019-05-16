@@ -422,10 +422,6 @@ services: docker
 language: php
 php:
   - 7.2
-env:
-  global:
-  - WP_VERSION=master
-  - WP_VERSION=4.7
 before_script:
   - composer install
 script:
