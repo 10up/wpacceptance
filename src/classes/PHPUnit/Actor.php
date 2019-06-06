@@ -827,6 +827,27 @@ class Actor {
 	}
 
 	/**
+	 * Check if the actor sees an element on the current page a specific number of times. Element
+	 * must be visible to human eye.
+	 *
+	 * @param  ElementHandle|string $elements Either element object or selector string
+	 * @param  int                  $times Number of times element must be visible
+	 */
+	public function seeNumberOfElements( $elements, int $times ) {
+		$elements = $this->getElements( $elements );
+
+		$visible = 0;
+
+		foreach ( $elements as $element ) {
+			if ( $this->elementIsVisible( $element ) ) {
+				$visible++;
+			}
+		}
+
+		TestCase::assertEquals( $times, $visible, $this->elementsToString( $elements ) . ' is not visible ' . $times . ' times.' );
+	}
+
+	/**
 	 * Check if the actor doesnt see an element on the current page. Element must not be visible to human eye.
 	 *
 	 * @param  ElementHandle|string $element Either element object or selector string
@@ -1149,6 +1170,8 @@ class Actor {
 	public function elementToString( $element ) {
 		if ( is_string( $element ) ) {
 			return $element;
+		} elseif ( is_array( $element ) ) {
+			return $this->elementsToString( $element );
 		}
 
 		$element = $this->getElement( $element );
@@ -1170,6 +1193,26 @@ class Actor {
 		}
 
 		return $message;
+	}
+
+	/**
+	 * Convert elements to a piece of a failure message.
+	 *
+	 * @param  array $elements Array of elements
+	 * @return string A message.
+	 */
+	public function elementsToString( array $elements ) {
+		$output = '';
+
+		foreach ( $elements as $key => $element ) {
+			if ( $key > 0 ) {
+				$output .= ', ';
+			}
+
+			$output .= $this->elementToString( $element );
+		}
+
+		return $output;
 	}
 
 	/**

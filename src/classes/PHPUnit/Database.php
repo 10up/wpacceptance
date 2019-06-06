@@ -283,8 +283,6 @@ trait Database {
 	 *   post_type   - (array|string) a post type or array of types.
 	 *   post_status - (array|string) a post status or array of statuses.
 	 *
-	 * @static
-	 * @acess public
 	 * @param array  $args Array of arguments.
 	 * @param string $message Optinal. A message to use on failure.
 	 */
@@ -299,19 +297,24 @@ trait Database {
 	}
 
 	/**
-	 * Get a row with a matching a column value
+	 * Get row(s) with matching column value(s)
 	 *
-	 * @param  mixed  $value       Value to find in column
-	 * @param  string $column_name Name of column
-	 * @param  string $table_name  Name of table
+	 * @param  array  $conditions Conditions to look up. Conditions should look like
+	 *                            [
+	 *                            'column_name'  => 'value',
+	 *                            'column_name2' => 'value2',
+	 *                            ]
+	 * @param  string $table_name Name of table
 	 * @return mixed
 	 */
-	public static function selectRowsByColumnValue( $value, $column_name, $table_name ) {
+	public static function selectRowsWhere( array $conditions, string $table_name ) {
 		$table = static::getTableName( $table_name );
 
-		$prepared_value = addcslashes( $value, "'" );
+		$query = "SELECT * FROM {$table} WHERE 1=1 ";
 
-		$query = "SELECT * FROM {$table} WHERE `{$column_name}` = '{$prepared_value}'";
+		foreach ( $conditions as $condition => $value ) {
+			$query .= ' AND `' . addcslashes( $condition, '`' ) . '` = "' . addcslashes( $value, '"' ) . '"';
+		}
 
 		$results = self::query( $query );
 
