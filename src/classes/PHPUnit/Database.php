@@ -299,6 +299,36 @@ trait Database {
 	}
 
 	/**
+	 * Get a row with a matching a column value
+	 *
+	 * @param  mixed  $value       Value to find in column
+	 * @param  string $column_name Name of column
+	 * @param  string $table_name  Name of table
+	 * @return mixed
+	 */
+	public static function selectRowsByColumnValue( $value, $column_name, $table_name ) {
+		$table = static::getTableName( $table_name );
+
+		$prepared_value = addcslashes( $value, "'" );
+
+		$query = "SELECT * FROM {$table} WHERE `{$column_name}` = '{$prepared_value}'";
+
+		$results = self::query( $query );
+
+		$rows = [];
+
+		while ( $row = $results->fetch_assoc() ) { // phpcs:ignore
+			$rows[] = $row;
+		}
+
+		if ( empty( $rows ) ) {
+			return null;
+		}
+
+		return 1 === count( $rows ) ? $rows[0] : $rows;
+	}
+
+	/**
 	 * Create a WP post
 	 *
 	 * @param  array $args Post table column args
