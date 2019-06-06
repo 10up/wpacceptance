@@ -118,7 +118,7 @@ You will need to create a repository if you don't have one. At 10up, we use `10u
 
 6\. Now that we are ready with WP Snapshots, let's run our tests again but this time saving the snapshot ID to our `wpacceptance.json` and pushing the snapshot to our remote repository:
 ```
-./vendor/bin/wpacceptance run --local --save_snapshot
+./vendor/bin/wpacceptance run --local --save
 ```
 
 After our tests pass, you will see the snapshot get pushed upstream.
@@ -151,7 +151,7 @@ To test a codebase on your local environment, you would run the following comman
 wpacceptance run --local
 ```
 
-The `--local` flag will force WP Acceptance to ignore environment instructions or snapshot ID defined in `wpacceptance.json`. If you are using a snapshot workflow, you can use the `--save_snapshot` flag which will make WP Acceptance create a new snapshot from your local and save the ID to `wpacceptance.json`. After saving a new snapshot to `wpacceptance.json`, you will want to commit and push the change upstream.
+The `--local` flag will force WP Acceptance to ignore environment instructions or snapshot ID defined in `wpacceptance.json`. If you are using a snapshot workflow, you can use the `--save` flag which will make WP Acceptance create a new snapshot from your local and save the ID to `wpacceptance.json`. After saving a new snapshot to `wpacceptance.json`, you will want to commit and push the change upstream.
 
 To test a codebase against environment instructions (assuming `environment_instructions` and `project_path` are defined in `wpacceptance.json`), you would run the following command in the directory of `wpacceptance.json`:
 ```
@@ -324,11 +324,11 @@ For detailed test examples, look at the [example test suite](https://github.com/
 
 ## Commands
 
-* __wpacceptance run__ [&lt;PATH TO wpacceptance.json DIRECTORY&gt;] [--local] [--snapshot_id=&lt;WPSNAPSHOT ID&gt;] [--enforce_clean_db] [--cache_environment] [--skip_environment_cache] [--db_host=&lt;DATABASE HOST&gt;] [--verbose] [--wp_directory=&lt;PATH TO WP DIRECTORY&gt;] [--save_snapshot] [--force_save] [--filter_tests=&lt;TEST FILTER&gt;] [--filter_test_files=&lt;TEST FILE FILTER&gt;] [--repository=&lt;REPOSITORY&gt;] [--mysql_wait_time=&lt;MYSQL WAIT TIME&gt;] [--screenshot_on_failure] [--environment_id=&lt;ENVIRONMENT ID&gt;] --show_browser] [--slowmo=&lt;TIME IN MILLISECONDS&gt;] - Runs a test suite.
+* __wpacceptance run__ [&lt;PATH TO wpacceptance.json DIRECTORY&gt;] [--local] [--snapshot_id=&lt;WPSNAPSHOT ID&gt;] [--enforce_clean_db] [--cache_environment] [--skip_environment_cache] [--db_host=&lt;DATABASE HOST&gt;] [--verbose] [--wp_directory=&lt;PATH TO WP DIRECTORY&gt;] [--save] [--force_save] [--filter_tests=&lt;TEST FILTER&gt;] [--filter_test_files=&lt;TEST FILE FILTER&gt;] [--repository=&lt;REPOSITORY&gt;] [--mysql_wait_time=&lt;MYSQL WAIT TIME&gt;] [--screenshot_on_failure] [--environment_id=&lt;ENVIRONMENT ID&gt;] --show_browser] [--slowmo=&lt;TIME IN MILLISECONDS&gt;] - Runs a test suite.
 	* `<PATH TO wpacceptance.json DIRECTORY>` - Path to `wpacceptance.json`, defaults to current working directory.
 	* `--local` - Runs your test suite against your local environment.
 	 * `--verbose`, `-v`, `-vv`, `-vvv` - Run with various degrees of verbosity.
-	* `--save_snapshot` - If tests are successful, save snapshot ID to `wpacceptance.json` and push snapshot upstream.
+	* `--save` - If tests are successful, save snapshot ID to `wpacceptance.json` and push snapshot upstream.
 	* `--force_save` - Save snapshot ID to `wpacceptance.json` and push snapshot upstream no matter what.
 	* `--wp_directory` - Path to WordPress. If unset, will search up the directory tree until wp-config.php is found
 	* `--snapshot_id` - Optionally run tests against a snapshot ID.
@@ -422,10 +422,6 @@ services: docker
 language: php
 php:
   - 7.2
-env:
-  global:
-  - WP_VERSION=master
-  - WP_VERSION=4.7
 before_script:
   - composer install
 script:
