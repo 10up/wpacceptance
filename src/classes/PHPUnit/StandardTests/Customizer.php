@@ -12,6 +12,9 @@ namespace WPAcceptance\PHPUnit\StandardTests;
  */
 trait Customizer {
 
+	/**
+	 * Test that someone can update site name/tagline in customizer.
+	 */
 	public function _testCustomizerCanUpdateIdentity() {
 		$actor = $this->openBrowserPage();
 
@@ -25,9 +28,15 @@ trait Customizer {
 
 		$actor->waitUntilElementVisible( '#_customize-input-blogname' );
 
-		$actor->fillField( '#_customize-input-blogname', 'New Site Name' );
+		$actor->typeInField( '#_customize-input-blogname', 'New Site Name' );
 
-		$actor->fillField( '#_customize-input-blogdescription', 'New tagline' );
+		$actor->typeInField( '#_customize-input-blogdescription', 'New tagline' );
+
+		$actor->waitUntilPropertyContains( 'New tagline', '#_customize-input-blogdescription', 'value' );
+
+		$actor->waitUntilPropertyContains( 'New Site Name', '#_customize-input-blogname', 'value' );
+
+		$actor->waitUntilElementEnabled( '#save' );
 
 		$actor->click( '#save' );
 
