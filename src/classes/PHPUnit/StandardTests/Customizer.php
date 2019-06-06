@@ -15,7 +15,7 @@ trait Customizer {
 	/**
 	 * Test that someone can update site name/tagline in customizer.
 	 */
-	public function _testCustomizerCanUpdateIdentity() {
+	protected function _testCustomizerCanUpdateIdentity() {
 		$actor = $this->openBrowserPage();
 
 		$actor->login();
