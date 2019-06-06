@@ -60,6 +60,92 @@ trait Backend {
 	}
 
 	/**
+	 * Check that we can add a featured image pre-gutenberg UI
+	 */
+	protected function _testFeaturedImagePreGutenberg() {
+		$actor = $this->openBrowserPage();
+
+		$actor->login();
+
+		$actor->moveTo( 'wp-admin/post-new.php' );
+
+		$actor->fillField( '#title', 'Test Post' );
+
+		$actor->click( '#set-post-thumbnail' );
+
+		$actor->waitUntilElementVisible( '.media-modal-content' );
+
+		$actor->attachFile( '.media-modal-content input[type="file"]', __DIR__ . '/img/10up-logo.jpg' );
+
+		$actor->waitUntilElementEnabled( '.media-modal-content .media-button-select' );
+
+		$actor->click( '.media-modal-content .media-button-select' );
+
+		$actor->waitUntilElementVisible( '#remove-post-thumbnail' );
+
+		$actor->scrollTo( 0, 0 );
+
+		$actor->click( '#publish' );
+
+		$actor->waitUntilElementVisible( '#wpadminbar' );
+
+		$actor->seeElement( '#postimagediv img' );
+	}
+
+	/**
+	 * Test uploading a featured image to a post.
+	 */
+	protected function _testFeaturedImage() {
+		$actor = $this->openBrowserPage();
+
+		$actor->login();
+
+		$actor->moveTo( 'wp-admin/post-new.php' );
+
+		$actor->click( '.nux-dot-tip__disable' );
+
+		$actor->typeInField( '#post-title-0', 'Test Post Image' );
+
+		$elements = $actor->getElements( '.components-panel__body-toggle' );
+
+		foreach ( $elements as $element ) {
+			$actor->click( $element );
+		}
+
+		$actor->waitUntilElementVisible( '.editor-post-featured-image__toggle' );
+
+		$actor->click( '.editor-post-featured-image__toggle' );
+
+		$actor->waitUntilElementVisible( '.upload-ui' );
+
+		$actor->attachFile( '.media-modal-content input[type="file"]', __DIR__ . '/img/10up-logo.jpg' );
+
+		$actor->waitUntilElementEnabled( '.media-button-select' );
+
+		$actor->click( '.media-button-select' );
+
+		$actor->waitUntilElementVisible( '.editor-post-publish-panel__toggle' );
+
+		$actor->waitUntilElementEnabled( '.editor-post-publish-panel__toggle' );
+
+		$actor->click( '.editor-post-publish-panel__toggle' );
+
+		$actor->waitUntilElementVisible( '.editor-post-publish-button' );
+
+		$actor->waitUntilElementEnabled( '.editor-post-publish-button' );
+
+		$actor->click( '.editor-post-publish-button' );
+
+		$actor->waitUntilElementVisible( '.components-notice' );
+
+		$actor->seeText( 'Post published', '.components-notice__content' );
+
+		$actor->waitUntilElementVisible( '.editor-post-featured-image img' );
+
+		$actor->seeElement( '.editor-post-featured-image img' );
+	}
+
+	/**
 	 * Test that a post actually publishes with gutenberg
 	 */
 	protected function _testPostPublish() {

@@ -51,4 +51,11 @@ class StandardTest extends \WPAcceptance\PHPUnit\TestCase {
 	public function testChangeSiteTitle() {
 		parent::_testChangeSiteTitle();
 	}
+
+	/**
+	 * @testdox I can change site title and description in the customizer
+	 */
+	public function testCustomizerCanUpdateIdentity() {
+		parent::_testCustomizerCanUpdateIdentity();
+	}
 }
