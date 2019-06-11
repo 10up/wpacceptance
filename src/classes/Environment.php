@@ -1908,6 +1908,63 @@ class Environment {
 	}
 
 	/**
+	 * WP CLI Runner
+	 *
+	 * @param string $command A WP CLI command.
+	 * @return array
+	 */
+	public function wpCliRunner( $command ) {
+		Log::instance()->write( 'Running wp command: ' . $command, 0 );
+
+		$command = 'wp ' . $command . ' --allow-root';
+
+		$exec_config = new ContainersIdExecPostBody();
+		$exec_config->setTty( true );
+		$exec_config->setAttachStdout( true );
+		$exec_config->setAttachStderr( true );
+		$exec_config->setCmd( [ '/bin/bash', '-c', $command ] );
+
+		$exec_command      = EnvironmentFactory::$docker->containerExec( $this->environment_id . '-wordpress', $exec_config );
+		$exec_id           = $exec_command->getId();
+		$exec_start_config = new ExecIdStartPostBody();
+		$exec_start_config->setDetach( false );
+
+		$stream = EnvironmentFactory::$docker->execStart( $exec_id, $exec_start_config );
+		$output = '';
+		$error  = '';
+
+		$stream->onStdout(
+			function( $stdout ) use ( &$output ) {
+				Log::instance()->write( $stdout, 1 );
+				$output .= $stdout;
+			}
+		);
+
+		$stream->onStderr(
+			function( $stderr ) use ( &$error ) {
+				Log::instance()->write( $stderr, 1 );
+				$error .= $stderr;
+			}
+		);
+
+		$stream->wait();
+
+		$exit_code = EnvironmentFactory::$docker->execInspect( $exec_id )->getExitCode();
+
+		if ( 0 !== $exit_code ) {
+			Log::instance()->write( 'Before script returned a non-zero exit code: ' . $script, 0, 'warning' );
+		}
+
+		$result = [
+			'stdout' => $output,
+			'stderr' => $error,
+			'code'   => $exit_code,
+		];
+
+		return $result;
+	}
+
+	/**
 	 * Generate an environment ID from config. This is a cache of critical suite config parameters
 	 *
 	 * @param  array $suite_config Suite config

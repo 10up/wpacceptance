@@ -16,7 +16,7 @@ use PHPUnit\Runner\BaseTestRunner;
  */
 abstract class TestCase extends \PHPUnit\Framework\TestCase {
 
-	use Puppeteer, Database, StandardTests\Backend, StandardTests\Frontend, StandardTests\Customizer;
+	use Puppeteer, Database, WpCLI, StandardTests\Backend, StandardTests\Frontend, StandardTests\Customizer;
 
 	/**
 	 * Store the last modifying query in the DB. We do this to determine if the DB is dirty (has changed)
@@ -90,5 +90,4 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase {
 			$this->browser->close();
 		}
 	}
-
 }
