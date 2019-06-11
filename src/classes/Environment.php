@@ -1824,7 +1824,7 @@ class Environment {
 	/**
 	 * WP CLI Runner
 	 *
-	 * @param string  $command A WP CLI command.
+	 * @param string $command A WP CLI command.
 	 * @return array
 	 */
 	public function wpCliRunner( $command ) {
@@ -1845,17 +1845,19 @@ class Environment {
 
 		$stream = EnvironmentFactory::$docker->execStart( $exec_id, $exec_start_config );
 		$output = '';
-		$error = '';
+		$error  = '';
 
 		$stream->onStdout(
-			function( $_stdout ) use ( &$output ) {
-				$output .= $_stdout;
+			function( $stdout ) use ( &$output ) {
+				Log::instance()->write( $stdout, 1 );
+				$output .= $stdout;
 			}
 		);
 
 		$stream->onStderr(
-			function( $_stderr ) use ( &$error ) {
-				$error .= $_stderr;
+			function( $stderr ) use ( &$error ) {
+				Log::instance()->write( $stderr, 1 );
+				$error .= $stderr;
 			}
 		);
 
@@ -1868,8 +1870,8 @@ class Environment {
 		}
 
 		$result = [
-			'stdOut' => $output,
-			'stdErr' => $error,
+			'stdout' => $output,
+			'stderr' => $error,
 			'code'   => $exit_code,
 		];
 
