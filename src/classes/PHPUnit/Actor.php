@@ -694,6 +694,21 @@ class Actor {
 	}
 
 	/**
+	 * Logout from WordPress.
+	 */
+	public function logout() {
+		$this->moveTo( 'wp-login.php?action=logout' );
+
+		$this->waitUntilElementVisible( '#error-page' );
+
+		$this->click( '#error-page a' );
+
+		usleep( 200 );
+
+		$this->waitUntilElementVisible( '#loginform' );
+	}
+
+	/**
 	 * Check a checkbox or radio input.
 	 *
 	 * @param  array|string $elements Array of ElementHandle or selector string
