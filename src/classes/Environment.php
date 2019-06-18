@@ -152,6 +152,13 @@ class Environment {
 	protected $sites = [];
 
 	/**
+	 * Sites prepared for wpsnapshot pull command
+	 *
+	 * @var array
+	 */
+	protected $site_mapping = [];
+
+	/**
 	 * Whether we are in gitlab or not
 	 *
 	 * @var bool
@@ -999,7 +1006,7 @@ class Environment {
 
 		Log::instance()->write( 'WordPress version is ' . $this->snapshot->meta['wp_version'], 1 );
 
-		$site_mapping = [];
+		$this->site_mapping = [];
 
 		Log::instance()->write( 'Snapshot site mapping:', 1 );
 
@@ -1018,7 +1025,7 @@ class Environment {
 				Log::instance()->write( 'Blog ID: ' . $map['blog_id'], 1 );
 			}
 
-			$site_mapping[] = $map;
+			$this->site_mapping[] = $map;
 
 			Log::instance()->write( 'Home URL: ' . $map['home_url'], 1 );
 			Log::instance()->write( 'Site URL: ' . $map['site_url'], 1 );
@@ -1083,7 +1090,7 @@ class Environment {
 			$verbose = '-vvv';
 		}
 
-		$command = '/root/.composer/vendor/bin/wpsnapshots pull ' . $snapshot_id . ' --repository=' . $this->suite_config['repository'] . ' --confirm --confirm_wp_version_change --confirm_ms_constant_update --config_db_name="' . $mysql_creds['DB_NAME'] . '" --config_db_user="' . $mysql_creds['DB_USER'] . '" --config_db_password="' . $mysql_creds['DB_PASSWORD'] . '" --config_db_host="' . $mysql_creds['DB_HOST'] . '" --confirm_wp_download --confirm_config_create ' . $main_domain_param . ' --site_mapping="' . addslashes( json_encode( $site_mapping ) ) . '" ' . $verbose;
+		$command = '/root/.composer/vendor/bin/wpsnapshots pull ' . $snapshot_id . ' --repository=' . $this->suite_config['repository'] . ' --confirm --confirm_wp_version_change --confirm_ms_constant_update --config_db_name="' . $mysql_creds['DB_NAME'] . '" --config_db_user="' . $mysql_creds['DB_USER'] . '" --config_db_password="' . $mysql_creds['DB_PASSWORD'] . '" --config_db_host="' . $mysql_creds['DB_HOST'] . '" --confirm_wp_download --confirm_config_create ' . $main_domain_param . ' --site_mapping="' . addslashes( json_encode( $this->site_mapping ) ) . '" ' . $verbose;
 
 		Log::instance()->write( 'Running command:', 1 );
 		Log::instance()->write( $command, 1 );
