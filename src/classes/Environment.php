@@ -40,6 +40,20 @@ class Environment {
 	];
 
 	/**
+	 * Main domain for use with snapshot. Parsed out of snapshot data
+	 *
+	 * @var string
+	 */
+	protected $main_domain;
+
+	/**
+	 * Prepared raw instructions
+	 *
+	 * @var string
+	 */
+	protected $raw_instructions;
+
+	/**
 	 * Environment ID
 	 *
 	 * @var string
@@ -142,7 +156,7 @@ class Environment {
 	 *
 	 * @var bool
 	 */
-	public $gitab = false;
+	public $gitlab = false;
 
 	/**
 	 * How long should we wait for MySQL to be available
@@ -324,12 +338,10 @@ class Environment {
 
 		$environment_meta = json_decode( $environment_meta, true );
 
-		$this->suite_config            = new Config( $environment_meta['suite_config'] );
 		$this->wordpress_port          = $environment_meta['wordpress_port'];
 		$this->mysql_port              = $environment_meta['mysql_port'];
 		$this->gateway_ip              = $environment_meta['gateway_ip'];
 		$this->current_environment_key = $environment_meta['current_environment_key'];
-		$this->sites                   = $environment_meta['sites'];
 
 		return true;
 	}
@@ -671,6 +683,12 @@ class Environment {
 
 			$new_environment_key = $snapshot_id_or_environment_instructions;
 
+			if ( ! $this->prepareSnapshotEnvironment( $snapshot_id_or_environment_instructions ) ) {
+				$this->wp_setup_in_process = false;
+
+				return false;
+			}
+
 			// We don't need to pull the snapshot if it's already loaded in the environment
 			if ( $new_environment_key !== $this->current_environment_key ) {
 				$this->destroyWordPressEnvironment();
@@ -682,8 +700,6 @@ class Environment {
 				}
 			} else {
 				Log::instance()->write( 'WordPress environment found in cache.', 1 );
-
-				$this->snapshot = Snapshot::get( $snapshot_id_or_environment_instructions );
 			}
 
 			$this->current_environment_key = $new_environment_key;
@@ -708,9 +724,15 @@ class Environment {
 				return false;
 			}
 
+			if ( ! $this->prepareInstructionsEnvironment( $snapshot_id_or_environment_instructions ) ) {
+				$this->wp_setup_in_process = false;
+
+				return false;
+			}
+
 			// We don't need to run the instructions if it's already loaded in the environment
 			if ( $new_environment_key !== $this->current_environment_key ) {
-				if ( ! $this->createFromInstructions( $snapshot_id_or_environment_instructions ) ) {
+				if ( ! $this->executeInstructions() ) {
 					$this->wp_setup_in_process = false;
 
 					return false;
@@ -754,17 +776,19 @@ class Environment {
 	}
 
 	/**
-	 * Create WP environment from instructions
+	 * Prepare instructions environment
 	 *
-	 * @param  string $raw_instructions Instructions to run
-	 * @return boolean
+	 * @param  string $raw_instructions Raw instructions
+	 * @return boolean|string
 	 */
-	protected function createFromInstructions( $raw_instructions ) {
-		Log::instance()->write( 'Saving instructions to container...', 1 );
+	protected function prepareInstructionsEnvironment( $raw_instructions ) {
+		Log::instance()->write( 'Preparing instructions environment...', 1 );
 
 		WPInstructions\Instruction::registerInstructionType( new WPInstructions\InstructionTypes\InstallWordPress() );
 
-		$this->instructions = new WPInstructions\Instructions( $raw_instructions );
+		$this->raw_instructions = $raw_instructions;
+		$this->instructions     = new WPInstructions\Instructions( $this->raw_instructions );
+
 		$this->instructions->prepare();
 
 		$instruction_array = $this->instructions->getInstructions();
@@ -804,11 +828,11 @@ class Environment {
 		$home_host = parse_url( $options['home url'], PHP_URL_HOST );
 		$site_host = parse_url( $options['site url'], PHP_URL_HOST );
 
-		$raw_instructions = preg_replace( '#https?://' . $home_host . '#i', 'http://' . $home_host . ':' . $this->wordpress_port, $raw_instructions );
+		$this->raw_instructions = preg_replace( '#https?://' . $home_host . '#i', 'http://' . $home_host . ':' . $this->wordpress_port, $this->raw_instructions );
 		$replaced_hosts[] = $home_host;
 
 		if ( ! in_array( $site_host, $replaced_hosts, true ) ) {
-			$raw_instructions = preg_replace( '#https?://' . $site_host . '#i', 'http://' . $site_host . ':' . $this->wordpress_port, $raw_instructions );
+			$this->raw_instructions = preg_replace( '#https?://' . $site_host . '#i', 'http://' . $site_host . ':' . $this->wordpress_port, $this->raw_instructions );
 
 			$replaced_hosts[] = $site_host;
 		}
@@ -838,13 +862,13 @@ class Environment {
 				$site_host = parse_url( $options['site url'], PHP_URL_HOST );
 
 				if ( ! in_array( $home_host, $replaced_hosts, true ) ) {
-					$raw_instructions = preg_replace( '#https?://' . $home_host . '#i', 'http://' . $home_host . ':' . $this->wordpress_port, $raw_instructions );
+					$this->raw_instructions = preg_replace( '#https?://' . $home_host . '#i', 'http://' . $home_host . ':' . $this->wordpress_port, $this->raw_instructions );
 
 					$replaced_hosts[] = $home_host;
 				}
 
 				if ( ! in_array( $site_host, $replaced_hosts, true ) ) {
-					$raw_instructions = preg_replace( '#https?://' . $site_host . '#i', 'http://' . $site_host . ':' . $this->wordpress_port, $raw_instructions );
+					$this->raw_instructions = preg_replace( '#https?://' . $site_host . '#i', 'http://' . $site_host . ':' . $this->wordpress_port, $this->raw_instructions );
 
 					$replaced_hosts[] = $site_host;
 				}
@@ -858,7 +882,18 @@ class Environment {
 			}
 		}
 
-		$command = 'rm -f /var/www/html/WPInstructions && touch /var/www/html/WPInstructions && echo "' . addslashes( $raw_instructions ) . '" >> /var/www/html/WPInstructions';
+		return true;
+	}
+
+	/**
+	 * Create WP environment from instructions
+	 *
+	 * @return boolean
+	 */
+	protected function executeInstructions() {
+		Log::instance()->write( 'Saving instructions to container...', 1 );
+
+		$command = 'rm -f /var/www/html/WPInstructions && touch /var/www/html/WPInstructions && echo "' . addslashes( $this->raw_instructions ) . '" >> /var/www/html/WPInstructions';
 
 		Log::instance()->write( $command, 2 );
 
@@ -946,17 +981,13 @@ class Environment {
 	}
 
 	/**
-	 * Pull WP Snapshot into container
+	 * Prepare snapshot environment
 	 *
-	 * @param  string $snapshot_id Snapshot ID to use
-	 * @return  bool
+	 * @param  string $snapshot_id Snapshot id
+	 * @return boolean
 	 */
-	protected function pullSnapshot( $snapshot_id ) {
-		/**
-		 * Pulling snapshot
-		 */
-
-		Log::instance()->write( 'Pulling snapshot ' . $snapshot_id . '...', 1 );
+	protected function prepareSnapshotEnvironment( $snapshot_id ) {
+		Log::instance()->write( 'Setting up snapshot environment...', 1 );
 
 		$this->snapshot = Snapshot::get( $snapshot_id );
 
@@ -971,8 +1002,6 @@ class Environment {
 		$site_mapping = [];
 
 		Log::instance()->write( 'Snapshot site mapping:', 1 );
-
-		$main_domain = '';
 
 		foreach ( $this->snapshot->meta['sites'] as $site ) {
 			$home_host = parse_url( $site['home_url'], PHP_URL_HOST );
@@ -1000,20 +1029,36 @@ class Environment {
 					if ( (int) $this->snapshot->meta['blog_id_current_site'] === (int) $site['blog_id'] ) {
 						$map['main_domain'] = true;
 
-						$main_domain = $home_host;
+						$this->main_domain = $home_host;
 					}
 				} else {
 					// Just set first site as main domain if we don't have blog_id_current_site
-					if ( empty( $main_domain ) ) {
+					if ( empty( $this->main_domain ) ) {
 						$map['main_domain'] = true;
 
-						$main_domain = $home_host;
+						$this->main_domain = $home_host;
 					}
 				}
 			}
 
 			$this->sites[] = $map;
 		}
+
+		return true;
+	}
+
+	/**
+	 * Pull WP Snapshot into container
+	 *
+	 * @param  string $snapshot_id Snapshot ID to use
+	 * @return  bool
+	 */
+	protected function pullSnapshot( $snapshot_id ) {
+		/**
+		 * Pulling snapshot
+		 */
+
+		Log::instance()->write( 'Pulling snapshot ' . $snapshot_id . '...', 1 );
 
 		$main_domain_param = '';
 
@@ -1022,7 +1067,7 @@ class Environment {
 				$main_domain_param = ' --main_domain="' . $this->snapshot->meta['domain_current_site'] . ':' . $this->wordpress_port . '" ';
 			} else {
 				// We have to do this for backwards compat where wpsnapshots didnt set domain_current_site
-				$main_domain_param = ' --main_domain="' . $main_domain . ':' . $this->wordpress_port . '" ';
+				$main_domain_param = ' --main_domain="' . $this->main_domain . ':' . $this->wordpress_port . '" ';
 			}
 		}
 
@@ -1848,13 +1893,11 @@ class Environment {
 	 */
 	public function getEnvironmentMeta() {
 		return [
-			'suite_config'            => $this->suite_config->toArray(),
 			'wordpress_port'          => $this->wordpress_port,
 			'mysql_port'              => $this->mysql_port,
 			'environment_id'          => $this->environment_id,
 			'gateway_ip'              => $this->gateway_ip,
 			'current_environment_key' => $this->current_environment_key,
-			'sites'                   => $this->sites,
 		];
 	}
 
