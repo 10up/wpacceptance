@@ -332,6 +332,52 @@ trait Database {
 	}
 
 	/**
+	 * Get row(s) with matching column value(s)
+	 *
+	 * @param  array  $updates_by_column Updates to make by column
+	 *                            [
+	 *                            'column_name'  => 'new value',
+	 *                            'column_name2' => 'new value2',
+	 *                            ]
+	 * @param  array  $where_conditions Conditions to look up. Conditions should look like
+	 *                            [
+	 *                            'column_name'  => 'value',
+	 *                            'column_name2' => 'value2',
+	 *                            ]
+	 * @param  string $table_name Name of table
+	 * @return boolean|integer
+	 */
+	public static function updateRowsWhere( array $updates_by_column, array $where_conditions, string $table_name ) {
+		$table = static::getTableName( $table_name );
+
+		$conditions = '';
+
+		foreach ( $where_conditions as $condition => $value ) {
+			$conditions .= ' AND `' . addcslashes( $condition, '`' ) . '` = "' . addcslashes( $value, '"' ) . '"';
+		}
+
+		$updates = '';
+
+		foreach ( $updates_by_column as $column => $value ) {
+			if ( ! empty( $updates ) ) {
+				$updates .= ', ';
+			}
+
+			if ( is_array( $value ) || is_object( $value ) ) {
+				$value = serialize( $value );
+			}
+
+			$value = mysqli_real_escape_string( EnvironmentFactory::get()->getMySQLClient()->getMySQLInstance(), $value );
+
+			$updates .= "`$column`='$value' ";
+		}
+
+		$query = "UPDATE {$table} SET $updates WHERE 1=1 $conditions";
+
+		return self::query( $query );
+	}
+
+	/**
 	 * Create a WP post
 	 *
 	 * @param  array $args Post table column args
