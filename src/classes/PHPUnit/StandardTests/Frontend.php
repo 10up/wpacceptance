@@ -22,8 +22,8 @@ trait Frontend {
 
 		$actor->seeTextInSource( '<html', '<html*> not found in page source.' );
 		$actor->seeTextInSource( '</html>', '</html> not found in page source.' );
-		$actor->seeTextInSource( '<body', '<html> not found in page source.' );
-		$actor->seeTextInSource( '</body>', '</html> not found in page source.' );
+		$actor->seeTextInSource( '<body', '<body*> not found in page source.' );
+		$actor->seeTextInSource( '</body>', '</body> not found in page source.' );
 	}
 
 	/**
