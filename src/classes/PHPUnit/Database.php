@@ -413,7 +413,7 @@ trait Database {
 
 		foreach ( $defaults as $key => $value ) {
 			if ( isset( $args[ $key ] ) ) {
-				$value = $args[ $value ];
+				$value = $args[ $key ];
 			}
 
 			if ( ! empty( $values ) ) {
