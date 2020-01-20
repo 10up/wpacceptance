@@ -64,7 +64,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase {
 
 		$new_last_modifying_query = $this->getLastModifyingQuery();
 
-		if ( ! empty( $new_last_modifying_query ) && $new_last_modifying_query['event_time'] !== $this->last_modifying_query['event_time'] ) {
+		if ( ! empty( $this->last_modifying_query ) && ! empty( $new_last_modifying_query ) && $new_last_modifying_query['event_time'] !== $this->last_modifying_query['event_time'] ) {
 			Log::instance()->write( 'Test modified the database (' . $this->getName() . ').', 1, 'warning' );
 			Log::instance()->write( 'Last query at ' . $new_last_modifying_query['event_time'] . ': ' . $new_last_modifying_query['argument'], 2 );
 

@@ -8,6 +8,7 @@
 namespace WPAcceptance\PHPUnit;
 
 use WPAcceptance\EnvironmentFactory;
+use WPAcceptance\Log;
 
 /**
  * Database trait
@@ -17,7 +18,7 @@ trait Database {
 	/**
 	 * Get the last INSERT, UPDATE, or DELETE that happened in the MySQL server
 	 *
-	 * @return array
+	 * @return array|null
 	 */
 	protected function getLastModifyingQuery() {
 		$mysql = EnvironmentFactory::get()->getMySQLClient();
