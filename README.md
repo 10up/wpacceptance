@@ -2,7 +2,7 @@
 
 > WP Acceptance is a toolkit that empowers developers and CI pipelines to test codebases using version controlled acceptance tests and sharable environments.
 
-[![Support Level](https://img.shields.io/badge/support-beta-blueviolet.svg)](#support-level) [![Documentation Status](https://readthedocs.org/projects/wpacceptance/badge/?version=latest)](https://wpacceptance.readthedocs.io/en/latest/?badge=latest) [![MIT License](https://img.shields.io/github/license/10up/wpacceptance.svg)](https://github.com/10up/wpacceptance/blob/master/LICENSE.md)
+[![Support Level](https://img.shields.io/badge/support-beta-blueviolet.svg)](#support-level) [![Release Version](https://img.shields.io/github/v/tag/10up/wpacceptance?label=version)](https://github.com/10up/wpacceptance/releases) [![Documentation Status](https://readthedocs.org/projects/wpacceptance/badge/?version=latest)](https://wpacceptance.readthedocs.io/en/latest/?badge=latest) [![MIT License](https://img.shields.io/github/license/10up/wpacceptance.svg)](https://github.com/10up/wpacceptance/blob/master/LICENSE.md)
 
 ## Requirements
 
