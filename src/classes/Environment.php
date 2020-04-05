@@ -2002,7 +2002,7 @@ class Environment {
 		$exit_code = EnvironmentFactory::$docker->execInspect( $exec_id )->getExitCode();
 
 		if ( 0 !== $exit_code ) {
-			Log::instance()->write( 'Before script returned a non-zero exit code: ' . $script, 0, 'warning' );
+			Log::instance()->write( 'Before script returned a non-zero exit code: ' . $exit_code, 0, 'warning' );
 		}
 
 		$result = [
