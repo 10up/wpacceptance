@@ -690,6 +690,13 @@ class Actor {
 			// Do nothing
 		}
 
+		// Fix Administration email verification diaglog
+		try {
+			$this->click( '#correct-admin-email' );
+		} catch ( ElementNotFound $exception ) {
+			// Do nothing
+		}
+
 		$this->waitUntilElementVisible( '#wpadminbar' );
 	}
 
