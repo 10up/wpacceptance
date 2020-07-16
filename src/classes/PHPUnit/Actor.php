@@ -1361,8 +1361,8 @@ class Actor {
 	/**
 	 * Add wp block to the editor
 	 *
-	 * @param $slug used to identify the block type
-	 * @param $name name that can be used to search for the block in the inserter
+	 * @param string $slug used to identify the block type
+	 * @param string $name name that can be used to search for the block in the inserter
 	 */
 	public function addBlock( $slug, $name ) {
 		// open the block appender
