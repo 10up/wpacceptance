@@ -996,7 +996,7 @@ class Environment {
 	protected function prepareSnapshotEnvironment( $snapshot_id ) {
 		Log::instance()->write( 'Setting up snapshot environment...', 1 );
 
-		$this->snapshot = Snapshot::get( $snapshot_id );
+		$this->snapshot = Snapshot::getLocal( $snapshot_id, $this->suite_config['repository'] );
 
 		if ( empty( $this->snapshot ) || empty( $this->snapshot->meta ) || empty( $this->snapshot->meta['sites'] ) ) {
 			Log::instance()->write( 'Snapshot invalid.', 0, 'error' );

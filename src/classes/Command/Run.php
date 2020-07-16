@@ -234,20 +234,11 @@ class Run extends Command {
 
 			if ( empty( $suite_config['environment_instructions'] ) ) {
 				foreach ( $suite_config['snapshots'] as $snapshot_array ) {
-					if ( ! \WPSnapshots\Utils\is_snapshot_cached( $snapshot_array['snapshot_id'] ) ) {
-						$snapshot = Snapshot::download( $snapshot_array['snapshot_id'], $repository->getName() );
+					$snapshot = Snapshot::get( $snapshot_array['snapshot_id'], $repository->getName() );
 
-						if ( ! is_a( $snapshot, '\WPSnapshots\Snapshot' ) ) {
-							Log::instance()->write( 'Could not download snapshot ' . $snapshot_array['snapshot_id'] . '. Does it exist?', 0, 'error' );
-							return 2;
-						}
-					} else {
-						$snapshot = Snapshot::get( $snapshot_array['snapshot_id'] );
-
-						if ( ! is_a( $snapshot, '\WPSnapshots\Snapshot' ) ) {
-							Log::instance()->write( 'Could not find cached snapshot ' . $snapshot_array['snapshot_id'] . '. Does it exist?', 0, 'error' );
-							return 2;
-						}
+					if ( ! is_a( $snapshot, '\WPSnapshots\Snapshot' ) ) {
+						Log::instance()->write( 'Could not download or find cached snapshot ' . $snapshot_array['snapshot_id'] . '. Does it exist?', 0, 'error' );
+						return 2;
 					}
 				}
 			}
