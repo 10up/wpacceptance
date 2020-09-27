@@ -697,6 +697,20 @@ class Actor {
 			// Do nothing
 		}
 
+		// Fix Update WordPress Database prompt
+		try {
+			sleep(1);
+			if ( 'Database Update Required' === $this->getElementInnerText( 'body > h1' ) ) {
+				$this->click( '.step a.button' );
+			}
+			sleep(1);
+			if ( 'Update Complete' === $this->getElementInnerText( 'body > h1' ) ) {
+				$this->click( '.step a.button' );
+			}
+		} catch ( \Exception $exception ) {
+			// Do nothing
+		}
+
 		$this->waitUntilElementVisible( '#wpadminbar' );
 	}
 
