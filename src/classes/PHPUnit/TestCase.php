@@ -38,6 +38,9 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase {
 		if ( ! empty( $this->last_modifying_query ) ) {
 			Log::instance()->write( 'Last modifying query at ' . $this->last_modifying_query['event_time'] . ': ' . $this->last_modifying_query['argument'], 2 );
 		}
+
+		// Fix Update WordPress Database prompt
+		$this->runCommand( 'wp core update-db' );
 	}
 
 	/**
