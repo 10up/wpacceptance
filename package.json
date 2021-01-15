@@ -1,6 +1,6 @@
 {
   "name": "wpacceptance",
-  "version": "0.16.6",
+  "version": "0.16.9",
   "description": "WP Acceptance is a toolkit that empowers developers and CI pipelines to test codebases using version controlled acceptance tests and sharable environments.",
   "license": "MIT",
   "repository": {
