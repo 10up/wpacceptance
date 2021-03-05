@@ -1356,4 +1356,81 @@ class Actor {
 		);
 	}
 
+	/**
+	 * Create new Post of any type
+	 *
+	 * @param string $post_type slug of the new post type to create
+	 */
+	public function navigateToNewPost( $post_type = 'post' ) {
+		$this->moveTo( "/wp-admin/post-new.php?post_type={$post_type}" );
+	}
+
+	/**
+	 * Add wp block to the editor
+	 *
+	 * @param string $slug used to identify the block type
+	 * @param string $name name that can be used to search for the block in the inserter
+	 */
+	public function addBlock( $slug, $name ) {
+		// open the block appender
+		$this->waitUntilElementVisible( '.block-editor-inserter__toggle' );
+		$this->click( '.block-editor-inserter__toggle' );
+
+		// search for the block by name
+		$this->waitUntilElementVisible( '.block-editor-inserter__search' );
+		$this->getPage()->type(  '.block-editor-inserter__search', $name, [ 'delay' => 10 ] );
+
+		// add the block via the list
+		$slug_array = explode( '/', $slug );
+		$class      = $slug_array[1];
+		$this->waitUntilElementVisible( ".editor-block-list-item-{$class}" );
+		$this->jsClick( ".editor-block-list-item-{$class}" );
+		$this->waitUntilElementVisible( "div[data-type=\"{$slug}\"]" );
+	}
+
+	/**
+	 * Ensures the block renders as expected
+	 *
+	 * @param string $slug the slug of the block to look for
+	 */
+	public function seeBlockIsAdded( $slug ) {
+		$this->seeElement( "div[data-type=\"{$slug}\"]" );
+		$this->dontSeeElement( '.block-editor-warning__message' );
+		$this->dontSeeText( 'Error loading block: No route was found matching the URL and request method', '.components-placeholder__fieldset' );
+	}
+
+	/**
+	 * Test that the editor will save
+	 */
+	public function saveGutenbergDraft() {
+		$this->click( '.editor-post-save-draft' );
+	}
+
+	/**
+	 * Test that the editor will save
+	 */
+	public function dontSeeGutenbergErrors() {
+		$this->dontSeeElement( '.is-error' );
+	}
+
+	/**
+	 * Dismiss any notices that may appear in the editor most likely on initial page load
+	 */
+	public function dismissGutenbergNotices() {
+		try {
+			$this->click( '.edit-post-welcome-guide .components-modal__header button' );
+		} catch ( ElementNotFound $e ) {}
+
+		try {
+			$this->click( '.nux-dot-tip__disable' );
+		} catch ( ElementNotFound $e ) {}
+
+		try {
+			$notices = $this->getElements( '.is-error.is-dismissible' );
+			foreach ( $notices as $notice ) {
+				$this->click( '.is-error.is-dismissible .components-notice__dismiss' );
+			}
+		} catch ( ElementNotFound $e ) {}
+	}
+
 }
