@@ -38,7 +38,7 @@ After installation, you will want to [setup WP Acceptance on a project](#project
 
 ## Project Setup
 
-After [installing WP Acceptance](https://wpacceptance.readthedocs.io/en/latest/install/), you need to setup your project and development workflow.
+After [installing WP Acceptance](https://wpacceptance.readthedocs.io/en/latest/#installation), you need to setup your project and development workflow.
 
 1\. Spin up your local environment. WP Acceptance will use your local if run with the  `--local` flag. We highly recommend [WP Local Docker](https://github.com/10up/wp-local-docker).
 
