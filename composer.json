@@ -1,5 +1,5 @@
 {
-  "name": "10up/wpacceptance",
+  "name": "next-press/wpacceptance",
   "description": "Test code using acceptance tests and sharable, defined file and database snapshots.",
   "keywords": ["wordpress", "testing", "acceptance tests"],
   "minimum-stability": "dev",
