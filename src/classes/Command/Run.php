@@ -115,15 +115,15 @@ class Run extends Command {
 			$repository_name = $suite_config['repository'];
 		}
 
-		$repository = RepositoryManager::instance()->setup( $repository_name );
+// 		$repository = RepositoryManager::instance()->setup( $repository_name );
 
-		if ( ! $repository ) {
-			if ( ! empty( $repository_name ) ) {
-				Log::instance()->write( 'Could not setup WP Snapshots repository.', 0, 'error' );
+// 		if ( ! $repository ) {
+// 			if ( ! empty( $repository_name ) ) {
+// 				Log::instance()->write( 'Could not setup WP Snapshots repository.', 0, 'error' );
 
-				return 2;
-			}
-		}
+// 				return 2;
+// 			}
+// 		}
 
 		$suite_config['repository'] = ( ! empty( $repository ) ) ? $repository->getName() : '';
 
