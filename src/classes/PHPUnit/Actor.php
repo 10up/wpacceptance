@@ -434,6 +434,20 @@ class Actor {
 	}
 
 	/**
+	 * Wait until element is hidden
+	 *
+	 * @param  string $element_path Path to element to check
+	 */
+	public function waitUntilElementHidden( string $element_path ) {
+		$args = [
+			'hidden' => true,
+			'timeout' => 90000,
+		];
+
+		$this->getPage()->waitForSelector( $element_path, $args );
+	}
+
+	/**
 	 * Wait until page source contains text
 	 *
 	 * @param  string $text Text to wait for
