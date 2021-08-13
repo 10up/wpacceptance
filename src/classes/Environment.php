@@ -1495,7 +1495,7 @@ class Environment {
 		$host_config->setPortBindings( $host_port_map );
 
 		$container_config = new ContainersCreatePostBody();
-		$container_config->setImage( 'mysql:5.7' );
+		$container_config->setImage( 'mariadb:10.4' );
 		$container_config->setAttachStdin( true );
 		$container_config->setAttachStdout( true );
 		$container_config->setAttachStderr( true );
