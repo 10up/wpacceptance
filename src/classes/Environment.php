@@ -1408,8 +1408,8 @@ class Environment {
 
 		$images = [
 			[
-				'name' => 'mysql',
-				'tag'  => '5.7',
+				'name' => 'mariadb',
+				'tag'  => '10.4',
 			],
 			[
 				'name' => '10up/wpacceptance-wordpress',
