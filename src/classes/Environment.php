@@ -1295,7 +1295,7 @@ class Environment {
 
 		$rsync_command = 'mkdir -p ' . $this->container_project_path . ' && rsync -a -I --exclude=".git" ' . $excludes . ' ' . $this->getWPContainerRepoRoot() . '/ ' . $this->container_project_path;
 
-		Log::instance()->write( $rsync_command, 2 );
+		Log::instance()->write( $rsync_command, 0 );
 
 		$exec_config = new ContainersIdExecPostBody();
 		$exec_config->setTty( true );
