@@ -1345,7 +1345,7 @@ class Environment {
 		$exec_config->setTty( true );
 		$exec_config->setAttachStdout( true );
 		$exec_config->setAttachStderr( true );
-		$exec_config->setCmd( [ '/bin/sh', '-c', 'chmod -R 0777 /var/www/html/wp-content/' ] );
+		$exec_config->setCmd( [ '/bin/sh', '-c', 'chmod -R 0777 /var/www/html/' ] );
 
 		$exec_id           = EnvironmentFactory::$docker->containerExec( $this->environment_id . '-wordpress', $exec_config )->getId();
 		$exec_start_config = new ExecIdStartPostBody();
