@@ -45,7 +45,7 @@
     "docker-php/docker-php": "^2.0@dev",
     "10up/wpsnapshots": "dev-master",
     "symfony/console": "^4.1",
-    "phpunit/phpunit": "^7.5",
+    "phpunit/phpunit": "^8.5",
     "php": ">=7.2",
     "nesk/puphpeteer": "^1.4",
     "10up/wpinstructions": "dev-master",
