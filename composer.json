@@ -50,5 +50,10 @@
     "nesk/puphpeteer": "^1.4",
     "10up/wpinstructions": "dev-master",
     "jane-php/open-api-runtime": "4.2.0"
+  },
+  "config": {
+    "allow-plugins": {
+      "dealerdirect/phpcodesniffer-composer-installer": true
+    }
   }
 }
